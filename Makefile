@@ -21,12 +21,12 @@ ifeq ($(UNAME_S), Linux)
 endif
 
 FLAGS += -Iinclude
-LIBS = -lm
+LIBS = -lm -lzmq
 
 all:
 
 fe_master: src/fe_master.cxx
-	$(CXX) $(FLAGS) -o $@ -c $<
+	$(CXX) $(FLAGS) $(LIBS) $< -o $@
 
 build/%.o: src/%.cxx
 	$(CXX) $(FLAGS) -o $@ -c $<

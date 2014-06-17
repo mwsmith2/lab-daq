@@ -18,7 +18,7 @@ using std::vector;
 //--- project includes -----------------------------------------------------//
 
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
   // Initialize some parameters.
   boost::property_tree::ptree conf;
@@ -48,4 +48,5 @@ int main(int argc, char **argv)
 
   }
 
+  return 0;
 }
