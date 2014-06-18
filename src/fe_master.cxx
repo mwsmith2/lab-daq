@@ -39,14 +39,14 @@ namespace {
 }
 
 // Function declarations
-int load_config();
-int start_workers();
-int stop_workers();
+int LoadConfig();
+int StartWorkers();
+int StopWorkers();
 
 // The main loop
 int main(int argc, char *argv[])
 {
-  load_config();
+  LoadConfig();
 
   while (true) {
 
@@ -61,20 +61,20 @@ int main(int argc, char *argv[])
 
       if (msg_string == string("START") && !is_running) {
 
-        start_workers();
+        StartWorkers();
 
       } else if (msg_string == string("STOP") && is_running) {
 
-        stop_workers();
+        StopWorkers();
 
       }
-
+    }
   }
 
   return 0;
 }
 
-int load_config(){
+int LoadConfig(){
   // load up the configuration.
   boost::property_tree::ptree conf;
   boost::property_tree::read_json("config/.default_master.json", conf);  
@@ -86,7 +86,7 @@ int load_config(){
 }
 
 // Flush the buffers and start data taking.
-int start_workers(){
+int StartWorkers(){
   cout << "Starting run." << endl;
   is_running = true;
 
@@ -94,7 +94,7 @@ int start_workers(){
 }
 
 // Write the data file and reset workers.
-int stop_workers(){
+int StopWorkers(){
   cout << "Stopping run." << endl;
   is_running = false;
 

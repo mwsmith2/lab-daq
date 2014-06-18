@@ -4,13 +4,15 @@
 // Class that covers the basics that DaqWorkers should inherit
 
 //--- std includes ----------------------------------------------------------//
-#include <string>
+#include <queue>
 #include <atomic>
+#include <mutex>
+#include <thread>
+#include <string>
 using std::string;
 
 //--- other includes --------------------------------------------------------//
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/foreach.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 //--- project includes ------------------------------------------------------//
@@ -22,17 +24,30 @@ class DaqWorkerBase {
   public:
 
     //ctor
-    DaqWorkerBase(string conf_file);
+    DaqWorkerBase(string conf_file) : conf_file_(conf_file),
+                                      go_time_(false), 
+                                      has_data_(false) {};
 
-    virtual int load_config() = 0;
-    virtual int start_worker() = 0;
-    virtual int stop_worker() = 0;
-    virtual int loop_thread();
+    // flow control functions                                  
+    void StartWorker() { go_time_ = true; };
+    void StopWorker() { go_time_ = false; };
+
+    // Need to be implented by descendants.
+    virtual void LoadConfig() = 0;
+    virtual void WorkLoop() = 0;
 
   protected:
 
     string conf_file_;
-    std::atomic bool go_time_;
+    std::atomic<bool> go_time_;
+    std::atomic<bool> has_data_;
+    std::mutex queue_mutex_;
+    std::thread work_thread_;
+
+    virtual bool HasData();
+
 };
 
-}
+} // daq
+
+#endif
