@@ -25,7 +25,7 @@ LIBS = -lm -lzmq
 
 all:
 
-fe_master: src/fe_master.cxx
+%: src/%.cxx
 	$(CXX) $(FLAGS) $(LIBS) $< -o $@
 
 build/%.o: src/%.cxx

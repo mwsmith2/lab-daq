@@ -20,25 +20,41 @@ using std::vector;
 
 int main(int argc, char *argv[])
 {
-  // Initialize some parameters.
+  // Set up the configuration.
   boost::property_tree::ptree conf;
   boost::property_tree::read_json("config/.default_master.json", conf);  
-  //vector<* DaqWorker> daq_workers;
+
+  // Initialize some parameters.
   bool is_running = false;
+  bool rc;
+  //vector<* DaqWorker> daq_workers;
 
   // Set up a zmq socket.
   zmq::context_t master_ctx(1);
-  zmq::socket_t master_sck(master_ctx, ZMQ_SUB);
-  zmq::message_t message;
+  zmq::socket_t master_sck(master_ctx, ZMQ_PULL);
+  zmq::message_t message(10);
 
   // Connect the socket.
   master_sck.bind(conf.get<std::string>("master_port").c_str());
 
   while (true) {
 
-    if (master_sck.recv(&message, ZMQ_NOBLOCK) == 0) {
+    // Check for a message.
+    rc = master_sck.recv(&message);
+    cout << "rc: " << rc << endl;
 
-      cout << message.data() << endl;;
+    // Process the message.
+    std::string msg_string;
+    std::istringstream ss(static_cast<char*>(message.data()));
+    std::getline(ss, msg_string, ':');
+
+    if (rc == true) {
+
+      cout << msg_string << endl;
+
+    } else {
+
+      cout << "No message." << endl;
 
     }
 
