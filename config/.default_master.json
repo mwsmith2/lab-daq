@@ -1,3 +1,10 @@
 {
-	"master_port":"tcp://127.0.0.1:42000"
+
+	"master_port":"tcp://127.0.0.1:42000",
+
+	"devices":{
+		"fake":"config/fake_conf.json",
+		"fake":"config/fake_conf.json"
+	}
+
 }

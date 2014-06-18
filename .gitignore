@@ -1,3 +1,4 @@
 fe_master
 start_daq
+stop_daq
 build/*
