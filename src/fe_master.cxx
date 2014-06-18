@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
   while (true) {
 
     // Check for a message.
-    rc = master_sck.recv(&message);
+    rc = master_sck.recv(&message, ZMQ_NOBLOCK);
 
     if (rc == true) {
 
@@ -68,12 +68,6 @@ int main(int argc, char *argv[])
         stop_workers();
 
       }
-
-    } else {
-
-      cout << "No message." << endl;
-
-    }
 
   }
 
