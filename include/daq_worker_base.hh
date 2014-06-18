@@ -34,7 +34,6 @@ class DaqWorkerBase {
 
     // Need to be implented by descendants.
     virtual void LoadConfig() = 0;
-    virtual void WorkLoop() = 0;
 
   protected:
 
@@ -44,7 +43,8 @@ class DaqWorkerBase {
     std::mutex queue_mutex_;
     std::thread work_thread_;
 
-    virtual bool HasData();
+    virtual bool HasEvent() = 0;
+    virtual void WorkLoop() = 0;
 
 };
 

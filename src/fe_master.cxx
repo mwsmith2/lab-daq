@@ -17,6 +17,9 @@ using std::string;
 #include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
+#include "daq_worker_base.hh"
+#include "daq_worker_fake.hh"
+using namespace daq;
 
 // Anonymous namespace for "global" paramaters
 namespace {
@@ -35,7 +38,7 @@ namespace {
   zmq::message_t message(10);
 
   // project declarations
-  // vector<* DaqWorkerBase> daq_workers;
+  vector<DaqWorkerBase *> daq_workers;
 }
 
 // Function declarations
