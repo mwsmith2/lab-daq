@@ -15,35 +15,34 @@
 // This class produces fake data to test functionality
 namespace daq {
 
-typedef sis_3350 data_struct;
+typedef sis_3350 event_struct;
 
-class DaqWorkerFake : public DaqWorkerBase {
+class DaqWorkerFake : public DaqWorkerBase<event_struct> {
 
   public:
 
     // ctor
-    DaqWorkerFake(string conf);
+    DaqWorkerFake(string name, string conf);
 
     void LoadConfig();
     void WorkLoop();
+    event_struct PopEvent();
 
   private:
 
     // Fake data variables
     int num_ch_;
     int len_tr_;
-    bool has_event_;
-    bool has_fake_event_;
+    std::atomic<bool> has_fake_event_;
     double rate_;
     double jitter_;
     double drop_rate_;
-    data_struct event_data_;
+    event_struct event_data_;
+    std::thread event_thread_;
 
-    // Data queue
-    std::queue<data_struct> data_queue_;
+    bool EventAvailable() { return has_fake_event_; };
+    void GetEvent(event_struct);
 
-    bool HasEvent() { return has_fake_event_; };
-    void GetEvent(data_struct);
 
     // The function generates fake data.
     void GenerateEvent();

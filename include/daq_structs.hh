@@ -9,12 +9,14 @@
 
 namespace daq {
 
-struct sis_3350 {
-    unsigned long long timestamp[SIS_3350_CH];
-    ushort trace[SIS_3350_CH][SIS_3350_LN];
+struct base_event {};
+
+struct sis_3350 : base_event {
+  unsigned long long timestamp[SIS_3350_CH];
+  ushort trace[SIS_3350_CH][SIS_3350_LN];
 };
 
-struct sis_3302 {
+struct sis_3302 : base_event{
   unsigned long long timestamp[SIS_3302_CH];
   ushort trace[SIS_3302_CH][SIS_3302_LN];
 };

@@ -12,14 +12,20 @@ using std::vector;
 using std::string;
 
 //--- other includes --------------------------------------------------------//
-#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <boost/variant.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <zmq.hpp>
+using namespace boost::property_tree;
 
 //--- project includes -----------------------------------------------------//
 #include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
+#include "event_builder.hh"
 using namespace daq;
+
+typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
 
 // Anonymous namespace for "global" paramaters
 namespace {
@@ -38,7 +44,8 @@ namespace {
   zmq::message_t message(10);
 
   // project declarations
-  vector<DaqWorkerBase *> daq_workers;
+  vector<worker_ptr_types> daq_workers;
+  EventBuilder *event_builder;
 }
 
 // Function declarations
@@ -79,11 +86,23 @@ int main(int argc, char *argv[])
 
 int LoadConfig(){
   // load up the configuration.
-  boost::property_tree::ptree conf;
-  boost::property_tree::read_json("config/.default_master.json", conf);  
+  string conf_file("config/.default_master.json");
+  ptree conf;
+  read_json(conf_file, conf);  
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
+
+
+  BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
+
+    string name(v.first);
+    string conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerFake(name, conf_file));
+  } 
+
+  event_builder = new EventBuilder(conf_file, daq_workers);
 
   return 0;
 }
@@ -93,6 +112,21 @@ int StartWorkers(){
   cout << "Starting run." << endl;
   is_running = true;
 
+  event_builder->StartBuilder();
+
+  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartWorker();
+
+    } else if ((*it).which() == 1) {
+
+      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
+
+    }
+  }
+
   return 0;
 }
 
@@ -100,6 +134,21 @@ int StartWorkers(){
 int StopWorkers(){
   cout << "Stopping run." << endl;
   is_running = false;
+
+  event_builder->StopBuilder();
+
+  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StopWorker();
+
+    } else if ((*it).which() == 1) {
+
+      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
+
+    }
+  }
 
   return 0;
 }

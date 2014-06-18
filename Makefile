@@ -1,7 +1,7 @@
 # Grab the targets and sources as two batches
-SOURCES = $(wildcard src/*.cxx)
-HEADERS = $(SOURCES:.cxx=.hh)
-OBJECTS = $(patsubst src%.cxx,build%.o,$(SOURCES))
+SOURCES = $(wildcard src*.cxx)
+#OBJECTS = $(patsubst src%.cxx,build%.o,$(SOURCES))
+OBJECTS = build/daq_worker_fake.o build/event_builder.o
 
 # Figure out the architecture
 UNAME_S = $(shell uname -s)
@@ -25,11 +25,14 @@ LIBS = -lm -lzmq
 
 all:
 
-%: src/%.cxx
-	$(CXX) $(FLAGS) $(LIBS) $< -o $@
+%: src/%.cxx $(OBJECTS)
+	$(CXX) $(FLAGS) $(OBJECTS) $(LIBS) $< -o $@
+
+fe_master: src/fe_master.cxx $(OBJECTS)
+	$(CXX) $(FLAGS) $(OBJECTS) $(LIBS) $< -o $@
 
 build/%.o: src/%.cxx
-	$(CXX) $(FLAGS) -o $@ -c $<
+	$(CXX) -c $(FLAGS) $< -o $@ 
 
 clean:
 	rm -f $(TARGETS) build/* 

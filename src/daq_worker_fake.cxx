@@ -1,9 +1,13 @@
 #include "daq_worker_fake.hh"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace daq {
 
 // ctor
-DaqWorkerFake::DaqWorkerFake(string conf) : DaqWorkerBase(conf) 
+DaqWorkerFake::DaqWorkerFake(string name, string conf) : DaqWorkerBase<event_struct>(name, conf)
 { 
   LoadConfig();
 
@@ -12,6 +16,7 @@ DaqWorkerFake::DaqWorkerFake(string conf) : DaqWorkerBase(conf)
   has_fake_event_ = false;
 
   work_thread_ = std::thread(&DaqWorkerFake::WorkLoop, this);
+  event_thread_ = std::thread(&DaqWorkerFake::GenerateEvent, this);
 }
 
 void DaqWorkerFake::LoadConfig() 
@@ -30,24 +35,29 @@ void DaqWorkerFake::GenerateEvent()
   // Make fake events.
   while (true) {
 
-    usleep(1.0e6 / rate_);
+    while (go_time_) {
 
-    for (int i = 0; i < num_ch_; ++i){
+      usleep(1.0e6 / rate_);
 
-      event_data_.timestamp[i] = clock();
+      cout << name_ << " generated an event." << endl;
 
-      for (int j = 0; j < len_tr_; ++j){
+      for (int i = 0; i < num_ch_; ++i){
 
-        event_data_.trace[i][j] = sin(j * 0.1);
+        event_data_.timestamp[i] = clock();
 
+        for (int j = 0; j < len_tr_; ++j){
+
+          event_data_.trace[i][j] = sin(j * 0.1);
+
+        }
       }
-    }
 
-    has_fake_event_ = true;    
+      has_fake_event_ = true;    
+    }
   } 
 }
 
-void DaqWorkerFake::GetEvent(data_struct bundle)
+void DaqWorkerFake::GetEvent(event_struct bundle)
 {
   // Copy the data.
   for (int i = 0; i < num_ch_; ++i){
@@ -62,25 +72,41 @@ void DaqWorkerFake::WorkLoop()
 {
   while (true) {
 
-    if (HasEvent()) {
+    while(go_time_) {
 
-      data_struct bundle;
-      GetEvent(bundle);
+      if (EventAvailable()) {
 
-      queue_mutex_.lock();
-      data_queue_.push(bundle);
-      has_event_ = true;
-      queue_mutex_.unlock();
+        event_struct bundle;
+        GetEvent(bundle);
 
-    } else {
+        queue_mutex_.lock();
+        data_queue_.push(bundle);
+        has_event_ = true;
+        queue_mutex_.unlock();
 
-      usleep(100);
+        cout << name_ << " pushed an event into the queue." << endl;
+
+      } else {
+
+        usleep(100);
+
+      }
+
+      std::this_thread::yield();
 
     }
-
-    std::this_thread::yield();
-
   }
+}
+
+event_struct DaqWorkerFake::PopEvent()
+{
+  event_struct data(data_queue_.front());
+  data_queue_.pop();
+
+  // Check if this is that last event.
+  if (data_queue_.size() == 0) has_event_ = false;
+
+  return data;
 }
 
 } // daq
