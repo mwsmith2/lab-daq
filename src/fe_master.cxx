@@ -36,7 +36,6 @@ namespace {
 
   // std declarations
   string msg_string;
-  std::istringstream ss;
 
   // zmq declarations
   zmq::context_t master_ctx(1);
@@ -67,7 +66,7 @@ int main(int argc, char *argv[])
     if (rc == true) {
 
       // Process the message.
-      ss = std::istringstream(static_cast<char *>(message.data()));
+      std::istringstream ss(static_cast<char *>(message.data()));
       std::getline(ss, msg_string, ':');
 
       if (msg_string == string("START") && !is_running) {
