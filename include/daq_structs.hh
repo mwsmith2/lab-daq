@@ -7,8 +7,16 @@
 #define SIS_3302_CH 8 
 #define SIS_3302_LN 1024
 
+//--- std includes ----------------------------------------------------------//
+#include <vector>
+using std::vector;
+
+//--- other includes --------------------------------------------------------//
+//--- projects includes -----------------------------------------------------//
+
 namespace daq {
 
+// Basic structs
 struct base_event {};
 
 struct sis_3350 : base_event {
@@ -19,6 +27,13 @@ struct sis_3350 : base_event {
 struct sis_3302 : base_event{
   unsigned long long timestamp[SIS_3302_CH];
   ushort trace[SIS_3302_CH][SIS_3302_LN];
+};
+
+// Built from basic structs 
+struct event_data {
+  vector<sis_3350> fake;
+  vector<sis_3350> sis_fast;
+  vector<sis_3302> sis_slow;
 };
 
 }

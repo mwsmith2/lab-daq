@@ -2,7 +2,7 @@
 
 namespace daq {
 
-EventBuilder::EventBuilder(string conf_file, const vector<worker_ptr_types>& daq_workers)
+EventBuilder::EventBuilder(string conf_file, const vector<worker_ptr_types>& daq_workers)//, const vector<DataWriterBase *> data_writers)
 {
   Init(conf_file, daq_workers);
 }
@@ -16,6 +16,7 @@ void EventBuilder::Init(string conf_file, const vector<worker_ptr_types>& daq_wo
   LoadConfig();
 
   builder_thread_ = std::thread(&EventBuilder::BuilderLoop, this);
+  push_data_thread_ = std::thread(&EventBuilder::PushDataLoop, this);
 }
 
 void EventBuilder::LoadConfig()
@@ -78,11 +79,15 @@ void EventBuilder::BuilderLoop()
         GetEventData(bundle);
 
         queue_mutex_.lock();
-        data_queue_.push(bundle);
+        pull_data_que_.push(bundle);
         queue_mutex_.unlock();
 
         std::cout << "Data queue is now size: ";
-        std::cout << data_queue_.size() << std::endl;
+        std::cout << pull_data_que_.size() << std::endl;
+
+        if (pull_data_que_.size() > max_queue_length_){
+          push_new_data_ = true;
+        }
 
       } else {
 
@@ -95,5 +100,46 @@ void EventBuilder::BuilderLoop()
     }
   }
 }
+
+void EventBuilder::PushDataLoop()
+{
+  while (true) {
+
+    while (go_time_) {
+
+      if (push_new_data_) {
+
+        std::cout << "Pushing data." << std::endl;
+
+        push_data_vec_.resize(0);
+
+        for (int i = 0; i < max_queue_length_; ++i) {
+
+          queue_mutex_.lock();
+          push_data_vec_.push_back(pull_data_que_.front());
+          pull_data_que_.pop();
+          queue_mutex_.unlock();
+
+        }
+
+        push_new_data_ = false;
+
+      } else {
+
+        usleep(100);
+
+      }
+
+      std::this_thread::yield();
+
+    }
+  }
+}
+
+
+
+
+
+
 
 } // ::daq

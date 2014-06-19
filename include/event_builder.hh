@@ -22,16 +22,12 @@ using std::vector;
 #include "daq_structs.hh"
 #include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
+#include "data_writer_base.hh"
+#include "data_writer_root.hh"
 
 namespace daq {
 
 typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
-
-struct event_data {
-  vector<sis_3350> fake;
-  vector<sis_3350> sis_fast;
-  vector<sis_3302> sis_slow;
-};
 
 // This class pulls data form all the workers.
 class EventBuilder {
@@ -54,20 +50,26 @@ class EventBuilder {
   private:
 
     // Simple variable declarations
+    const int max_queue_length_ = 10;
     string conf_file_;
     std::atomic<bool> go_time_;
+    std::atomic<bool> push_new_data_;
 
-    // 
+    // Data accumulation variables
     vector<worker_ptr_types> daq_workers_;
-    std::queue<event_data> data_queue_;
+    vector<event_data> push_data_vec_;
+    std::queue<event_data> pull_data_que_;
 
+    // Concurrency variables
     std::mutex queue_mutex_;
     std::thread builder_thread_;
+    std::thread push_data_thread_;
 
+    // Private member functions
     bool WorkersHaveEvents();
     void GetEventData(event_data& bundle);
     void BuilderLoop();
-
+    void PushDataLoop();
 
 };
 
