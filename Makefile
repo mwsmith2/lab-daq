@@ -20,8 +20,11 @@ ifeq ($(UNAME_S), Linux)
 	FLAGS = -std=c++0x
 endif
 
+FLAGS = $(shell root-config --cflags)
 FLAGS += -Iinclude
-LIBS = -lm -lzmq
+
+LIBS = $(shell root-config --libs)
+LIBS += -lm -lzmq
 
 all:
 

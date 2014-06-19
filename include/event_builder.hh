@@ -22,8 +22,8 @@ using std::vector;
 #include "daq_structs.hh"
 #include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
-#include "data_writer_base.hh"
-#include "data_writer_root.hh"
+#include "daq_writer_base.hh"
+#include "daq_writer_root.hh"
 
 namespace daq {
 
@@ -35,17 +35,13 @@ class EventBuilder {
   public:
 
     //ctors
-    EventBuilder() {};
-    EventBuilder(string conf_file, 
-      const vector<worker_ptr_types>& daq_workers);
-
-    // inline functions
-    void StartBuilder() { go_time_ = true; };
-    void StopBuilder() { go_time_ = false; };
+    EventBuilder(const vector<worker_ptr_types>& daq_workers, 
+                 const vector<DaqWriterBase);
 
     // member functions
+    void StartBuilder() { go_time_ = true; };
+    void StopBuilder() { go_time_ = false; };
     void LoadConfig();
-    void Init(string conf_file,const vector<worker_ptr_types>& daq_workers);
 
   private:
 
@@ -57,6 +53,7 @@ class EventBuilder {
 
     // Data accumulation variables
     vector<worker_ptr_types> daq_workers_;
+    vector<DaqWriterBase *> daq_writers_;
     vector<event_data> push_data_vec_;
     std::queue<event_data> pull_data_que_;
 

@@ -2,15 +2,11 @@
 
 namespace daq {
 
-EventBuilder::EventBuilder(string conf_file, const vector<worker_ptr_types>& daq_workers)//, const vector<DataWriterBase *> data_writers)
+EventBuilder::EventBuilder(const vector<worker_ptr_types>& daq_workers), 
+                           const vector<DaqWriterBase *> daq_writers)
 {
-  Init(conf_file, daq_workers);
-}
-
-void EventBuilder::Init(string conf_file, const vector<worker_ptr_types>& daq_workers)
-{
-  conf_file_ = conf_file;
   daq_workers_ = daq_workers;
+  daq_writers_ = daq_writers;
   go_time_ = false;
 
   LoadConfig();
@@ -21,10 +17,8 @@ void EventBuilder::Init(string conf_file, const vector<worker_ptr_types>& daq_wo
 
 void EventBuilder::LoadConfig()
 {
-  boost::property_tree::ptree conf;
-  boost::property_tree::read_json(conf_file_, conf);
-
-
+//  boost::property_tree::ptree conf;
+//  boost::property_tree::read_json(conf_file_, conf);
 }
 
 bool EventBuilder::WorkersHaveEvents()
@@ -85,7 +79,7 @@ void EventBuilder::BuilderLoop()
         std::cout << "Data queue is now size: ";
         std::cout << pull_data_que_.size() << std::endl;
 
-        if (pull_data_que_.size() > max_queue_length_){
+        if (pull_data_que_.size() > max_queue_length_) {
           push_new_data_ = true;
         }
 
@@ -123,6 +117,12 @@ void EventBuilder::PushDataLoop()
         }
 
         push_new_data_ = false;
+
+        for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
+
+          (*it)->PullData(push_data_vec_);
+
+        }
 
       } else {
 

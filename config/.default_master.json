@@ -9,6 +9,15 @@
 			"fake_1":"config/fake_conf.json"
 		}
 
+	},
+
+	"writers":{
+
+		"root":{
+			"file":"test.root",
+			"tree":"t"
+		}
+
 	}
 
 }

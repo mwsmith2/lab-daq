@@ -1,10 +1,9 @@
-#ifndef SLAC_DAQ_INCLUDE_DATA_WRITER_BASE_HH_
-#define SLAC_DAQ_INCLUDE_DATA_WRITER_BASE_HH_
+#ifndef SLAC_DAQ_INCLUDE_DAQ_WRITER_BASE_HH_
+#define SLAC_DAQ_INCLUDE_DAQ_WRITER_BASE_HH_
 
 //--- std includes ----------------------------------------------------------//
 #include <thread>
 #include <mutex>
-#include <atomic>
 #include <string>
 #include <vector>
 using std::vector;
@@ -14,17 +13,17 @@ using std::string;
 
 
 //--- project includes ------------------------------------------------------//
-
+#include "daq_structs.hh"
 
 namespace daq {
 
 // This class defines an abstract base class for data writers to inherit form.
 
-class DataWriterBase {
+class DaqWriterBase {
 
   public:
 
-    DataWriterBase(string conf_file) : conf_file_(conf_file) {};
+    DaqWriterBase(string conf_file) : conf_file_(conf_file) {};
 
     // Basic functions
     virtual void LoadConfig() = 0;
@@ -36,8 +35,7 @@ class DataWriterBase {
   protected:
 
     // Simple variables
-    conf_file_;
-    std::atomic<bool> go_time_;
+    string conf_file_;
 
     // Concurrency variables
     std::thread writer_thread_;
@@ -46,3 +44,5 @@ class DataWriterBase {
 };
 
 } // ::daq
+
+#endif
