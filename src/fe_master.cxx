@@ -45,6 +45,7 @@ namespace {
 
   // project declarations
   vector<worker_ptr_types> daq_workers;
+  vector<DaqWriterBase *> daq_writers;
   EventBuilder *event_builder;
 }
 
@@ -102,7 +103,9 @@ int LoadConfig(){
     daq_workers.push_back(new DaqWorkerFake(name, conf_file));
   } 
 
-  event_builder = new EventBuilder(conf_file, daq_workers);
+  daq_writers.push_back(new DaqWriterRoot(conf_file));
+
+  event_builder = new EventBuilder(daq_workers, daq_writers);
 
   return 0;
 }
@@ -112,8 +115,15 @@ int StartWorkers(){
   cout << "Starting run." << endl;
   is_running = true;
 
+  // Start the event builder
   event_builder->StartBuilder();
 
+  // Start the writers
+  for (auto it = daq_writers.begin(); it != daq_writers.end(); ++it) {
+    (*it)->StartWriter();
+  }
+
+  // Start the data gatherers
   for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
 
     if ((*it).which() == 0) {
@@ -135,8 +145,15 @@ int StopWorkers(){
   cout << "Stopping run." << endl;
   is_running = false;
 
+  // Stop the event builder
   event_builder->StopBuilder();
 
+  // Stop the writers
+  for (auto it = daq_writers.begin(); it != daq_writers.end(); ++it) {
+    (*it)->StopWriter();
+  }
+
+  // Stop the data gatherers
   for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
 
     if ((*it).which() == 0) {

@@ -2,12 +2,13 @@
 
 namespace daq {
 
-EventBuilder::EventBuilder(const vector<worker_ptr_types>& daq_workers), 
+EventBuilder::EventBuilder(const vector<worker_ptr_types>& daq_workers, 
                            const vector<DaqWriterBase *> daq_writers)
 {
   daq_workers_ = daq_workers;
   daq_writers_ = daq_writers;
   go_time_ = false;
+  push_new_data_ = false;
 
   LoadConfig();
 
@@ -83,13 +84,10 @@ void EventBuilder::BuilderLoop()
           push_new_data_ = true;
         }
 
-      } else {
-
-        usleep(100);
-
-      }
+      } 
 
       std::this_thread::yield();
+      usleep(100);
 
     }
   }
@@ -109,6 +107,7 @@ void EventBuilder::PushDataLoop()
 
         for (int i = 0; i < max_queue_length_; ++i) {
 
+          std::cout << "Size of pull queue is: " << pull_data_que_.size() << std::endl;
           queue_mutex_.lock();
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
@@ -118,19 +117,17 @@ void EventBuilder::PushDataLoop()
 
         push_new_data_ = false;
 
+        
+
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
           (*it)->PullData(push_data_vec_);
 
         }
-
-      } else {
-
-        usleep(100);
-
       }
 
       std::this_thread::yield();
+      usleep(100);
 
     }
   }

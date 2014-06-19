@@ -36,7 +36,7 @@ class EventBuilder {
 
     //ctors
     EventBuilder(const vector<worker_ptr_types>& daq_workers, 
-                 const vector<DaqWriterBase);
+                 const vector<DaqWriterBase *> daq_writers);
 
     // member functions
     void StartBuilder() { go_time_ = true; };

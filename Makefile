@@ -1,7 +1,7 @@
 # Grab the targets and sources as two batches
 SOURCES = $(wildcard src*.cxx)
 #OBJECTS = $(patsubst src%.cxx,build%.o,$(SOURCES))
-OBJECTS = build/daq_worker_fake.o build/event_builder.o
+OBJECTS = build/daq_worker_fake.o build/event_builder.o build/daq_writer_root.o
 
 # Figure out the architecture
 UNAME_S = $(shell uname -s)
@@ -21,7 +21,7 @@ ifeq ($(UNAME_S), Linux)
 endif
 
 FLAGS = $(shell root-config --cflags)
-FLAGS += -Iinclude
+FLAGS += -Iinclude -g
 
 LIBS = $(shell root-config --libs)
 LIBS += -lm -lzmq

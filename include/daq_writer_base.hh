@@ -30,7 +30,7 @@ class DaqWriterBase {
     virtual void StartWriter() = 0;
     virtual void StopWriter() = 0;
 
-    virtual void PullData(vector<event_data> data_buffer) = 0;
+    virtual void PullData(const vector<event_data> &data_buffer) = 0;
 
   protected:
 

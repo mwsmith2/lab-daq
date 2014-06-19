@@ -19,7 +19,7 @@ namespace daq {
 
 // A class that interfaces with the an EventBuilder and writes a root file.
 
-class DaqWriterRoot : DaqWriterBase {
+class DaqWriterRoot : public DaqWriterBase {
 
   public:
 
@@ -31,7 +31,7 @@ class DaqWriterRoot : DaqWriterBase {
     void StartWriter();
     void StopWriter();
 
-    void PullData(vector<event_data> data_buffer);
+    void PullData(const vector<event_data> &data_buffer);
 
   private:
 

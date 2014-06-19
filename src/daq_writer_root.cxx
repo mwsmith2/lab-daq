@@ -33,9 +33,9 @@ void DaqWriterRoot::StartWriter()
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
     static int count = 0;
-
     root_data_.fake.resize(count + 1);
 
+    br_name = string(v.first);
     sprintf(br_vars, "timestamp[%i]/l:trace[%i][%i]/s", 
       SIS_3350_CH, SIS_3350_CH, SIS_3350_LN);
 
@@ -52,12 +52,11 @@ void DaqWriterRoot::StopWriter()
   delete pf_;
 }
 
-void DaqWriterRoot::PullData(vector<event_data> data_buffer)
+void DaqWriterRoot::PullData(const vector<event_data> &data_buffer)
 {
   for (auto it = data_buffer.begin(); it != data_buffer.end(); ++it) {
 
     memcpy(&root_data_, &(*it), sizeof(*it));
-
     pt_->Fill();
 
   }
