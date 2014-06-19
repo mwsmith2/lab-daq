@@ -22,7 +22,6 @@ using std::vector;
 #include "daq_structs.hh"
 #include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
-#include "event_builder.hh"
 
 namespace daq {
 
@@ -30,8 +29,8 @@ typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> wor
 
 struct event_data {
   vector<sis_3350> fake;
-  vector<sis_3350> sis_f;
-  vector<sis_3302> sis_s;
+  vector<sis_3350> sis_fast;
+  vector<sis_3302> sis_slow;
 };
 
 // This class pulls data form all the workers.

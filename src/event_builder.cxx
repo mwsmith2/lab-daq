@@ -60,7 +60,7 @@ void EventBuilder::GetEventData(event_data& bundle)
     } else if ((*it).which() == 1) {
 
       auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
-      bundle.sis_s.push_back(ptr->PopEvent());
+      bundle.sis_slow.push_back(ptr->PopEvent());
 
     }
   }
