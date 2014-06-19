@@ -47,7 +47,7 @@ void DaqWorkerFake::GenerateEvent()
 
         for (int j = 0; j < len_tr_; ++j){
 
-          event_data_.trace[i][j] = sin(j * 0.1);
+          event_data_.trace[i][j] = 1000 + 100 * sin(j * 0.01);
 
         }
       }
@@ -57,13 +57,10 @@ void DaqWorkerFake::GenerateEvent()
   } 
 }
 
-void DaqWorkerFake::GetEvent(event_struct bundle)
+void DaqWorkerFake::GetEvent(event_struct &bundle)
 {
   // Copy the data.
-  for (int i = 0; i < num_ch_; ++i){
-    bundle.timestamp[i] = event_data_.timestamp[i];
-    memcpy(bundle.trace[i], event_data_.trace[i], len_tr_);
-  }
+  bundle = event_data_;
 
   has_fake_event_ = false;
 }
@@ -86,21 +83,19 @@ void DaqWorkerFake::WorkLoop()
 
         cout << name_ << " pushed an event into the queue." << endl;
 
-      } else {
-
-        usleep(100);
-
       }
 
       std::this_thread::yield();
 
+      usleep(100);
     }
   }
 }
 
 event_struct DaqWorkerFake::PopEvent()
 {
-  event_struct data(data_queue_.front());
+  // Copy the data.
+  event_struct data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.

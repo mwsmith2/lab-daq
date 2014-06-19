@@ -77,8 +77,8 @@ void EventBuilder::BuilderLoop()
         pull_data_que_.push(bundle);
         queue_mutex_.unlock();
 
-        std::cout << "Data queue is now size: ";
-        std::cout << pull_data_que_.size() << std::endl;
+        cout << "Data queue is now size: ";
+        cout << pull_data_que_.size() << endl;
 
         if (pull_data_que_.size() > max_queue_length_) {
           push_new_data_ = true;
@@ -101,13 +101,14 @@ void EventBuilder::PushDataLoop()
 
       if (push_new_data_) {
 
-        std::cout << "Pushing data." << std::endl;
+        cout << "Pushing data." << endl;
 
         push_data_vec_.resize(0);
 
         for (int i = 0; i < max_queue_length_; ++i) {
 
-          std::cout << "Size of pull queue is: " << pull_data_que_.size() << std::endl;
+          cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
+
           queue_mutex_.lock();
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
@@ -121,7 +122,7 @@ void EventBuilder::PushDataLoop()
 
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
-          (*it)->PullData(push_data_vec_);
+          (*it)->PushData(push_data_vec_);
 
         }
       }

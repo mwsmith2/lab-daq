@@ -12,6 +12,8 @@
 #include <queue>
 using std::string;
 using std::vector;
+using std::cout;
+using std::endl;
 
 //--- other includes --------------------------------------------------------//
 #include <boost/variant.hpp>

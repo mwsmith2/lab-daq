@@ -41,7 +41,7 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     std::thread event_thread_;
 
     bool EventAvailable() { return has_fake_event_; };
-    void GetEvent(event_struct);
+    void GetEvent(event_struct &bundle);
 
 
     // The function generates fake data.

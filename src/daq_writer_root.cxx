@@ -52,11 +52,12 @@ void DaqWriterRoot::StopWriter()
   delete pf_;
 }
 
-void DaqWriterRoot::PullData(const vector<event_data> &data_buffer)
+void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
 {
   for (auto it = data_buffer.begin(); it != data_buffer.end(); ++it) {
 
-    memcpy(&root_data_, &(*it), sizeof(*it));
+    root_data_ = *it;
+
     pt_->Fill();
 
   }

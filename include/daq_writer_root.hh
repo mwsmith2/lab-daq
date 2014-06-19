@@ -2,6 +2,9 @@
 #define SLAC_DAQ_INCLUDE_DAQ_WRITER_ROOT_HH_
 
 //--- std includes ----------------------------------------------------------//
+#include <iostream>
+using std::cout;
+using std::endl;
 
 //--- other includes --------------------------------------------------------//
 #include <boost/foreach.hpp>
@@ -31,7 +34,7 @@ class DaqWriterRoot : public DaqWriterBase {
     void StartWriter();
     void StopWriter();
 
-    void PullData(const vector<event_data> &data_buffer);
+    void PushData(const vector<event_data> &data_buffer);
 
   private:
 
