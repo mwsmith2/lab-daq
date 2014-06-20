@@ -28,10 +28,10 @@ LIBS += -lm -lzmq
 all:
 
 %: modules/%.cxx $(OBJECTS)
-	$(CXX) $(FLAGS) $(OBJECTS) $(LIBS) $< -o $@
+	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(LIBS)
 
 build/%.o: src/%.cxx
-	$(CXX) -c $(FLAGS) $< -o $@ 
+	$(CXX) -c $< -o $@ $(FLAGS)
 
 clean:
 	rm -f $(TARGETS) $(OBJECTS)
