@@ -21,7 +21,7 @@ ifeq ($(UNAME_S), Linux)
 endif
 
 FLAGS = $(shell root-config --cflags)
-FLAGS += -Iinclude -g
+FLAGS += -Iinclude
 
 LIBS = $(shell root-config --libs)
 LIBS += -lm -lzmq

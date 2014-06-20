@@ -52,9 +52,15 @@ void DaqWorkerFake::GenerateEvent()
         }
       }
 
-      has_fake_event_ = true;    
+      has_fake_event_ = true;
+  
+      std::this_thread::yield();
     }
-  } 
+
+    std::this_thread::yield();
+
+    usleep(100);
+  }
 }
 
 void DaqWorkerFake::GetEvent(event_struct &bundle)
@@ -89,6 +95,10 @@ void DaqWorkerFake::WorkLoop()
 
       usleep(100);
     }
+
+    std::this_thread::yield();
+
+    usleep(100);
   }
 }
 

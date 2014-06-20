@@ -87,9 +87,13 @@ void EventBuilder::BuilderLoop()
       } 
 
       std::this_thread::yield();
-      usleep(100);
 
+      usleep(100);
     }
+
+    std::this_thread::yield();
+
+    usleep(100);
   }
 }
 
@@ -128,9 +132,13 @@ void EventBuilder::PushDataLoop()
       }
 
       std::this_thread::yield();
-      usleep(100);
 
+      usleep(100);
     }
+
+    std::this_thread::yield();
+
+    usleep(100);
   }
 }
 

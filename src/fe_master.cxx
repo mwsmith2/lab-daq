@@ -50,8 +50,8 @@ namespace {
 
 // Function declarations
 int LoadConfig();
-int StartWorkers();
-int StopWorkers();
+int StartRun();
+int StopRun();
 
 // The main loop
 int main(int argc, char *argv[])
@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
 
       if (msg_string == string("START") && !is_running) {
 
-        StartWorkers();
+        StartRun();
 
       } else if (msg_string == string("STOP") && is_running) {
 
-        StopWorkers();
+        StopRun();
 
       }
     }
@@ -93,7 +93,6 @@ int LoadConfig(){
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
 
-
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
     string name(v.first);
@@ -110,7 +109,7 @@ int LoadConfig(){
 }
 
 // Flush the buffers and start data taking.
-int StartWorkers(){
+int StartRun(){
   cout << "Starting run." << endl;
   is_running = true;
 
@@ -140,7 +139,7 @@ int StartWorkers(){
 }
 
 // Write the data file and reset workers.
-int StopWorkers(){
+int StopRun(){
   cout << "Stopping run." << endl;
   is_running = false;
 

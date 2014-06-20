@@ -43,7 +43,6 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     bool EventAvailable() { return has_fake_event_; };
     void GetEvent(event_struct &bundle);
 
-
     // The function generates fake data.
     void GenerateEvent();
 };
