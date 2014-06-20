@@ -1,7 +1,6 @@
 # Grab the targets and sources as two batches
-SOURCES = $(wildcard src*.cxx)
-#OBJECTS = $(patsubst src%.cxx,build%.o,$(SOURCES))
-OBJECTS = build/daq_worker_fake.o build/event_builder.o build/daq_writer_root.o
+OBJECTS = $(patsubst src%.cxx,build%.o,$(wildcard src/*.cxx))
+TARGETS = $(patsubst modules%.cxx,%,$(wildcard modules/*.cxx))
 
 # Figure out the architecture
 UNAME_S = $(shell uname -s)
@@ -20,7 +19,7 @@ ifeq ($(UNAME_S), Linux)
 	FLAGS = -std=c++0x
 endif
 
-FLAGS = $(shell root-config --cflags)
+FLAGS += $(shell root-config --cflags)
 FLAGS += -Iinclude
 
 LIBS = $(shell root-config --libs)
@@ -28,14 +27,11 @@ LIBS += -lm -lzmq
 
 all:
 
-%: src/%.cxx $(OBJECTS)
-	$(CXX) $(FLAGS) $(OBJECTS) $(LIBS) $< -o $@
-
-fe_master: src/fe_master.cxx $(OBJECTS)
+%: modules/%.cxx $(OBJECTS)
 	$(CXX) $(FLAGS) $(OBJECTS) $(LIBS) $< -o $@
 
 build/%.o: src/%.cxx
 	$(CXX) -c $(FLAGS) $< -o $@ 
 
 clean:
-	rm -f $(TARGETS) build/* 
+	rm -f $(TARGETS) $(OBJECTS)
