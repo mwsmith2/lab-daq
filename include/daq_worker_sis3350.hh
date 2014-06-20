@@ -5,7 +5,7 @@
 #include <ctime>
 
 //--- other includes --------------------------------------------------------//
-#include "vme/sis3100_vme_calls.h"
+//#include "vme/sis3100_vme_calls.h"
 
 //--- project includes ------------------------------------------------------//
 #include "daq_worker_base.hh"

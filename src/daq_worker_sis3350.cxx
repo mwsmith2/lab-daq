@@ -22,4 +22,10 @@ void DaqWorkerSis3350::WorkLoop()
   //stub
 }
 
+event_struct DaqWorkerSis3350::PopEvent()
+{
+  event_struct sis;
+  return sis;
+}
+
 } // ::daq

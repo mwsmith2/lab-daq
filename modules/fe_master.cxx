@@ -1,4 +1,4 @@
-// Master frontend
+// Master Frontend
 
 
 //--- std includes ----------------------------------------------------------//
@@ -16,8 +16,9 @@ using std::string;
 #include <boost/variant.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <zmq.hpp>
 using namespace boost::property_tree;
+
+#include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
 #include "daq_worker_base.hh"
