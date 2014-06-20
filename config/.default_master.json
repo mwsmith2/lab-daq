@@ -11,6 +11,10 @@
 			"fake_3":"config/fake_conf.json",
 			"fake_4":"config/fake_conf.json",
 			"fake_5":"config/fake_conf.json"
+		},
+
+		"sis_3350":{
+			"sis_fast_0":"config/sis_3350_0.json",
 		}
 
 	},

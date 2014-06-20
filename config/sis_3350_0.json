@@ -1,8 +1,8 @@
 {
 	"device":"/dev/sis1100_00remote",
-	"base_address":0x30000000,
+	"base_address":"0x30000000",
+	"pretrigger_samples":"0x100",
 	"invert_ext_lemo":false,
 	"user_led_on":false,
-	"enable_ext_lemo":true,
-	"pretrigger_samples":0x100
+	"enable_ext_lemo":true
 }

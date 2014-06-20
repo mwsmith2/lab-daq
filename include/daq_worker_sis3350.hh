@@ -42,8 +42,9 @@ private:
   bool EventAvailable();
   void GetEvent(event_struct &bundle);
   
-  int Write(int addr, unsigned int &msg);
-  int Read(int addr, unsigned int &msg);
+  int Read(int addr, uint &msg);
+  int Write(int addr, uint msg);
+  int ReadTrace(int addr, uint *trace);
 };
 
 } // ::daq

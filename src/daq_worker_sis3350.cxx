@@ -12,233 +12,194 @@ DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<eve
   work_thread_ = std::thread(&DaqWorkerSis3350::WorkLoop, this);
 }
 
-int DaqWorkerSis3350::Read(int addr, int &msg)
-{
-  int ret;
-  int stat;
-
-  stat = (ret = vme_A32D32_read(device_, base_address_ + addr, &msg));
-  if (stat != 0) {
-    cerr << "Address not found." << endl;
-  }
-
-  return ret;
-}
-
-int DaqWorkerSis3350::Write(int addr, int &msg)
-{
-  
-}
-
 void DaqWorkerSis3350::LoadConfig()
 { 
-  boost::property_tree:ptree conf;
+  boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  if ((device_ = open(conf.get<string>("device"), O_RDWR, 0) < 0) {
+  if ((device_ = open(conf.get<string>("device").c_str(), O_RDWR, 0) < 0)) {
       cerr << "Open vme device." << endl;
-      return -1;
   }
-  
-  base_address_ = conf.get<int>("base_address");
+
+  // Get the base address.  Needs to be converted from hex.
+  string addr = conf.get<string>("base_address");
+  std::stringstream ss;
+  ss << addr;
+  ss >> std::hex >> base_address_;
 
   int ret;
-  unsigned int msg = 0;
+  uint msg = 0;
 
-  ret = Read(0x0, msg);
+  // Check for device.
+  Read(0x0, msg);
   cout << "sis3350 found at 0x%08x\n" << base_address_ << endl;
 
-  //reset
-  status = 1;
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x400, status)) != 0) {
-    printf("error writing sis3350 reset register\n");
-  }
+  // Reset device.
+  msg = 1;
+  Write(0x400, msg);
 
-  //get ID
-  status = 0;
-  if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + 0x4, &status)) != 0) {
-    printf("error reading sis3350 ID\n");
-  }
+  // Get and print device ID.
+  msg = 0;
+  Read(0x4, msg);
+  
   printf("sis3350 ID: %04x, maj rev: %02x, min rev: %02x\n",
-	 status >> 16, (status >> 8) & 0xff, status & 0xff);
+	       msg >> 16, (msg >> 8) & 0xff, msg & 0xff);
 
-  //control/status register
-  status = 0;
-  //status |= 0x10; // invert EXT TRIG
-  status |= 0x1; // LED on
-  status = ((~status & 0xffff) << 16) | status; // j/k
-  status &= 0x00110011; // zero reserved bits
+  // Set and check the control/status register.
+  msg = 0;
 
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address, status)) != 0) {
-    printf("error writing sis3350 status register\n");
+  if (conf.get<bool>("invert_ext_lemo")) {
+    msg |= 0x10; // invert EXT TRIG
   }
 
-  status = 0;
-  if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address, &status)) != 0) {
-    printf("error reading sis3350 status register\n");
+  if (conf.get<bool>("user_led_on")) {
+    msg |= 0x1; // LED on
   }
 
-  printf("EXT LEMO set to %s\n", ((status & 0x10) == 0x10)?"NIM":"TTL");
-  printf("user LED turned %s\n", (status & 0x1)?"ON":"OFF");
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= 0x00110011; // zero reserved bits
+  Write(0x0, msg);
 
-  //acquisition register
-  status = 0;
-  status |= 0x1; //sync ring buffer mode
-  //status |= 0x1 << 5; //enable multi mode
-  //status |= 0x1 << 6; //enable internal (channel) triggers
-  status |= 0x1 << 8; //enable EXT LEMO
-  //status |= 0x1 << 9; //enable EXT LVDS
-  //status |= 0x0 << 12; // clock source: synthesizer
+  msg = 0;
+  Read(0x0, msg);
 
-  status = ((~status & 0xffff) << 16) | status; // j/k
-  status &= ~0xcc98cc98; //reserved bits
+  printf("EXT LEMO set to %s\n", ((msg & 0x10) == 0x10) ? "NIM" : "TTL");
+  printf("user LED turned %s\n", (msg & 0x1) ? "ON" : "OFF");
 
-  printf("sis 3350 setting acq reg to 0x%08x\n", status);
+  // Set to the acquisition register.
+  msg = 0;
+  msg |= 0x1; //sync ring buffer mode
+  //msg |= 0x1 << 5; //enable multi mode
+  //msg |= 0x1 << 6; //enable internal (channel) triggers
 
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x10, status)) != 0) {
-    printf("error writing sis3350 acq register\n");
+  if (conf.get<bool>("enable_ext_lemo")) {
+    msg |= 0x1 << 8; //enable EXT LEMO
   }
 
-  status = 0;
-  if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + 0x10, &status)) != 0) {
-    printf("error reading sis3350 acq register\n");
-  }
-  printf("sis 3350 acq reg reads 0x%08x\n", status);
+  //msg |= 0x1 << 9; //enable EXT LVDS
+  //msg |= 0x0 << 12; // clock source: synthesizer
 
-  //synthesizer reg
-  status = 0x14; //500 MHz
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x1c, status)) != 0) {
-    printf("error writing sis3350 freq synthesizer register\n");
-  }
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= ~0xcc98cc98; //reserved bits
 
-  //memory page
-  status = 0; //first 8MB chunk
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x34, status)) != 0) {
-    printf("error writing sis3350 freq synthesizer register\n");
-  }
+  printf("sis 3350 setting acq reg to 0x%08x\n", msg);
+  Write(0x10, msg);
 
-  //trigger output
-  status = 0;
-  status |= 0x1; //LEMO IN -> LEMO OUT
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x38, status)) != 0) {
-    printf("error writing sis3350 freq synthesizer register\n");
-  }
+  msg = 0;
+  Read(0x10, msg);
+  printf("sis 3350 acq reg reads 0x%08x\n", msg);
 
-  //ext trigger threshold
+  // Set the synthesizer register.
+  msg = 0x14; //500 MHz
+  Write(0x1c, msg);
+
+  // Set the memory page.
+  msg = 0; //first 8MB chunk
+  Write(0x34, msg);
+
+  // Set the trigger output.
+  msg = 0;
+  msg |= 0x1; // LEMO IN -> LEMO OUT
+  Write(0x38, msg);
+
+  // Set ext trigger threshold.
   //first load data, then clock in, then ramp
-  status = 37500; // +1.45V TTL
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x54, status)) != 0) {
-    printf("error writing sis3350 ext trg data register\n");
-  }
+  msg = 37500; // +1.45V TTL
+  Write(0x54, msg);
 
-  status = 0;
-  status |= 0x1 << 4; //TRG threshold
-  status |= 0x1; //load shift register DAC
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x50, status)) != 0) {
-    printf("error writing sis3350 ext trg ctrl register\n");
-  }
+  msg = 0;
+  msg |= 0x1 << 4; //TRG threshold
+  msg |= 0x1; //load shift register DAC
+  Write(0x50, msg);
 
-  unsigned int timeout_max = 1000;
-  unsigned int timeout_cnt = 0;
+  uint timeout_max = 1000;
+  uint timeout_cnt = 0;
   do {
-    status = 0;
-    if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + 0x50, &status)) != 0) {
-      printf("error reading sis3350 ext trg ctrl register\n");
-    }
+
+    msg = 0;
+    Read(0x50, msg);
     timeout_cnt++;
-  } while (((status & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
+
+  } while (((msg & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
 
   if (timeout_cnt == timeout_max) {
     printf("error loading ext trg shift reg\n");
   }
 
-  status = 0;
-  status |= 0x1 << 4; //TRG threshold
-  status |= 0x2; //load DAC
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x50, status)) != 0) {
-    printf("error writing sis3350 ext trg ctrl register\n");
-  }
+  msg = 0;
+  msg |= 0x1 << 4; //TRG threshold
+  msg |= 0x2; //load DAC
+  Write(0x50, msg);
 
   timeout_cnt = 0;
   do {
-    status = 0;
-    if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + 0x50, &status)) != 0) {
-      printf("error reading sis3350 ext trg ctrl register\n");
-    }
+
+    msg = 0;
+    Read(0x50, msg);
     timeout_cnt++;
-  } while (((status & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
+
+  } while (((msg & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
 
   if (timeout_cnt == timeout_max) {
     printf("error loading ext trg dac\n");
   }
 
   //board temperature
-  status = 0;
-  if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + 0x70, &status)) != 0) {
-    printf("error reading sis3350 temperature register\n");
-  }
-  printf("sis3350 board temperature: %.2f degC\n", (float)status / 4.0);
+  msg = 0;
+
+  Read(0x70, msg);
+  printf("sis3350 board temperature: %.2f degC\n", (float)msg / 4.0);
 
   //ring buffer sample length
-  status = sis3350_trace_length;
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x01000020, status)) != 0) {
-    printf("error writing sis3350 ringbuffer sample length register\n");
-  }
+  msg = SIS_3350_LN;
+  Write(0x01000020, msg);
 
   //ring buffer pre-trigger sample length
-  status = 0x100;
-  if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x01000024, status)) != 0) {
-    printf("error writing sis3350 ringbuffer sample length register\n");
-  }
+  string pretrigger = conf.get<string>("pretrigger_samples");
+  ss << pretrigger;
+  ss >> pretrigger >> msg;
+  Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V
-  unsigned int ch;
+  uint ch;
   //DAC offsets
-  for (ch = 0; ch < 4; ch++) {
+  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
-    status = 39000; // ??? V
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + offset | 0x4, status)) != 0) {
-      printf("error writing sis3350 ADC DAC data register\n");
-    }
+    msg = 39000; // ??? V
+    Write(offset, msg);
 
-    status = 0;
-    status |= (ch % 2) << 4;
-    status |= 0x1; //load shift register DAC
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + offset, status)) != 0) {
-      printf("error writing sis3350 adc dac ctrl register\n");
-    }
+    msg = 0;
+    msg |= (ch % 2) << 4;
+    msg |= 0x1; //load shift register DAC
+    Write(offset, msg);
 
     timeout_max = 1000;
     timeout_cnt = 0;
+
     do {
-      status = 0;
-      if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + offset, &status)) != 0) {
-	printf("error reading sis3350 adc dac ctrl register\n");
-      }
+      msg = 0;
+      Read(offset, msg);
       timeout_cnt++;
-    } while (((status & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
+    } while (((msg & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
 
     if (timeout_cnt == timeout_max) {
       printf("error loading ext trg shift reg\n");
     }
 
-    status = 0;
-    status |= (ch % 2) << 4;
-    status |= 0x2; //load DAC
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + offset, status)) != 0) {
-      printf("error writing sis3350 ext trg ctrl register\n");
-    }
+    msg = 0;
+    msg |= (ch % 2) << 4;
+    msg |= 0x2; //load DAC
+    Write(offset, msg);
 
     timeout_cnt = 0;
     do {
-      status = 0;
-      if ((ret = vme_A32D32_read(vme_dev, sis3350_base_address + offset, &status)) != 0) {
-	printf("error reading sis3350 ext trg ctrl register\n");
-      }
+      msg = 0;
+      Read(offset, msg);
       timeout_cnt++;
-    } while (((status & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
+    } while (((msg & 0x8000) == 0x8000) && (timeout_cnt < timeout_max));
 
     if (timeout_cnt == timeout_max) {
       printf("error loading adc dac\n");
@@ -247,139 +208,167 @@ void DaqWorkerSis3350::LoadConfig()
 
   //gain
   //factory default 18 -> 5V
-  for (ch = 0; ch < 4; ch++) {
-    status = 45;
+  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    msg = 45;
     int offset = 0x02000048;
     offset |= (ch >> 1) << 24;
     offset |= (ch % 2) << 2;
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + offset, status)) != 0) {
-      printf("error reading sis3350 adc gain register\n");
-    }
-    printf("adc %d gain %d\n", ch, status);
+    Write(offset, msg);
+    printf("adc %d gain %d\n", ch, msg);
   }
-
-  return SUCCESS;
-}
-
-  /*-- Frontend Exit -------------------------------------------------*/
-  INT frontend_exit()
-  {
-    //disarm sampling logic
-    unsigned int armit = 0;
-    int ret = 0;
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x414, armit)) != 0) {
-      printf("error sis3350 disarming sampling logic\n");
-    }
-
-    return SUCCESS;
-  }
-
-  /*-- Begin of Run --------------------------------------------------*/
-  INT begin_of_run(INT run_number, char *error)
-  {
-    //HW part
-
-    unsigned int armit = 1;
-    int ret = 0;
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x410, armit)) != 0) {
-      printf("error sis3350 arming sampling logic\n");
-    }
-
-    sis_que.clear();
-    time_to_finish = false;
-    has_event = false;
-    sis_thread = std::thread(sis_worker);
-
-    //DATA part
-
-    HNDLE hDB, hkey;
-    INT status;
-    char str[256], filename[256];
-    int size;
-
-    cm_get_experiment_database(&hDB, NULL);
-    db_find_key(hDB, 0, "/Logger/Data dir", &hkey);
-
-    if (hkey) {
-      size = sizeof(str);
-      db_get_data(hDB, hkey, str, &size, TID_STRING);
-      if (str[strlen(str) - 1] != DIR_SEPARATOR) {
-	strcat(str, DIR_SEPARATOR_STR);
-      }
-    }
-
-    db_find_key(hDB, 0, "/Runinfo", &hkey);
-    if (db_open_record(hDB, hkey, &runinfo, sizeof(runinfo), MODE_READ,
-		       NULL, NULL) != DB_SUCCESS) {
-      cm_msg(MERROR, "analyzer_init", "Cannot open \"/Runinfo\" tree in ODB");
-      return 0;
-    }
-
-    strcpy(filename, str);
-    sprintf(str, "run_%05d.root", runinfo.run_number);
-    strcat(filename, str);
-
-    root_file = new TFile(filename, "recreate");
-    t = new TTree("t", "t");
-    char br_str[32];
-    sprintf(br_str, "timestamp[4]/l:trace[4][%d]/s", sis3350_trace_length);
-    t->Branch("sis", &br_sis, br_str);
-
-    t->SetAutoSave(0);
-    t->SetAutoFlush(0);
-    //t->Print();
-
-    run_in_progress = true;
-
-    return SUCCESS;
-  }
-
-  /*-- End of Run ----------------------------------------------------*/
-  INT end_of_run(INT run_number, char *error)
-  {
-    time_to_finish = true;
-    sis_thread.join();
-
-    //disarm sampling logic
-    unsigned int armit = 0;
-    int ret = 0;
-    if ((ret = vme_A32D32_write(vme_dev, sis3350_base_address + 0x414, armit)) != 0) {
-      printf("error sis3350 disarming sampling logic\n");
-    }
-
-    if (run_in_progress) {
-      t->Write();
-      root_file->Close();
-
-      delete root_file;
-      run_in_progress = false;
-    }
-
-    return SUCCESS;
-  }
-
-  /*-- Pause Run -----------------------------------------------------*/
-  INT pause_run(INT run_number, char *error)
-  {
-    return SUCCESS;
-  }
-
-  /*-- Resuem Run ----------------------------------------------------*/
-  INT resume_run(INT run_number, char *error)
-  {
-    return SUCCESS;
-  //stub
-}
+} // LoadConfig
 
 void DaqWorkerSis3350::WorkLoop()
 {
-  //stub
+  while (true) {
+
+    while (go_time_) {
+
+      if (EventAvailable()) {
+
+        static event_struct bundle;
+        GetEvent(bundle);
+
+        queue_mutex_.lock();
+        data_queue_.push(bundle);
+        has_event_ = true;
+        queue_mutex_.unlock();
+      }
+
+      std::this_thread::yield();
+
+      usleep(100);
+    }
+
+    std::this_thread::yield();
+
+    usleep(100);
+  }
 }
 
 event_struct DaqWorkerSis3350::PopEvent()
 {
-  event_struct sis;
-  return sis;
+  // Copy the data.
+  event_struct data = data_queue_.front();
+  data_queue_.pop();
+
+  // Check if this is that last event.
+  if (data_queue_.size() == 0) has_event_ = false;
+
+  return data;
+}
+
+bool DaqWorkerSis3350::EventAvailable()
+{
+  // Check acq reg.
+  static uint msg = 0;
+  static bool is_event;
+
+  Read(0x10, msg);
+  is_event = !(msg & 0x10000);
+
+  return is_event;
+}
+
+// Pull the event.
+void DaqWorkerSis3350::GetEvent(event_struct &bundle)
+{
+  int ch, offset, ret = 0;
+
+  // Check how long the event is.
+  //expected SIS_3350_LN + 8
+  
+  uint next_sample_address[4] = {0, 0, 0, 0};
+
+  for (ch = 0; ch < SIS_3350_CH; ch++) {
+
+    offset = 0x02000010;
+    offset |= (ch >> 1) << 24;
+    offset |= (ch & 0x1) << 2;
+
+    Read(offset, next_sample_address[ch]);
+  }
+
+  //todo: check it has the expected length
+  uint trace[4][SIS_3350_LN / 2 + 4];
+
+  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    offset = (0x4 + ch) << 24;
+    ReadTrace(offset, trace[ch]);
+  }
+
+  //arm the logic
+  uint armit = 1;
+  Write(0x410, armit);
+
+  //decode the event (little endian arch)
+  for (ch = 0; ch < SIS_3350_CH; ch++) {
+
+    bundle.timestamp[ch] = 0;
+    bundle.timestamp[ch] = trace[ch][1] & 0xfff;
+    bundle.timestamp[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
+    bundle.timestamp[ch] |= (trace[ch][0] & 0xfffULL) << 24;
+    bundle.timestamp[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
+
+    uint idx;
+    for (idx = 0; idx < SIS_3350_LN / 2; idx++) {
+      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xfff;
+      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xfff;
+    }
+  }
+}
+
+int DaqWorkerSis3350::Read(int addr, uint &msg)
+{
+  static int retval;
+  static int status;
+
+  status = (retval = vme_A32D32_read(device_, base_address_ + addr, &msg));
+
+  if (status != 0) {
+    char str[100];
+    sprintf(str, "Address 0x%08x not readable.\n", base_address_ + addr);
+    perror(str);
+  }
+
+  return retval;
+}
+
+int DaqWorkerSis3350::Write(int addr, uint msg)
+{
+  static int retval;
+  static int status;
+
+  status = (retval = vme_A32D32_write(device_, base_address_ + addr, msg));
+
+  if (status != 0) {
+    char str[100];
+    sprintf(str, "Address 0x%08x not writeable.\n", base_address_ + addr);
+    perror(str);
+  }
+
+  return retval;
+}
+
+int DaqWorkerSis3350::ReadTrace(int addr, uint *trace)
+{
+  static int retval;
+  static int status;
+  static uint num_got;
+
+  status = (retval = vme_A32_2EVME_read(device_,
+                                        base_address_ + addr,
+                                        trace,
+                                        SIS_3350_LN / 2 + 4,
+                                        &num_got));
+
+  if (status != 0) {
+    char str[100];
+    sprintf(str, "Error rading trace at 0x%08x.\n", base_address_ + addr);
+    perror(str);
+  }
+
+  return retval;
 }
 
 } // ::daq
