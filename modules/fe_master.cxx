@@ -20,8 +20,8 @@ using namespace boost::property_tree;
 #include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
-#include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
+#include "daq_worker_sis3350.hh"
 #include "event_builder.hh"
 using namespace daq;
 
@@ -100,6 +100,15 @@ int LoadConfig(){
 
     daq_workers.push_back(new DaqWorkerFake(name, conf_file));
   } 
+
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3350")) {
+
+    string name(v.first);
+    string conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerSis3350(name, conf_file));
+  }  
 
   daq_writers.push_back(new DaqWriterRoot(conf_file));
 

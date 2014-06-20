@@ -29,7 +29,7 @@ LIBS += -lm -lzmq
 all:
 
 %: modules/%.cxx $(OBJECTS) $(OBJ_VME)
-	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(LIBS)
+	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
 
 build/%.o: src/%.cxx
 	$(CXX) -c $< -o $@ $(FLAGS)

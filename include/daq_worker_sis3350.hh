@@ -1,5 +1,5 @@
-#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_FAKE_HH_
-#define SLAC_DAQ_INCLUDE_DAQ_WORKER_FAKE_HH_
+#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
+#define SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
 
 //--- std includes ----------------------------------------------------------//
 #include <ctime>
