@@ -1,6 +1,5 @@
 // Master Frontend
 
-
 //--- std includes ----------------------------------------------------------//
 #include <cassert>
 #include <ctime>

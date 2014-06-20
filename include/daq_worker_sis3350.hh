@@ -3,9 +3,13 @@
 
 //--- std includes ----------------------------------------------------------//
 #include <ctime>
+#include <iostream>
+using std::cout;
+using std::cerr;
+using std::endl;
 
 //--- other includes --------------------------------------------------------//
-//#include "vme/sis3100_vme_calls.h"
+#include "vme/sis3100_vme_calls.h"
 
 //--- project includes ------------------------------------------------------//
 #include "daq_worker_base.hh"
@@ -17,24 +21,29 @@ namespace daq {
 typedef sis_3350 event_struct;
 
 class DaqWorkerSis3350 : public DaqWorkerBase<event_struct> {
+    
+public:
+  
+  // ctor
+  DaqWorkerSis3350(string name, string conf);
+  
+  void LoadConfig();
+  void WorkLoop();
+  event_struct PopEvent();
+  
+private:
+  
+  int num_ch_;
+  int len_tr_;
 
-  public:
-
-    // ctor
-    DaqWorkerSis3350(string name, string conf);
-
-    void LoadConfig();
-    void WorkLoop();
-    event_struct PopEvent();
-
-  private:
-
-    int num_ch_;
-    int len_tr_;
-
-    bool EventAvailable();
-    void GetEvent(event_struct &bundle);
-
+  int device_;
+  int base_address_;
+  
+  bool EventAvailable();
+  void GetEvent(event_struct &bundle);
+  
+  int Write(int addr, unsigned int &msg);
+  int Read(int addr, unsigned int &msg);
 };
 
 } // ::daq

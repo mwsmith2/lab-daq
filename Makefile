@@ -1,6 +1,7 @@
 # Grab the targets and sources as two batches
-OBJECTS = $(patsubst src%.cxx,build%.o,$(wildcard src/*.cxx))
-TARGETS = $(patsubst modules%.cxx,%,$(wildcard modules/*.cxx))
+OBJECTS = $(patsubst src%.cxx, build%.o, $(wildcard src/*.cxx))
+OBJ_VME = $(patsubst include/vme%.c, build%.o, $(wildcard include/vme/*.c))
+TARGETS = $(patsubst modules/%.cxx, %, $(wildcard modules/*.cxx))
 
 # Figure out the architecture
 UNAME_S = $(shell uname -s)
@@ -20,18 +21,21 @@ ifeq ($(UNAME_S), Linux)
 endif
 
 FLAGS += $(shell root-config --cflags)
-FLAGS += -Iinclude
+FLAGS += -Iinclude 
 
 LIBS = $(shell root-config --libs)
 LIBS += -lm -lzmq
 
 all:
 
-%: modules/%.cxx $(OBJECTS)
+%: modules/%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(LIBS)
 
 build/%.o: src/%.cxx
 	$(CXX) -c $< -o $@ $(FLAGS)
+
+build/%.o: include/vme/%.c
+	$(CC) -c $< -o $@
 
 clean:
 	rm -f $(TARGETS) $(OBJECTS)
