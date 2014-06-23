@@ -1,0 +1,13 @@
+<!doctype html>
+<title>Online Display</title>
+<link rel=stylesheet type=text/css 
+href="{{ url_for('static', filename='style.css') }}">
+<link rel="shortcut icon" 
+href="{{ url_for('static', filename='favicon.ico') }}">
+<div class=page>
+  <a href="{{ url_for('home') }}"><h1>Online Display</h1></a>
+  {% block body %}{% endblock %}
+  {% block footer %}{% endblock %}
+  {% block online_text %}{% endblock %}
+  {% block online_pics %}{% endblock %}
+</div>
