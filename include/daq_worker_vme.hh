@@ -32,6 +32,7 @@ protected:
   int len_tr_;
 
   int base_address_;
+  std::mutex mutex_;
   
   virtual bool EventAvailable() = 0;
   
@@ -47,7 +48,9 @@ int DaqWorkerVme<T>::Read(int addr, uint &msg)
   static int retval;
   static int status;
 
+  mutex_.lock();
   status = (retval = vme_A32D32_read(vme::device, base_address_ + addr, &msg));
+  mutex_.unlock();
 
   if (status != 0) {
     char str[100];
@@ -64,7 +67,9 @@ int DaqWorkerVme<T>::Write(int addr, uint msg)
   static int retval;
   static int status;
 
+  mutex_.lock();
   status = (retval = vme_A32D32_write(vme::device, base_address_ + addr, msg));
+  mutex_.unlock();
 
   if (status != 0) {
     char str[100];
@@ -82,11 +87,13 @@ int DaqWorkerVme<T>::ReadTrace(int addr, uint *trace)
   static int status;
   static uint num_got;
 
+  mutex_.lock();
   status = (retval = vme_A32_2EVME_read(vme::device,
                                         base_address_ + addr,
                                         trace,
                                         len_tr_ / 2 + 4,
                                         &num_got));
+  mutex_.unlock();
 
   if (status != 0) {
     char str[100];
