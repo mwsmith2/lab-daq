@@ -122,8 +122,6 @@ void EventBuilder::PushDataLoop()
 
         push_new_data_ = false;
 
-        
-
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
           (*it)->PushData(push_data_vec_);

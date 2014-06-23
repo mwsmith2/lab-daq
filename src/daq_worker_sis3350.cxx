@@ -17,9 +17,11 @@ void DaqWorkerSis3350::LoadConfig()
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  if ((device_ = open(conf.get<string>("device").c_str(), O_RDWR, 0) < 0)) {
+  if ((device_ = open(conf.get<string>("device").c_str(), O_RDWR, 0)) < 0) {
       cerr << "Open vme device." << endl;
   }
+
+  cout << "device: " << device_ << endl;
 
   // Get the base address.  Needs to be converted from hex.
   string addr = conf.get<string>("base_address");
@@ -32,7 +34,7 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Check for device.
   Read(0x0, msg);
-  cout << "sis3350 found at 0x%08x\n" << base_address_ << endl;
+  cout << "sis3350 found at 0x" << std::hex << base_address_ << ".\n";
 
   // Reset device.
   msg = 1;

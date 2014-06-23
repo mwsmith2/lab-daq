@@ -9,6 +9,7 @@
 
 //--- std includes ----------------------------------------------------------//
 #include <vector>
+#include <atomic>
 using std::vector;
 
 //--- other includes --------------------------------------------------------//
@@ -33,6 +34,10 @@ struct event_data {
   vector<sis_3350> sis_fast;
   vector<sis_3302> sis_slow;
 };
+
+namespace vme {
+  std::atomic<int> device = -1;
+}
 
 }
 
