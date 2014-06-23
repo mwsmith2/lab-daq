@@ -2,7 +2,7 @@
 
 namespace daq {
 
-DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<sis_3350>(name, conf)
+DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
   LoadConfig();
 
@@ -258,6 +258,7 @@ sis_3350 DaqWorkerSis3350::PopEvent()
   return data;
 }
 
+
 bool DaqWorkerSis3350::EventAvailable()
 {
   // Check acq reg.
@@ -316,59 +317,6 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
       bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xfff;
     }
   }
-}
-
-int DaqWorkerSis3350::Read(int addr, uint &msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_read(device_, base_address_ + addr, &msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not readable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3350::Write(int addr, uint msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_write(device_, base_address_ + addr, msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not writeable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3350::ReadTrace(int addr, uint *trace)
-{
-  static int retval;
-  static int status;
-  static uint num_got;
-
-  status = (retval = vme_A32_2EVME_read(device_,
-                                        base_address_ + addr,
-                                        trace,
-                                        SIS_3350_LN / 2 + 4,
-                                        &num_got));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Error rading trace at 0x%08x.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
 }
 
 } // ::daq

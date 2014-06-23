@@ -12,13 +12,13 @@ using std::endl;
 #include "vme/sis3100_vme_calls.h"
 
 //--- project includes ------------------------------------------------------//
-#include "daq_worker_base.hh"
+#include "daq_worker_vme.hh"
 #include "daq_structs.hh"
 
 // This class pulls data from a sis_3350 device.
 namespace daq {
 
-class DaqWorkerSis3350 : public DaqWorkerBase<sis_3350> {
+class DaqWorkerSis3350 : public DaqWorkerVme<sis_3350> {
 
 public:
   
@@ -31,18 +31,9 @@ public:
   
 private:
   
-  int num_ch_;
-  int len_tr_;
-
-  int device_;
-  int base_address_;
-  
   bool EventAvailable();
   void GetEvent(sis_3350 &bundle);
-  
-  int Read(int addr, uint &msg);
-  int Write(int addr, uint msg);
-  int ReadTrace(int addr, uint *trace);
+
 };
 
 } // ::daq

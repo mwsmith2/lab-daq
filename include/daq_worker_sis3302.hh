@@ -9,16 +9,15 @@ using std::cerr;
 using std::endl;
 
 //--- other includes --------------------------------------------------------//
-#include "vme/sis3100_vme_calls.h"
 
 //--- project includes ------------------------------------------------------//
-#include "daq_worker_base.hh"
+#include "daq_worker_vme.hh"
 #include "daq_structs.hh"
 
 // This class pulls data from a sis_3302 device.
 namespace daq {
 
-class DaqWorkerSis3302 : public DaqWorkerBase<sis_3302> {
+class DaqWorkerSis3302 : public DaqWorkerVme<sis_3302> {
 
 public:
   
@@ -28,21 +27,12 @@ public:
   void LoadConfig();
   void WorkLoop();
   sis_3302 PopEvent();
-  
-private:
-  
-  int num_ch_;
-  int len_tr_;
 
-  int device_;
-  int base_address_;
+private:
   
   bool EventAvailable();
   void GetEvent(sis_3302 &bundle);
-  
-  int Read(int addr, uint &msg);
-  int Write(int addr, uint msg);
-  int ReadTrace(int addr, uint *trace);
+
 };
 
 } // ::daq
