@@ -26,7 +26,7 @@ void DaqWorkerSis3302::LoadConfig()
       cerr << "Open vme device." << endl;
     }
   }
-  cout << "device: " << vme::device;
+  cout << "device: " << vme::device << endl;
 
   // Get the base address for the device.  Convert from hex.
   string addr = conf.get<string>("base_address");
