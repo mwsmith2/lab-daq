@@ -15,7 +15,12 @@
 
 		"sis_3350":{
 			"sis_fast_0":"config/sis_3350_0.json"
+		},
+
+		"sis_3302":{
+			"sis_slow_0":"config/sis_3302_0.json"
 		}
+
 
 	},
 

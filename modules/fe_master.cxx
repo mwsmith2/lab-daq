@@ -22,6 +22,7 @@ using namespace boost::property_tree;
 //--- project includes -----------------------------------------------------//
 #include "daq_worker_fake.hh"
 #include "daq_worker_sis3350.hh"
+#include "daq_worker_sis3302.hh"
 #include "event_builder.hh"
 using namespace daq;
 
@@ -93,6 +94,7 @@ int LoadConfig(){
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
 
+  // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
     string name(v.first);
@@ -101,6 +103,7 @@ int LoadConfig(){
     daq_workers.push_back(new DaqWorkerFake(name, conf_file));
   } 
 
+  // Set up the sis3350 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.sis_3350")) {
 
@@ -110,8 +113,20 @@ int LoadConfig(){
     daq_workers.push_back(new DaqWorkerSis3350(name, conf_file));
   }  
 
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3302")) {
+
+    string name(v.first);
+    string conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerSis3302(name, conf_file));
+  }
+
+  // Set up the data writers.
   daq_writers.push_back(new DaqWriterRoot(conf_file));
 
+  // Set up the event builder.
   event_builder = new EventBuilder(daq_workers, daq_writers);
 
   return 0;

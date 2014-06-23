@@ -2,7 +2,7 @@
 
 namespace daq {
 
-DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<event_struct>(name, conf)
+DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<sis_3350>(name, conf)
 {
   LoadConfig();
 
@@ -226,7 +226,7 @@ void DaqWorkerSis3350::WorkLoop()
 
       if (EventAvailable()) {
 
-        static event_struct bundle;
+        static sis_3350 bundle;
         GetEvent(bundle);
 
         queue_mutex_.lock();
@@ -246,10 +246,10 @@ void DaqWorkerSis3350::WorkLoop()
   }
 }
 
-event_struct DaqWorkerSis3350::PopEvent()
+sis_3350 DaqWorkerSis3350::PopEvent()
 {
   // Copy the data.
-  event_struct data = data_queue_.front();
+  sis_3350 data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.
@@ -271,7 +271,7 @@ bool DaqWorkerSis3350::EventAvailable()
 }
 
 // Pull the event.
-void DaqWorkerSis3350::GetEvent(event_struct &bundle)
+void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
 {
   int ch, offset, ret = 0;
 

@@ -1,5 +1,5 @@
-#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
-#define SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
+#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3302_HH_
+#define SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3302_HH_
 
 //--- std includes ----------------------------------------------------------//
 #include <ctime>
@@ -15,19 +15,19 @@ using std::endl;
 #include "daq_worker_base.hh"
 #include "daq_structs.hh"
 
-// This class pulls data from a sis_3350 device.
+// This class pulls data from a sis_3302 device.
 namespace daq {
 
-class DaqWorkerSis3350 : public DaqWorkerBase<sis_3350> {
+class DaqWorkerSis3302 : public DaqWorkerBase<sis_3302> {
 
 public:
   
   // ctor
-  DaqWorkerSis3350(string name, string conf);
+  DaqWorkerSis3302(string name, string conf);
   
   void LoadConfig();
   void WorkLoop();
-  sis_3350 PopEvent();
+  sis_3302 PopEvent();
   
 private:
   
@@ -38,7 +38,7 @@ private:
   int base_address_;
   
   bool EventAvailable();
-  void GetEvent(sis_3350 &bundle);
+  void GetEvent(sis_3302 &bundle);
   
   int Read(int addr, uint &msg);
   int Write(int addr, uint msg);
