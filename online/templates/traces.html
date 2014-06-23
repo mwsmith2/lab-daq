@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block body %}	 
+  <img src={{url_for('get_upload', filename=path) }} width="80%"></img>	
+  <br></br>
+  <form action = {{url_for('traces')}}>
+    <input type=submit value=Update></form>
+  {% endblock body %}
+	  						  

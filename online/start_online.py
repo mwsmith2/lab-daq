@@ -2,10 +2,12 @@
 #Fienberg@uw.edu
 #online display for SLAC test beam run
 
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, redirect, url_for
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import os, glob
+
+import data_io
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -18,24 +20,56 @@ app.config.update(dict(
 
 @app.route('/')
 def home():
-    filepath = new_hist()
-    return render_template('home.html', path=filepath)
+    return render_template('home.html')
 
-def new_hist():
-    data = np.random.standard_normal(10000)
+@app.route('/hist')
+def running_hist():
+    filepath = update_hist()
+    return render_template('hist.html', path=filepath)
+
+@app.route('/traces')
+def traces():
+    filepath = generate_traces()
+    return render_template('traces.html', path=filepath)
+
+@app.route('/reset')
+def reset():
+    data_io.clear_data()
+    return redirect(url_for('home'))
+
+def update_hist():
+    data_io.update_data()
     plt.clf()
-    plt.hist(data)
+    plt.hist(data_io.data)
    
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_hist*'):
         os.remove(tempFile)
     filename = unique_filename('temp_hist.png')
     filepath = upload_path(filename)
-    plt.savefig('test.png')
     plt.savefig(filepath)
-    print 'fig saved'
     
     return filepath
 
+def generate_traces():
+    trace = data_io.fill_trace()
+    
+    plt.clf()
+    for i in xrange(4):
+        for j in xrange(7):
+            plt.subplot(4, 7, i*7+j+1)
+            plt.axis('off')
+            plt.plot(trace)
+
+   
+    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_traces*'):
+        os.remove(tempFile)
+    filename = unique_filename('temp_traces.png')
+    filepath = upload_path(filename)
+    plt.savefig(filepath)
+    
+    return filepath
+    
+    
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""
      filename = os.path.basename(upload_file).split('.')[0]
