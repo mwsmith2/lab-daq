@@ -28,7 +28,9 @@ using namespace daq;
 
 typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
 
-// Anonymous namespace for "global" paramaters
+int daq::vme::device = -1;
+
+// Anonymous namespace for "global" parameters
 namespace {
   
   // simple declarations

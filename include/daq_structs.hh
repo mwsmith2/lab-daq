@@ -9,7 +9,6 @@
 
 //--- std includes ----------------------------------------------------------//
 #include <vector>
-#include <atomic>
 using std::vector;
 
 //--- other includes --------------------------------------------------------//
@@ -36,9 +35,11 @@ struct event_data {
 };
 
 namespace vme {
-  std::atomic<int> device = -1;
-}
 
-}
+extern int device;
+
+} // ::vme
+
+} // ::daq
 
 #endif

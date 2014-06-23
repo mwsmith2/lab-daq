@@ -28,8 +28,6 @@ public:
 
 protected:
 
-  static int device_;
-  
   int num_ch_;
   int len_tr_;
 
@@ -44,15 +42,12 @@ protected:
 };
 
 template<typename T>
-int DaqWorkerVme<T>::device_ = -1;
-
-template<typename T>
 int DaqWorkerVme<T>::Read(int addr, uint &msg)
 {
   static int retval;
   static int status;
 
-  status = (retval = vme_A32D32_read(device_, base_address_ + addr, &msg));
+  status = (retval = vme_A32D32_read(vme::device, base_address_ + addr, &msg));
 
   if (status != 0) {
     char str[100];
@@ -69,7 +64,7 @@ int DaqWorkerVme<T>::Write(int addr, uint msg)
   static int retval;
   static int status;
 
-  status = (retval = vme_A32D32_write(device_, base_address_ + addr, msg));
+  status = (retval = vme_A32D32_write(vme::device, base_address_ + addr, msg));
 
   if (status != 0) {
     char str[100];
@@ -87,7 +82,7 @@ int DaqWorkerVme<T>::ReadTrace(int addr, uint *trace)
   static int status;
   static uint num_got;
 
-  status = (retval = vme_A32_2EVME_read(device_,
+  status = (retval = vme_A32_2EVME_read(vme::device,
                                         base_address_ + addr,
                                         trace,
                                         len_tr_ / 2 + 4,

@@ -14,14 +14,19 @@ DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_
 
 void DaqWorkerSis3350::LoadConfig()
 { 
+  // Open the configuration file.
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  if ((device_ = open(conf.get<string>("device").c_str(), O_RDWR, 0)) < 0) {
-      cerr << "Open vme device." << endl;
-  }
+  // Get the device filestream
+  if (vme::device == -1) {
 
-  cout << "device: " << device_ << endl;
+    string dev_path = conf.get<string>("device");
+    if ((vme::device = open(dev_path.c_str(), O_RDWR, 0)) < 0) {
+      cerr << "Open vme device." << endl;
+    }
+  }
+  cout << "device: " << vme::device << endl;
 
   // Get the base address.  Needs to be converted from hex.
   string addr = conf.get<string>("base_address");

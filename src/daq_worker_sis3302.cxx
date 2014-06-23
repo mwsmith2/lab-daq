@@ -22,7 +22,7 @@ void DaqWorkerSis3302::LoadConfig()
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
-    if ((vme::device = open(dev_path.c_str();, O_RDWR, 0)) < 0) {
+    if ((vme::device = open(dev_path.c_str(), O_RDWR, 0)) < 0) {
       cerr << "Open vme device." << endl;
     }
   }
