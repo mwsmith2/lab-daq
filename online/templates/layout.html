@@ -11,9 +11,22 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('running_hist') }}">histogram</a>
     <a href="{{ url_for('traces') }}">traces</a>
     </div>
+    {% if session['running'] %}
+      {{ session['events'] }} events recorded
+    {% else %}
+      No run in progress
+    {% endif %}
   </div>
   {% block body %}{% endblock %}
   {% block footer %}{% endblock %}
   {% block online_text %}{% endblock %}
   {% block online_pics %}{% endblock %}
+  <br></br>
+  {% if not session['running'] %}
+    <form action = {{ url_for('start_run') }}>
+      <input type=submit value=Begin Run></input></form>
+    {% else %}
+      <form action = {{ url_for('end_run') }}>
+	<input type=submit value=End Run></input></form>
+      {% endif %}
 </div>
