@@ -26,7 +26,7 @@ FLAGS += -Iinclude
 LIBS = $(shell root-config --libs)
 LIBS += -lm -lzmq
 
-all:
+all: $(OBJECTS) $(OBJ_VME) $(TARGETS)
 
 %: modules/%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
