@@ -19,6 +19,7 @@ void DaqWorkerSis3350::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
+  cout << "vme::device for " << name_ << ": " << vme::device << endl;
   queue_mutex_.lock();
   if (vme::device == -1) {
 
@@ -177,7 +178,7 @@ void DaqWorkerSis3350::LoadConfig()
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
-    msg = conf.get<int>("gain_shift", 39000); //39000; // ??? V
+    msg = 39000; // ??? V
     Write(offset, msg);
 
     msg = 0;

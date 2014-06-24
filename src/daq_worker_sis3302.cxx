@@ -19,6 +19,7 @@ void DaqWorkerSis3302::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
+  cout << "vme::device for " << name_ << ": " << vme::device << endl;
   queue_mutex_.lock();
   if (vme::device == -1) {
 
@@ -162,7 +163,7 @@ sis_3302 DaqWorkerSis3302::PopEvent()
   queue_mutex_.lock();
   data_queue_.pop();
   queue_mutex_.unlock();
-  
+
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
