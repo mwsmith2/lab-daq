@@ -66,10 +66,10 @@ href="{{ url_for('static', filename='favicon.ico') }}">
   <br></br>
   {% if not in_progress %}
     <form id = 'begin_run' action = {{ url_for('start_run') }}>
-      <input type=submit value=Begin Run></input></form>
+      <input type=submit value="Begin Run"></input></form>
     {% else %}
       <form id = "end_run" action = {{ url_for('end_run') }}>
-	<input type=submit value=End Run></input>
+	<input type=submit value="End Run"></input>
       </form>
    {% endif %}
 </div>
