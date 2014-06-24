@@ -26,11 +26,12 @@ app.config.update(dict(
 app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
 socketio = SocketIO(app)
 
+#global flag denoting whether or not a run is in progress
+running = False
+
 @app.route('/')
 def home():
-    if 'running' not in session:
-        session['running'] = False
-    return render_template('layout.html')
+    return render_template('layout.html', in_progress=running)
 
 def send_events():
     while not data_io.e.isSet():
@@ -42,15 +43,21 @@ def send_events():
 
 @socketio.on('refreshed', namespace='/test')
 def on_refresh():
-    if session['running']:
+    if running:
         data_io.lock.acquire()
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/test')
         data_io.lock.release()
 
+@socketio.on('refresh', namespace='/test')
+def broadcast_refresh():
+    print 'broadcasting refresh'
+    emit('refresh', {'data': ''}, broadcast=True)
+
 @app.route('/start')
 def start_run():
-    session['running'] = True
+    global running
+    running = True
     print 'attempting to begin run'
     data_io.begin_run()
     
@@ -62,8 +69,11 @@ def start_run():
 
 @app.route('/end')
 def end_run():
-    session['running'] = False
-    data_io.end_run()
+    global running
+    if running:
+        running = False
+        data_io.end_run()
+
     return redirect(url_for('running_hist'))
 
 @app.route('/hist')
@@ -71,16 +81,16 @@ def running_hist():
     filepath = update_hist()
     if filepath == 'failed':
         return render_template('no_data.html')
-    return render_template('hist.html', path=filepath)
+    return render_template('hist.html', path=filepath, in_progress=running)
 
 @app.route('/traces')
 def traces():
     filepath = generate_traces()
-    return render_template('traces.html', path=filepath)
+    return render_template('traces.html', path=filepath, in_progress=running)
 
 @app.route('/nodata')
 def no_data():
-    return render_template('no_data.html')
+    return render_template('no_data.html', in_progress=running)
 
 @app.route('/reset')
 def reset():

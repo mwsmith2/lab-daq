@@ -21,9 +21,21 @@
 	    $('#nEvents').text(String(msg.count));
             $('#rate').text(String(msg.rate.toFixed(1)));
 	});
+
+	$('form#begin_run').submit(function(event) {
+	    socket.emit('refresh');
+	});
+	
+        $('form#end_run').submit(function(event) {
+	    socket.emit('refresh');
+	});
 	
         socket.on('my response', function(msg) {
             $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
+	});
+
+	socket.on('refresh', function(msg) {
+	    location.reload();
 	});
 
     });
@@ -40,7 +52,7 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('running_hist') }}">histogram</a>
     <a href="{{ url_for('traces') }}">traces</a>
     </div>
-    {% if session['running'] %}
+    {% if in_progress %}
     <b id="nEvents"></b> events recorded<br>
      data rate: <b id="rate"></b> hz 
     {% else %}
@@ -52,12 +64,13 @@ href="{{ url_for('static', filename='favicon.ico') }}">
   {% block online_text %}{% endblock %}
   {% block online_pics %}{% endblock %}
   <br></br>
-  {% if not session['running'] %}
-    <form action = {{ url_for('start_run') }}>
+  {% if not in_progress %}
+    <form id = 'begin_run' action = {{ url_for('start_run') }}>
       <input type=submit value=Begin Run></input></form>
     {% else %}
-      <form action = {{ url_for('end_run') }}>
-	<input type=submit value=End Run></input></form>
-      {% endif %}
+      <form id = "end_run" action = {{ url_for('end_run') }}>
+	<input type=submit value=End Run></input>
+      </form>
+   {% endif %}
 </div>
 </html>
