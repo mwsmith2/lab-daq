@@ -99,6 +99,7 @@ int DaqWorkerVme<T>::ReadTrace(int addr, uint *trace)
     char str[100];
     sprintf(str, "Error rading trace at 0x%08x.\n", base_address_ + addr);
     perror(str);
+    cout << "asked for: " << len_tr_ / 2 + 4 << ", got: " << num_got << endl;
   }
 
   return retval;
