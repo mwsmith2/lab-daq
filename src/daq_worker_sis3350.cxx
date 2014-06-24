@@ -259,7 +259,10 @@ sis_3350 DaqWorkerSis3350::PopEvent()
 {
   // Copy the data.
   sis_3350 data = data_queue_.front();
+
+  queue_mutex_.lock();
   data_queue_.pop();
+  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;

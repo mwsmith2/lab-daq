@@ -29,7 +29,7 @@ void DaqWorkerSis3302::LoadConfig()
   }
   cout << "device: " << vme::device << endl;
   queue_mutex_.unlock();
-  
+
   // Get the base address for the device.  Convert from hex.
   string addr = conf.get<string>("base_address");
   std::stringstream ss;
@@ -158,8 +158,11 @@ sis_3302 DaqWorkerSis3302::PopEvent()
 {
   // Copy the data.
   sis_3302 data = data_queue_.front();
-  data_queue_.pop();
 
+  queue_mutex_.lock();
+  data_queue_.pop();
+  queue_mutex_.unlock();
+  
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
