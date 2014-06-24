@@ -19,7 +19,6 @@ void DaqWorkerSis3350::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
-  cout << "vme::device for " << name_ << ": " << vme::device << endl;
   queue_mutex_.lock();
   if (vme::device == -1) {
 
@@ -35,7 +34,7 @@ void DaqWorkerSis3350::LoadConfig()
   string addr = conf.get<string>("base_address");
   std::stringstream ss;
   ss << addr;
-  ss >> std::hex >> base_address_;
+  ss >> std::hex >> base_address_ >> std::dec;
 
   int ret;
   uint msg = 0;
@@ -167,7 +166,8 @@ void DaqWorkerSis3350::LoadConfig()
   //ring buffer pre-trigger sample length
   string pretrigger = conf.get<string>("pretrigger_samples");
   ss << pretrigger;
-  ss >> pretrigger >> msg;
+  ss >> std::hex >> pretrigger >> msg >> std::dec;
+
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V

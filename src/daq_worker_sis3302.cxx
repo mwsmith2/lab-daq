@@ -35,7 +35,7 @@ void DaqWorkerSis3302::LoadConfig()
   string addr = conf.get<string>("base_address");
   std::stringstream ss;
   ss << addr;
-  ss >> std::hex >> base_address_;
+  ss >> std::hex >> base_address_ >> std::dec;
 
   int ret;
   uint msg = 0;
