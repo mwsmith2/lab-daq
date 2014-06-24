@@ -1,9 +1,35 @@
-<!doctype html>
+<!DOCTYPE HTML>
+<html>
+<head>
 <title>Online Display</title>
+<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    $(document).ready(function(){
+	namespace = '/test';
+	var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+	
+	$('#nEvents').text(0);
+	$('#rate').text(0);
+	socket.on('event info', function(msg) {
+	    $('#nEvents').text(String(msg.count));
+            $('#rate').text(String(msg.rate.toFixed(1)));
+	});
+	
+        socket.on('my response', function(msg) {
+            $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
+	});
+
+    });
+    </script>
+</head>	
 <link rel=stylesheet type=text/css 
 href="{{ url_for('static', filename='style.css') }}">
 <link rel="shortcut icon" 
-href="{{ url_for('static', filename='favicon.ico') }}">
+href="{{ url_for('static', filename='favicon.ico') }}">	
 <div class=page>
   <a href="{{ url_for('home') }}"><h1>Online Display</h1></a>
   <div class=metanav>
@@ -12,8 +38,8 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('traces') }}">traces</a>
     </div>
     {% if session['running'] %}
-      {{ session['events'] }} events recorded<br>
-      data rate: {{ session['rate'] }} hz
+    <b id="nEvents"></b> events recorded<br>
+     data rate: <b id="rate"></b> hz 
     {% else %}
       No run in progress
     {% endif %}
@@ -31,3 +57,4 @@ href="{{ url_for('static', filename='favicon.ico') }}">
 	<input type=submit value=End Run></input></form>
       {% endif %}
 </div>
+</html>
