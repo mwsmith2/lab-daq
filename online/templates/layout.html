@@ -12,7 +12,8 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('traces') }}">traces</a>
     </div>
     {% if session['running'] %}
-      {{ session['events'] }} events recorded
+      {{ session['events'] }} events recorded<br>
+      data rate: {{ session['rate'] }} hz
     {% else %}
       No run in progress
     {% endif %}

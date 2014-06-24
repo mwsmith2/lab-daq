@@ -1,16 +1,16 @@
 import numpy as np
-from time import sleep
+from time import sleep, time
 import threading
 
 data = []
 e = threading.Event()
 lock = threading.Lock()
+start = 0
+rate = 0 
 
 def clear_data():
     global data
     data = []
-#    data = np.empty(0)
-
 
 def pulse_shape(t):
     return -1.0*np.exp(-(t)/5.0)*(1-np.exp(-(t)/1.0))
@@ -22,17 +22,21 @@ def fill_trace():
 def generate_data(e, data):
     while not e.isSet():
         global lock
+        global rate
         lock.acquire()
         newValue = np.random.standard_normal(1)[0]
         data.append(newValue)
+        rate = len(data)/(time() - start)
         lock.release()
         sleep(0.1)
     
 def begin_run():
     global e
+    global start
     e.clear()
     clear_data()
     t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
+    start = time()
     t.start()
 
 def end_run():

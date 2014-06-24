@@ -30,16 +30,17 @@ def home():
 def start_run():
     session['running'] = True
     session['events'] = 0
+    session['rate'] = '0'
     print 'attempting to begin run'
     data_io.begin_run()
-    sleep(.5)
+    sleep(0.2)
     return redirect(url_for('running_hist'))
 
 @app.route('/end')
 def end_run():
     session['running'] = False
     data_io.end_run()
-    return redirect(url_for('home'))
+    return redirect(url_for('running_hist'))
 
 @app.route('/hist')
 def running_hist():
@@ -64,14 +65,16 @@ def reset():
 
 def update_hist():
     plt.clf()
+  
     data_io.lock.acquire()
     try:
         plt.hist(data_io.data)
+        session['events'] = len(data_io.data)
+        session['rate'] = str(data_io.rate)[:4]
+        data_io.lock.release()
     except IndexError:
         data_io.lock.release()
         return 'failed'
-    session['events'] = len(data_io.data)
-    data_io.lock.release()
 
     for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_hist*'):
         os.remove(temp_file)
@@ -91,7 +94,6 @@ def generate_traces():
             plt.axis('off')
             plt.plot(trace)
 
-   
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_traces*'):
         os.remove(tempFile)
     filename = unique_filename('temp_traces.png')
