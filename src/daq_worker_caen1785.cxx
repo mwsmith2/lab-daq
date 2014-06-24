@@ -112,13 +112,18 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
   int offset;
   uint ch, data;
 
+  // Get the system time
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  high_resolution_clock::duration dtn = t1.time_since_epoch();
+  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
+
   // Get the event header for each high or low value
   for (ch = 0; ch < CAEN_1785_CH; ++ch) {
     
     offset = 0x0 + 4 * ch;
     Read(offset, data);
 
-    bundle.timestamp[ch] = 21;
+    bundle.device_clock[ch] = 21;
     bundle.value[ch] = (data & 0x7ff);
   }
 }

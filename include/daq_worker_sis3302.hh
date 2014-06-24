@@ -2,8 +2,9 @@
 #define SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3302_HH_
 
 //--- std includes ----------------------------------------------------------//
-#include <ctime>
+#include <chrono>
 #include <iostream>
+using namespace std::chrono;
 using std::cout;
 using std::cerr;
 using std::endl;

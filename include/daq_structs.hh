@@ -24,17 +24,20 @@ namespace daq {
 
 // Basic structs
 struct sis_3350 {
-  unsigned long long timestamp[SIS_3350_CH];
+  unsigned long long system_clock;
+  unsigned long long device_clock[SIS_3350_CH];
   ushort trace[SIS_3350_CH][SIS_3350_LN];
 };
 
 struct sis_3302 {
-  unsigned long long timestamp[SIS_3302_CH];
+  unsigned long long system_clock;
+  unsigned long long device_clock[SIS_3302_CH];
   ushort trace[SIS_3302_CH][SIS_3302_LN];
 };
 
 struct caen_1785 {
-  unsigned long long timestamp[CAEN_1785_CH];
+  unsigned long long system_clock;
+  unsigned long long device_clock[CAEN_1785_CH];
   ushort value[CAEN_1785_CH];
 };
 

@@ -199,12 +199,16 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
     Read(offset, next_sample_address[ch]);
   }
 
+  // Get the system time
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  high_resolution_clock::duration dtn = t1.time_since_epoch();
+  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();  
+
   //todo: check it has the expected length
   uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;
-    printf("sis3302 offset: %08x\n.", offset);
     Read(0x10000, trace[ch][0]);
     Read(0x10001, trace[ch][1]);
     ReadTrace(offset, trace[ch] + 4);
@@ -217,11 +221,11 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   //decode the event (little endian arch)
   for (ch = 0; ch < SIS_3302_CH; ch++) {
 
-    bundle.timestamp[ch] = 0;
-    bundle.timestamp[ch] = trace[ch][1] & 0xfff;
-    bundle.timestamp[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfffULL) << 24;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
+    bundle.device_clock[ch] = 0;
+    bundle.device_clock[ch] = trace[ch][1] & 0xfff;
+    bundle.device_clock[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfffULL) << 24;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
 
     uint idx;
     for (idx = 0; idx < SIS_3302_LN / 2; idx++) {
@@ -235,26 +239,26 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
 
 //   if (sis_idx > 0) {
 //     unsigned int status = 0;
-//     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-//     do {
-//       int ret = 0;
-//       if ((ret = Read(0x10, &status)) != 0) {
-//   printf("error reading sis3302 acq register\n");
-//       }
+  //   high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  //   do {
+  //     int ret = 0;
+  //     if ((ret = Read(0x10, &status)) != 0) {
+  // printf("error reading sis3302 acq register\n");
+  //     }
 
-//       high_resolution_clock::time_point t2 = high_resolution_clock::now();
-//       duration<double> time_span = duration_cast<duration<double>>(t2-t1);
-//       if (time_span.count() > 3e-3) {
-//   printf("sis3302 readout timeout address: 0x%08x\n",  base_address_);
-//   printf("time span: %lf\n", time_span.count());
-//   break;
-//       }
+  //     high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  //     duration<double> time_span = duration_cast<duration<double>>(t2-t1);
+  //     if (time_span.count() > 3e-3) {
+  // printf("sis3302 readout timeout address: 0x%08x\n",  base_address_);
+  // printf("time span: %lf\n", time_span.count());
+  // break;
+  //     }
   
-//     } while((status & 0x10000));
+  //   } while((status & 0x10000));
   
-//     // MWS - setting the high res system clock here
-//     high_resolution_clock::duration dtn = t1.time_since_epoch();
-//     mSystemTime = duration_cast<nanoseconds>(dtn).count();  
+  //   // MWS - setting the high res system clock here
+  //   high_resolution_clock::duration dtn = t1.time_since_epoch();
+  //   mSystemTime = duration_cast<nanoseconds>(dtn).count();  
 
 //     if (status & 0x10000) {
 //       bundle.is_bad_event++;

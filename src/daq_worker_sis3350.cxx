@@ -297,6 +297,11 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
     Read(offset, next_sample_address[ch]);
   }
 
+  // Get the system time.
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  high_resolution_clock::duration dtn = t1.time_since_epoch();
+  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
+
   //todo: check it has the expected length
   uint trace[4][SIS_3350_LN / 2 + 4];
 
@@ -312,11 +317,11 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
   //decode the event (little endian arch)
   for (ch = 0; ch < SIS_3350_CH; ch++) {
 
-    bundle.timestamp[ch] = 0;
-    bundle.timestamp[ch] = trace[ch][1] & 0xfff;
-    bundle.timestamp[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfffULL) << 24;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
+    bundle.device_clock[ch] = 0;
+    bundle.device_clock[ch] = trace[ch][1] & 0xfff;
+    bundle.device_clock[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfffULL) << 24;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
 
     uint idx;
     for (idx = 0; idx < SIS_3350_LN / 2; idx++) {
