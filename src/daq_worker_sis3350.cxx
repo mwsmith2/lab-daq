@@ -23,7 +23,7 @@ void DaqWorkerSis3350::LoadConfig()
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
-    if ((vme::device = open(dev_path.c_str(), O_RDWR, 0)) < 0) {
+    if ((vme::device = open(dev_path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
       cerr << "Open vme device." << endl;
     }
   }
@@ -31,17 +31,14 @@ void DaqWorkerSis3350::LoadConfig()
   queue_mutex_.unlock();
 
   // Get the base address.  Needs to be converted from hex.
-  string addr = conf.get<string>("base_address");
-  std::stringstream ss;
-  ss << addr;
-  ss >> std::hex >> base_address_ >> std::dec;
+  base_address_ = std::stoi(conf.get<string>("base_address"));
 
   int ret;
   uint msg = 0;
 
   // Check for device.
   Read(0x0, msg);
-  cout << "sis3350 found at 0x" << std::hex << base_address_ << ".\n";
+  cout << "sis3350 found at 0x%08x\n." << base_address_;
 
   // Reset device.
   msg = 1;
@@ -164,10 +161,7 @@ void DaqWorkerSis3350::LoadConfig()
   Write(0x01000020, msg);
 
   //ring buffer pre-trigger sample length
-  string pretrigger = conf.get<string>("pretrigger_samples");
-  ss << pretrigger;
-  ss >> std::hex >> pretrigger >> msg >> std::dec;
-
+  msg = std::stoi(conf.get<string>("pretrigger_samples"));
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V

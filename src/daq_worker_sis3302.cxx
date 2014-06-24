@@ -19,12 +19,11 @@ void DaqWorkerSis3302::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
-  cout << "vme::device for " << name_ << ": " << vme::device << endl;
   queue_mutex_.lock();
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
-    if ((vme::device = open(dev_path.c_str(), O_RDWR, 0)) < 0) {
+    if ((vme::device = open(dev_path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
       cerr << "Open vme device." << endl;
     }
   }
@@ -32,10 +31,7 @@ void DaqWorkerSis3302::LoadConfig()
   queue_mutex_.unlock();
 
   // Get the base address for the device.  Convert from hex.
-  string addr = conf.get<string>("base_address");
-  std::stringstream ss;
-  ss << addr;
-  ss >> std::hex >> base_address_ >> std::dec;
+  base_address_ = std::stoi(conf.get<string>("base_address"));
 
   int ret;
   uint msg = 0;
