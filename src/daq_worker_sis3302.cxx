@@ -31,7 +31,7 @@ void DaqWorkerSis3302::LoadConfig()
   queue_mutex_.unlock();
 
   // Get the base address for the device.  Convert from hex.
-  base_address_ = std::stoi(conf.get<string>("base_address"));
+  base_address_ = std::stoi(conf.get<string>("base_address", nullptr, 0));
 
   int ret;
   uint msg = 0;

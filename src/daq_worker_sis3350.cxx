@@ -31,7 +31,7 @@ void DaqWorkerSis3350::LoadConfig()
   queue_mutex_.unlock();
 
   // Get the base address.  Needs to be converted from hex.
-  base_address_ = std::stoi(conf.get<string>("base_address"));
+  base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
 
   int ret;
   uint msg = 0;
@@ -161,7 +161,7 @@ void DaqWorkerSis3350::LoadConfig()
   Write(0x01000020, msg);
 
   //ring buffer pre-trigger sample length
-  msg = std::stoi(conf.get<string>("pretrigger_samples"));
+  msg = std::stoi(conf.get<string>("pretrigger_samples"), nullptr, 0);
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V
