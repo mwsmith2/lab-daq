@@ -35,7 +35,7 @@
 	});
 
 	socket.on('refresh', function(msg) {
-	    location.reload();
+	    location.replace("{{url_for('running_hist')}}");
 	});
 
     });
