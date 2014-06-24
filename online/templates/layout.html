@@ -23,11 +23,11 @@
 	});
 
 	$('form#begin_run').submit(function(event) {
-	    socket.emit('refresh');
+	    socket.emit('update run status');
 	});
 	
         $('form#end_run').submit(function(event) {
-	    socket.emit('refresh');
+	    socket.emit('update run status');
 	});
 	
         socket.on('my response', function(msg) {

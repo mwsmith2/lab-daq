@@ -1,6 +1,7 @@
 #Aaron Fienberg
 #Fienberg@uw.edu
 #online display for SLAC test beam run
+
 from gevent import monkey
 monkey.patch_all()
 
@@ -32,27 +33,6 @@ running = False
 @app.route('/')
 def home():
     return render_template('layout.html', in_progress=running)
-
-def send_events():
-    while not data_io.e.isSet():
-        data_io.lock.acquire()
-        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
-                      namespace='/test')
-        data_io.lock.release()
-        sleep(0.1)
-
-@socketio.on('refreshed', namespace='/test')
-def on_refresh():
-    if running:
-        data_io.lock.acquire()
-        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
-                      namespace='/test')
-        data_io.lock.release()
-
-@socketio.on('refresh', namespace='/test')
-def broadcast_refresh():
-    print 'broadcasting refresh'
-    emit('refresh', {'data': ''}, broadcast=True)
 
 @app.route('/start')
 def start_run():
@@ -97,6 +77,30 @@ def reset():
     data_io.clear_data()
     return redirect(url_for('home'))
 
+def send_events():
+    while not data_io.e.isSet():
+        data_io.lock.acquire()
+        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+                      namespace='/test')
+        data_io.lock.release()
+        sleep(0.1)
+
+@socketio.on('refreshed', namespace='/test')
+def on_refresh():
+    if running:
+        data_io.lock.acquire()
+        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+                      namespace='/test')
+        data_io.lock.release()
+
+@socketio.on('update run status', namespace='/test')
+def broadcast_refresh():
+    emit('refresh', {'data': ''}, broadcast=True)
+
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    emit('my response', {'data': 'Connected'})
+
 def update_hist():
     plt.clf()
   
@@ -116,10 +120,6 @@ def update_hist():
     plt.savefig(filepath)
     
     return filepath
-
-@socketio.on('connect', namespace='/test')
-def test_connect():
-    emit('my response', {'data': 'Connected'})
 
 def generate_traces():
     trace = data_io.fill_trace()
