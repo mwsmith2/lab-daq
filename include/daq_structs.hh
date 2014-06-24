@@ -14,6 +14,8 @@
 using std::vector;
 
 //--- other includes --------------------------------------------------------//
+#include <boost/variant.hpp>
+
 
 //--- projects includes -----------------------------------------------------//
 #include "daq_worker_base.hh"
