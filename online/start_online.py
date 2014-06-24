@@ -81,23 +81,23 @@ def send_events():
     while not data_io.e.isSet():
         data_io.lock.acquire()
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
-                      namespace='/test')
+                      namespace='/online')
         data_io.lock.release()
         sleep(0.1)
 
-@socketio.on('refreshed', namespace='/test')
+@socketio.on('refreshed', namespace='/online')
 def on_refresh():
     if running:
         data_io.lock.acquire()
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
-                      namespace='/test')
+                      namespace='/online')
         data_io.lock.release()
 
-@socketio.on('update run status', namespace='/test')
+@socketio.on('update run status', namespace='/online')
 def broadcast_refresh():
     emit('refresh', {'data': ''}, broadcast=True)
 
-@socketio.on('connect', namespace='/test')
+@socketio.on('connect', namespace='/online')
 def test_connect():
     emit('my response', {'data': 'Connected'})
 
@@ -159,4 +159,4 @@ def get_upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, host='0.0.0.0')

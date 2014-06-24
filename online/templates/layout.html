@@ -6,7 +6,7 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
     $(document).ready(function(){
-	namespace = '/test';
+	namespace = '/online';
 	var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 	
 	socket.emit('refreshed');
