@@ -38,7 +38,15 @@ def send_events():
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/test')
         data_io.lock.release()
-        sleep(0.2)
+        sleep(0.1)
+
+@socketio.on('refreshed', namespace='/test')
+def on_refresh():
+    if session['running']:
+        data_io.lock.acquire()
+        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+                      namespace='/test')
+        data_io.lock.release()
 
 @app.route('/start')
 def start_run():
