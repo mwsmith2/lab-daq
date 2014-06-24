@@ -32,12 +32,16 @@ void DaqWorkerCaen1785::LoadConfig()
 
   // Get the base address for the device.  Convert from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
-
+  
   int ret;
   uint msg = 0;
 
+  Read(base_address_, msg);
+  printf("caen1785 found at 0x%08x\n", base_address_);
+
   // Reset the data on the device.
   ClearData();
+  printf("Device data cleared.\n");
 
 } // LoadConfig
 
