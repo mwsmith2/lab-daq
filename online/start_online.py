@@ -1,12 +1,16 @@
 #Aaron Fienberg
 #Fienberg@uw.edu
 #online display for SLAC test beam run
+from gevent import monkey
+monkey.patch_all()
 
 from flask import Flask, render_template, send_from_directory, redirect, url_for
 from flask import session
+from flask.ext.socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import os, glob
+import threading
 
 import data_io
 from time import sleep
@@ -19,6 +23,8 @@ app.config.update(dict(
     UPLOAD_FOLDER='uploads',
     IMAGE_UPLOADS=['.jpg', '.jpe', '.jpeg', '.png', '.gif', '.svg', '.bmp'],
     DEBUG=True))
+app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
+socketio = SocketIO(app)
 
 @app.route('/')
 def home():
@@ -26,13 +32,23 @@ def home():
         session['running'] = False
     return render_template('layout.html')
 
+def send_events():
+    while not data_io.e.isSet():
+        data_io.lock.acquire()
+        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+                      namespace='/test')
+        data_io.lock.release()
+        sleep(0.2)
+
 @app.route('/start')
 def start_run():
     session['running'] = True
-    session['events'] = 0
-    session['rate'] = '0'
     print 'attempting to begin run'
     data_io.begin_run()
+    
+    t = threading.Thread(name='emitter', target=send_events)
+    t.start()
+    
     sleep(0.2)
     return redirect(url_for('running_hist'))
 
@@ -69,8 +85,7 @@ def update_hist():
     data_io.lock.acquire()
     try:
         plt.hist(data_io.data)
-        session['events'] = len(data_io.data)
-        session['rate'] = str(data_io.rate)[:4]
+        plt.title('Event ' + str(data_io.eventCount))
         data_io.lock.release()
     except IndexError:
         data_io.lock.release()
@@ -83,6 +98,10 @@ def update_hist():
     plt.savefig(filepath)
     
     return filepath
+
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    emit('my response', {'data': 'Connected'})
 
 def generate_traces():
     trace = data_io.fill_trace()
@@ -122,5 +141,4 @@ def get_upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    app.secret_key = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
-    app.run();
+    socketio.run(app)
