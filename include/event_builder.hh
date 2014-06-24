@@ -29,8 +29,6 @@ using std::endl;
 
 namespace daq {
 
-typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
-
 // This class pulls data form all the workers.
 class EventBuilder {
 

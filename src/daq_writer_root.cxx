@@ -68,6 +68,18 @@ void DaqWriterRoot::StartWriter()
     pt_->Branch(br_name.c_str(), &root_data_.sis_slow[count++], br_vars);
 
   }
+
+    BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.caen_1785")) {
+
+    int count = 0;
+    root_data_.caen_adc.resize(count + 1);
+
+    br_name = string(v.first);
+    sprintf(br_vars, "timestamp[%i]/l:values[%i]/s", SIS_3302_CH, SIS_3302_CH);
+
+    pt_->Branch(br_name.c_str(), &root_data_.caen_adc[count++], br_vars);
+
+  }
 }
 
 void DaqWriterRoot::StopWriter()

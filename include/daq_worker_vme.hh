@@ -38,6 +38,8 @@ protected:
   
   int Read(int addr, uint &msg);
   int Write(int addr, uint msg);
+  int Read16(int addr, ushort &msg);
+  int Write16(int addr, ushort msg);
   int ReadTrace(int addr, uint *trace);
 
 };
@@ -69,6 +71,44 @@ int DaqWorkerVme<T>::Write(int addr, uint msg)
 
   mutex_.lock();
   status = (retval = vme_A32D32_write(vme::device, base_address_ + addr, msg));
+  mutex_.unlock();
+
+  if (status != 0) {
+    char str[100];
+    sprintf(str, "Address 0x%08x not writeable.\n", base_address_ + addr);
+    perror(str);
+  }
+
+  return retval;
+}
+
+template<typename T>
+int DaqWorkerVme<T>::Read16(int addr, ushort &msg)
+{
+  static int retval;
+  static int status;
+
+  mutex_.lock();
+  status = (retval = vme_A32D16_read(vme::device, base_address_ + addr, &msg));
+  mutex_.unlock();
+
+  if (status != 0) {
+    char str[100];
+    sprintf(str, "Address 0x%08x not readable.\n", base_address_ + addr);
+    perror(str);
+  }
+
+  return retval;
+}
+
+template<typename T>
+int DaqWorkerVme<T>::Write16(int addr, ushort msg)
+{
+  static int retval;
+  static int status;
+
+  mutex_.lock();
+  status = (retval = vme_A32D16_write(vme::device, base_address_ + addr, msg));
   mutex_.unlock();
 
   if (status != 0) {

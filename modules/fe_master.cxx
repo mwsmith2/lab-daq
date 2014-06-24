@@ -23,10 +23,11 @@ using namespace boost::property_tree;
 #include "daq_worker_fake.hh"
 #include "daq_worker_sis3350.hh"
 #include "daq_worker_sis3302.hh"
+#include "daq_worker_caen1785.hh"
 #include "event_builder.hh"
-using namespace daq;
+#include "daq_structs.hh"
 
-typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
+using namespace daq;
 
 int daq::vme::device = -1;
 
@@ -125,6 +126,16 @@ int LoadConfig(){
     daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_1785")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
   // Set up the data writers.
   daq_writers.push_back(new DaqWriterRoot(conf_file));
 
@@ -158,6 +169,10 @@ int StartRun(){
 
       boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
 
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
+
     }
   }
 
@@ -187,6 +202,10 @@ int StopRun(){
     } else if ((*it).which() == 1) {
 
       boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopWorker();
 
     }
   }

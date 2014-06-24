@@ -37,7 +37,7 @@ void DaqWorkerSis3302::LoadConfig()
   uint msg = 0;
 
   // Read the base register.
-  Read(0x0, msg);
+  Read(0x1000, msg);
   printf("sis3302 found at 0x%08x\n", base_address_);
 
   // Reset the device.
@@ -49,7 +49,7 @@ void DaqWorkerSis3302::LoadConfig()
   // Get device ID.
   msg = 0;
   Read(0x4, msg);
-  printf("sis3302 ID: %04x, maj rev: %02x, min rev: %02x\n",
+  printf("Caen 1795 firmware, maj rev: %04x, min rev: %04x\n",
    msg >> 16, (msg >> 8) & 0xff, msg & 0xff);
 
   // Read control/status register.
