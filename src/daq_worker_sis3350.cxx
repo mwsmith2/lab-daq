@@ -177,7 +177,7 @@ void DaqWorkerSis3350::LoadConfig()
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
-    msg = 39000; // ??? V
+    msg = conf.get<int>("gain_shift", 39000); //39000; // ??? V
     Write(offset, msg);
 
     msg = 0;
