@@ -186,9 +186,11 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   // Check how long the event is.
   //expected SIS_3302_LN + 8
   
-  uint next_sample_address[4] = {0, 0, 0, 0};
+  uint next_sample_address[SIS_3302_CH];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
+
+    next_sample_address[ch] = 0;
 
     offset = 0x02000010;
     offset |= (ch >> 1) << 24;
@@ -198,14 +200,25 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   }
 
   //todo: check it has the expected length
-  uint trace[4][SIS_3302_LN / 2 + 4];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
-    offset = (0x4 + ch) << 24;
+
+    // Set the offset to proper channel's memory page.
+    offset = (0x8 + ch) << 23;
+
+    // Read the timestamp.
+    Read(0x10000, trace[ch][0]);
+    Read(0x10001, trace[ch][1]);
+
+    // Read the waveform.
     ReadTrace(offset, trace[ch]);
   }
 
-  //arm the logic
+  // Clear the previous timestamp.
+  //  Write(0x42c, 0x1);
+
+  // Rearm the logic.
   uint armit = 1;
   Write(0x410, armit);
 
