@@ -34,6 +34,12 @@ struct event_data {
   vector<sis_3302> sis_slow;
 };
 
-}
+namespace vme {
+
+extern int device;
+
+} // ::vme
+
+} // ::daq
 
 #endif

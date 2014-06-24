@@ -2,7 +2,7 @@
 
 namespace daq {
 
-DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerBase<sis_3302>(name, conf)
+DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerVme<sis_3302>(name, conf)
 {
   LoadConfig();
 
@@ -17,6 +17,16 @@ void DaqWorkerSis3302::LoadConfig()
   // Open the configuration file.
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
+
+  // Get the device filestream
+  if (vme::device == -1) {
+
+    string dev_path = conf.get<string>("device");
+    if ((vme::device = open(dev_path.c_str(), O_RDWR, 0)) < 0) {
+      cerr << "Open vme device." << endl;
+    }
+  }
+  cout << "device: " << vme::device << endl;
 
   // Get the base address for the device.  Convert from hex.
   string addr = conf.get<string>("base_address");
@@ -153,6 +163,7 @@ sis_3302 DaqWorkerSis3302::PopEvent()
 
   return data;
 }
+
 
 bool DaqWorkerSis3302::EventAvailable()
 {
@@ -308,58 +319,5 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
 
 //   sis_idx++;
 // }
-
-int DaqWorkerSis3302::Read(int addr, uint &msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_read(device_, base_address_ + addr, &msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not readable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3302::Write(int addr, uint msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_write(device_, base_address_ + addr, msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not writeable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3302::ReadTrace(int addr, uint *trace)
-{
-  static int retval;
-  static int status;
-  static uint num_got;
-
-  status = (retval = vme_A32_2EVME_read(device_,
-                                        base_address_ + addr,
-                                        trace,
-                                        SIS_3302_LN / 2 + 4,
-                                        &num_got));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Error rading trace at 0x%08x.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
 
 } // ::daq

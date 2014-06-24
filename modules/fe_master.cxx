@@ -28,7 +28,9 @@ using namespace daq;
 
 typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
 
-// Anonymous namespace for "global" paramaters
+int daq::vme::device = -1;
+
+// Anonymous namespace for "global" parameters
 namespace {
   
   // simple declarations
@@ -96,21 +98,21 @@ int LoadConfig(){
 
   // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
-
+    
     string name(v.first);
-    string conf_file(v.second.data());
+    string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, conf_file));
+    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.sis_3350")) {
+		conf.get_child("devices.sis_3350")) {
 
     string name(v.first);
-    string conf_file(v.second.data());
+    string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, conf_file));
+    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -118,9 +120,9 @@ int LoadConfig(){
                 conf.get_child("devices.sis_3302")) {
 
     string name(v.first);
-    string conf_file(v.second.data());
+    string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3302(name, conf_file));
+    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
   // Set up the data writers.
