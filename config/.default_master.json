@@ -14,9 +14,11 @@
 
 		"sis_3302":{
 			"sis_slow_0":"config/sis_3302_0.json"
-		}		
+		},
 
-
+		"caen_1785":{
+			"caen_1785_0":"config/caen_1785_0.json"
+		}
 
 	},
 
