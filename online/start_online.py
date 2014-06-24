@@ -21,7 +21,7 @@ from matplotlib import pyplot as plt
 
 app = Flask(__name__)
 app.config.update(dict(
-    UPLOAD_FOLDER='uploads',
+    UPLOAD_FOLDER=os.path.dirname(os.path.realpath(__file__))+'/uploads',
     IMAGE_UPLOADS=['.jpg', '.jpe', '.jpeg', '.png', '.gif', '.svg', '.bmp'],
     DEBUG=True))
 app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
@@ -59,6 +59,7 @@ def end_run():
 @app.route('/hist')
 def running_hist():
     filepath = update_hist()
+
     if filepath == 'failed':
         return render_template('no_data.html')
     return render_template('hist.html', path=filepath, in_progress=running)
@@ -150,13 +151,15 @@ def unique_filename(upload_file):
 def upload_path(filename):
     """Construct the full path of the uploaded file."""
     basename = os.path.basename(filename)
-    return os.path.join('uploads', basename)
+    return os.path.join(os.path.dirname(os.path.realpath(__file__))+
+                        '/uploads', basename)
 
-@app.route('/uploads/<path:filename>')
+@app.route('/<path:filename>')
 def get_upload(filename):
     """Return the requested file from the server."""
     filename = os.path.basename(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
+    print app.config['UPLOAD_FOLDER']
     socketio.run(app, host='0.0.0.0')
