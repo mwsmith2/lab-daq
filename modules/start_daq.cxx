@@ -11,11 +11,6 @@ using std::endl;
 #include <boost/property_tree/json_parser.hpp>
 #include <zmq.hpp>
 
-#include "daq_structs.hh"
-
-// Needs to be initialized.
-int daq::vme::device = -1;
-
 int main(int argc, char *argv[])
 {
   // Get the system configuration

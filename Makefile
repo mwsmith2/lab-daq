@@ -28,8 +28,11 @@ LIBS += -lm -lzmq
 
 all: $(OBJECTS) $(OBJ_VME) $(TARGETS)
 
-%: modules/%.cxx $(OBJECTS) $(OBJ_VME)
+fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
+
+%_daq: modules/%_daq.cxx 
+	$(CXX) $< -o $@  $(FLAGS) $(LIBS)
 
 build/%.o: src/%.cxx
 	$(CXX) -c $< -o $@ $(FLAGS)
