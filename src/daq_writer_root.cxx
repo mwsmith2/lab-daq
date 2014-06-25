@@ -4,6 +4,7 @@ namespace daq {
 
 DaqWriterRoot::DaqWriterRoot(string conf_file) : DaqWriterBase(conf_file)
 {
+  end_of_batch_ = false;
   LoadConfig();
 }
 
@@ -102,6 +103,11 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
     pt_->Fill();
 
   }
+}
+
+void DaqWriterRoot::EndOfBatch(bool bad_data)
+{
+  
 }
 
 } // ::daq

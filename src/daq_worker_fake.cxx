@@ -78,7 +78,7 @@ void DaqWorkerFake::GetEvent(event_struct &bundle)
 
 void DaqWorkerFake::WorkLoop() 
 {
-  while (true) {
+  while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
 

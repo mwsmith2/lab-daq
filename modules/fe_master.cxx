@@ -49,11 +49,12 @@ namespace {
   // project declarations
   vector<worker_ptr_types> daq_workers;
   vector<DaqWriterBase *> daq_writers;
-  EventBuilder *event_builder;
+  EventBuilder *event_builder = nullptr;
 }
 
 // Function declarations
 int LoadConfig();
+int ReloadConfig();
 int StartRun();
 int StopRun();
 
@@ -75,6 +76,7 @@ int main(int argc, char *argv[])
 
       if (msg_string == string("START") && !is_running) {
 
+        ReloadConfig();
         StartRun();
 
       } else if (msg_string == string("STOP") && is_running) {
@@ -92,7 +94,7 @@ int LoadConfig(){
   // load up the configuration.
   string conf_file("config/.default_master.json");
   ptree conf;
-  read_json(conf_file, conf);  
+  read_json(conf_file, conf);
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
@@ -108,7 +110,7 @@ int LoadConfig(){
 
   // Set up the sis3350 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
-		conf.get_child("devices.sis_3350")) {
+		            conf.get_child("devices.sis_3350")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
@@ -140,13 +142,93 @@ int LoadConfig(){
   daq_writers.push_back(new DaqWriterRoot(conf_file));
 
   // Set up the event builder.
-  event_builder = new EventBuilder(daq_workers, daq_writers);
+  event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
+
+  return 0;
+}
+
+int ReloadConfig() {
+  // load up the configuration.
+  string conf_file("config/.default_master.json");
+  ptree conf;
+  read_json(conf_file, conf);
+
+  // Delete the allocated workers.
+  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      delete boost::get<DaqWorkerBase<sis_3350> *>(*it);
+
+    } else if ((*it).which() == 1) {
+
+      delete boost::get<DaqWorkerBase<sis_3302> *>(*it);
+
+    } else if ((*it).which() == 2) {
+
+      delete boost::get<DaqWorkerBase<caen_1785> *>(*it);
+
+    }
+  }
+  daq_workers.resize(0);
+
+  // Delete the allocated writers.
+  for (auto &writer : daq_writers) {
+    delete writer;
+  }
+
+  delete event_builder;
+
+  // Get the fake data writers (for testing).
+  BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
+    
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
+  } 
+
+  // Set up the sis3350 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3350")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
+  }  
+
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3302")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+  }
+
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_1785")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the data writers.
+  daq_writers.push_back(new DaqWriterRoot(conf_file));
+
+  // Set up the event builder.
+  event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
 
   return 0;
 }
 
 // Flush the buffers and start data taking.
-int StartRun(){
+int StartRun() {
   cout << "Starting run." << endl;
   is_running = true;
 
@@ -180,7 +262,7 @@ int StartRun(){
 }
 
 // Write the data file and reset workers.
-int StopRun(){
+int StopRun() {
   cout << "Stopping run." << endl;
   is_running = false;
 
