@@ -1,9 +1,42 @@
-<!doctype html>
-<title>Online Display</title>
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Online DAQometer</title>
+<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    $(document).ready(function(){
+	namespace = '/online';
+	var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+	
+	socket.emit('refreshed');
+
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+	
+	$('#nEvents').text(0);
+	$('#rate').text(0);
+	socket.on('event info', function(msg) {
+	    $('#nEvents').text(String(msg.count));
+            $('#rate').text(String(msg.rate.toFixed(1)));
+	});
+	
+        socket.on('my response', function(msg) {
+            $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
+	});
+
+	socket.on('refresh', function(msg) {
+	    location.replace("{{url_for('running_hist')}}");
+	});
+
+    });
+    </script>
+</head>	
 <link rel=stylesheet type=text/css 
 href="{{ url_for('static', filename='style.css') }}">
 <link rel="shortcut icon" 
-href="{{ url_for('static', filename='favicon.ico') }}">
+href="{{ url_for('static', filename='favicon.ico') }}">	
 <div class=page>
   <a href="{{ url_for('home') }}"><h1>Online Display</h1></a>
   <div class=metanav>
@@ -11,8 +44,9 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('running_hist') }}">histogram</a>
     <a href="{{ url_for('traces') }}">traces</a>
     </div>
-    {% if session['running'] %}
-      {{ session['events'] }} events recorded
+    {% if in_progress %}
+    <b id="nEvents"></b> events recorded<br>
+     data rate: <b id="rate"></b> hz 
     {% else %}
       No run in progress
     {% endif %}
@@ -22,11 +56,13 @@ href="{{ url_for('static', filename='favicon.ico') }}">
   {% block online_text %}{% endblock %}
   {% block online_pics %}{% endblock %}
   <br></br>
-  {% if not session['running'] %}
-    <form action = {{ url_for('start_run') }}>
-      <input type=submit value=Begin Run></input></form>
-    {% else %}
-      <form action = {{ url_for('end_run') }}>
-	<input type=submit value=End Run></input></form>
-      {% endif %}
+  {% if not in_progress and not new %}
+    <form id = 'new_run' action = {{ url_for('new_run') }}>
+      <input type=submit value="New Run"></input></form>
+    {% elif not new %}
+      <form id = "end_run" action = {{ url_for('end_run') }}>
+	<input type=submit value="End Run"></input>
+      </form>
+   {% endif %}
 </div>
+</html>
