@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 {% block body %}
     <button id="generate">Generate Runlog</button>
-    <b id="runlog" style="display: none"><br><br>runlog goes here</b>
+    <a id="runlog" style="display: none"
+		 href="{{url_for('get_upload', filename=path) }}">
+       <br><br>runlog.csv </a>
     
     <script type="text/javascript" charset="utf-8">
        $(document).ready(function(){

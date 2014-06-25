@@ -33,7 +33,8 @@ socketio = SocketIO(app)
 #Define attributes of a run
 run_info = {}
 run_info['db_name'] = 'run_db'
-run_info['attr'] = ['Table x', 'Table y', 'Beam Energy [GeV]', 'Description']
+run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
+run_info['runlog'] = 'runlog.csv'
 
 #global flag denoting whether or not a run is in progress
 running = False
@@ -121,7 +122,11 @@ def no_data():
 
 @app.route('/runlog')
 def runlog():
-    return render_template('runlog.html', in_progress=running)
+    """renders page from which user can request the runlog"""
+
+    runlog_path = upload_path(run_info['runlog'])
+    return render_template('runlog.html', in_progress=running,
+                           path=runlog_path)
 
 @app.route('/<path:filename>')
 def get_upload(filename):
@@ -138,8 +143,27 @@ def send_events():
 
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
+    """generates runlog upon request from client"""
     print 'clicked'
-    sleep(0.5) #do something
+    
+    with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
+        db = connect_db(run_info['db_name'])
+        
+        #write column headers
+        runlog.write('run number')
+        for attr in run_info['attr']:
+            runlog.write(', ' + attr)
+        
+        #fill runlog data from database
+        for run_idx in xrange(int(db['toc']['n_runs'])):
+            runlog.write('\n')
+            run_num = str(run_idx+1)
+            runlog.write(run_num)
+            
+            data = db[db['toc'][run_num]]
+            for attr in run_info['attr']:
+                runlog.write(', ' + data[attr])
+
     emit('runlog ready')
 
 @socketio.on('refreshed', namespace='/online')
