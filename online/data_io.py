@@ -6,7 +6,7 @@ from flask.ext.socketio import emit
 
 data = []
 e = threading.Event()
-lock = threading.Lock()
+
 rate = 0 
 eventCount = 0
 
@@ -33,17 +33,17 @@ def generate_data(e, data):
         past = generate_data.times.get()
         generate_data.times.put(now)
         
-        global lock
+
         global rate
         global eventCount
-        lock.acquire()
+
         newValue = np.random.standard_normal(1)[0]
         data.append(newValue)
         
         rate = float(generate_data.counter)/(now-past)
         eventCount+=1
-        
-        lock.release()
+
+
         sleep(0.1)
 generate_data.maxsize = 10
 generate_data.counter = 0

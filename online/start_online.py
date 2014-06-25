@@ -20,6 +20,7 @@ from time import sleep
 import numpy as np
 from matplotlib import pyplot as plt
 
+#setup flask app
 app = Flask(__name__)
 app.config.update(dict(
     UPLOAD_FOLDER=os.path.dirname(os.path.realpath(__file__))+'/uploads',
@@ -39,10 +40,14 @@ running = False
 
 @app.route('/')
 def home():
+    """display home page of online DAQ"""
     return render_template('layout.html', in_progress=running)
 
 @app.route('/new')
 def new_run():
+    """a new run is about to begin. Load the data from 
+    the previous run and prompt user"""
+
     last_data ={}
     if run_info['last_run'] != 0:
         db = connect_db(run_info['db_name'])
@@ -53,7 +58,9 @@ def new_run():
 
 @app.route('/start', methods=['POST'])
 def start_run():
-    #check the form for completion
+    """Check user form for completion. If it is complete, start the run.
+    This entails saving the user configuration in couchdb and launching the data getter
+    and emitter"""
     data = copy_form_data(run_info, request)
     print 'checking form'   
     complete = check_form_data(run_info, data)
@@ -83,6 +90,8 @@ def start_run():
 
 @app.route('/end')
 def end_run():
+    """Ends the run, broadcasts a refresh message to all clients"""
+
     global running
     if running:
         running = False
@@ -93,6 +102,7 @@ def end_run():
 
 @app.route('/hist')
 def running_hist():
+    """displays an online histogram"""
     filepath = update_hist()
 
     if filepath == 'failed':
@@ -101,17 +111,15 @@ def running_hist():
 
 @app.route('/traces')
 def traces():
+    """Displays online traces"""
     filepath = generate_traces()
     return render_template('traces.html', path=filepath, in_progress=running)
 
 @app.route('/nodata')
 def no_data():
+    """Displays a message if someone tries to draw a histogram when no data
+    is available"""
     return render_template('no_data.html', in_progress=running)
-
-@app.route('/reset')
-def reset():
-    data_io.clear_data()
-    return redirect(url_for('home'))
 
 @app.route('/<path:filename>')
 def get_upload(filename):
@@ -120,6 +128,7 @@ def get_upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 def send_events():
+    """sends data to the clients while a run is going"""
     while not data_io.e.isSet():
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
@@ -127,18 +136,23 @@ def send_events():
 
 @socketio.on('refreshed', namespace='/online')
 def on_refresh():
+    """when a client refreshes his page, this sends him a fresh batch of data"""
     if running:
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
 
 @socketio.on('connect', namespace='/online')
 def test_connect():
+    """communicates upon connection with a client"""
     emit('my response', {'data': 'Connected'})
 
 def broadcast_refresh():
+    """tells all clients to refresh their pages. This is called when a run begins
+    or ends"""
     socketio.emit('refresh', {'data': ''}, namespace='/online')
 
 def update_hist():
+    """updates the online histogram"""
     plt.clf()
   
     try:
@@ -156,6 +170,7 @@ def update_hist():
     return filepath
 
 def generate_traces():
+    """generates the online traces"""
     trace = data_io.fill_trace()
     
     plt.clf()
@@ -262,6 +277,7 @@ def get_db(db_name):
     return g.client[db_name]
 
 def last_run_number():
+    """determines the last run number by looking in the database"""
     db = connect_db(run_info['db_name'])
     return db['toc']['n_runs']
 
