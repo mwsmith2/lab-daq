@@ -6,7 +6,7 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template, send_from_directory, redirect, url_for
-from flask import g, request
+from flask import g, request, session
 from flask.ext.socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
@@ -85,17 +85,19 @@ def start_run():
     data_io.begin_run()
 
     # Send a start run signal to fe_master.
-    context = zmq.Context()
-    start_sck = context.socket(zmq.PUSH)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    start_sck.connect(conf['master_port'])
-    start_sck.send("START:%05i:" % run_info['last_run'])
+    # context = zmq.Context()
+    # start_sck = context.socket(zmq.PUSH)
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # start_sck.connect(conf['master_port'])
+    # start_sck.send("START:%05i:" % run_info['last_run'])
     
+
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
-    
+
     sleep(0.1)
     broadcast_refresh()
+
     return redirect(url_for('running_hist'))
 
 @app.route('/end')
@@ -108,12 +110,12 @@ def end_run():
         data_io.end_run()
 
     # Send a stop run signal to fe_master.
-    context = zmq.Context()
-    stop_sck = context.socket(zmq.PUSH)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    stop_sck.connect(conf['master_port'])
-    stop_sck.send("STOP:")
-    
+    # context = zmq.Context()
+    # stop_sck = context.socket(zmq.PUSH)
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # stop_sck.connect(conf['master_port'])
+    # stop_sck.send("STOP:")
+
     broadcast_refresh()
     return redirect(url_for('running_hist'))
 
@@ -138,6 +140,52 @@ def no_data():
     is available"""
     return render_template('no_data.html', in_progress=running)
 
+@app.route('/revision_select')
+def revision_select():
+    """display page where user can select a run to revise"""
+    if run_info['last_run']<10:
+        end = 1
+    else:
+        end = run_info['last_run']-10
+    
+    return render_template("revision_select.html", 
+                           last_ten=range(run_info['last_run'],end,-1))
+
+@app.route('/revise/<string:run_num>')
+def revise(run_num):
+    """display page for revising the given run"""
+    try:
+        db = connect_db(run_info['db_name'])
+        old_data = db[db['toc'][run_num]]
+        print 'found run'
+        print 'before: ' + old_data['_id']
+        session['revision_number']=run_num
+        return render_template('revise.html', num=run_num, 
+                               info=run_info, data=old_data,
+                               in_progress=running)
+    except:
+         return render_template('no_run.html')
+    
+
+@app.route('/save_revision', methods=['POST'])
+def save_revision():
+    """save run revision information"""
+    data = copy_form_data(run_info, request)
+    complete = check_form_data(run_info, data)
+    if not complete:
+        error = "All fields in the form must be filled."
+        return render_template('revise.html',num=session['revision_number'], 
+                               info=run_info, data=data,error=error, 
+                               in_progress=running)
+        
+    #save the revision    
+    db = connect_db(run_info['db_name'])
+    data['_id'] = db[db['toc'][session['revision_number']]]['_id']
+    data['_rev'] = db[db['toc'][session['revision_number']]]['_rev']
+    data['run_number'] = session['revision_number']
+    save_db_data(db, data)
+    return render_template('revision_success.html', in_progress=running)
+
 @app.route('/runlog')
 def runlog():
     """renders page from which user can request the runlog"""
@@ -145,6 +193,11 @@ def runlog():
     runlog_path = upload_path(run_info['runlog'])
     return render_template('runlog.html', in_progress=running,
                            path=runlog_path)
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error404.html'), 404
+
+
 
 @app.route('/<path:filename>')
 def get_upload(filename):
@@ -288,7 +341,7 @@ def save_db_data(db, data):
         toc['_id'] = 'toc'
 
     # Increment n_entries if necessary.
-    if run_info['last_run'] not in toc:
+    if str(run_info['last_run']) not in toc:
         toc['n_runs'] += 1
 
     # Save the data.
