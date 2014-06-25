@@ -86,7 +86,7 @@ def start_run():
 
     # Send a start run signal to fe_master.
     context = zmq.Context()
-    start_sck = context.socket(zmq.PUB)
+    start_sck = context.socket(zmq.PUSH)
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     start_sck.connect(conf['master_port'])
     start_sck.send("START:%05i:" % run_info['last_run'])
@@ -109,7 +109,7 @@ def end_run():
 
     # Send a stop run signal to fe_master.
     context = zmq.Context()
-    stop_sck = context.socket(zmq.PUB)
+    stop_sck = context.socket(zmq.PUSH)
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     stop_sck.connect(conf['master_port'])
     stop_sck.send("STOP:")
