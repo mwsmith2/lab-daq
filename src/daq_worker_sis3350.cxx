@@ -226,6 +226,8 @@ void DaqWorkerSis3350::WorkLoop()
 {
   while (true) {
 
+    t0_ = high_resolution_clock::now();
+
     while (go_time_) {
 
       if (EventAvailable()) {
@@ -298,8 +300,8 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
   }
 
   // Get the system time.
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  high_resolution_clock::duration dtn = t1.time_since_epoch();
+  auto t1 = high_resolution_clock::now();
+  auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
   bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
 
   //todo: check it has the expected length

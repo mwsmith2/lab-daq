@@ -42,8 +42,8 @@ void DaqWorkerFake::GenerateEvent()
       cout << name_ << " generated an event." << endl;
 
       // Get the system time
-      high_resolution_clock::time_point t1 = high_resolution_clock::now();
-      high_resolution_clock::duration dtn = t1.time_since_epoch();
+      auto t1 = high_resolution_clock::now();
+      auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();     
       event_data_.system_clock = duration_cast<nanoseconds>(dtn).count();
 
       for (int i = 0; i < num_ch_; ++i){
@@ -79,6 +79,8 @@ void DaqWorkerFake::GetEvent(event_struct &bundle)
 void DaqWorkerFake::WorkLoop() 
 {
   while (true) {
+
+    t0_ = high_resolution_clock::now();
 
     while(go_time_) {
 

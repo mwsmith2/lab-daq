@@ -32,6 +32,8 @@ public:
   
 private:
   
+  high_resolution_clock::time_point t0_;
+  
   bool EventAvailable();
   void GetEvent(sis_3350 &bundle);
 

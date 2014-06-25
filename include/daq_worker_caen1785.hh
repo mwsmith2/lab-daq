@@ -32,6 +32,8 @@ public:
   
 private:
   
+  high_resolution_clock::time_point t0_;
+  
   bool EventAvailable();
   void ClearData() { Write16(0x1032, 0x4); };
   void GetEvent(caen_1785 &bundle);

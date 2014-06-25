@@ -49,6 +49,8 @@ void DaqWorkerCaen1785::WorkLoop()
 {
   while (true) {
 
+    t0_ = high_resolution_clock::now();
+
     while (go_time_) {
 
       if (EventAvailable()) {
@@ -113,8 +115,8 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
   uint ch, data;
 
   // Get the system time
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  high_resolution_clock::duration dtn = t1.time_since_epoch();
+  auto t1 = high_resolution_clock::now();
+  auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
   bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
 
   // Get the event header for each high or low value
