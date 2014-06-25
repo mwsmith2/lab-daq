@@ -41,14 +41,14 @@ running = False
 @app.route('/')
 def home():
     """display home page of online DAQ"""
-    return render_template('layout.html', in_progress=running)
+    return render_template('home.html', in_progress=running)
 
 @app.route('/new')
 def new_run():
     """a new run is about to begin. Load the data from 
     the previous run and prompt user"""
-
-    last_data ={}
+    
+    last_data = {}
     if run_info['last_run'] != 0:
         db = connect_db(run_info['db_name'])
         last_data = db[db['toc'][str(run_info['last_run'])]]
@@ -119,6 +119,10 @@ def no_data():
     is available"""
     return render_template('no_data.html', in_progress=running)
 
+@app.route('/runlog')
+def runlog():
+    return render_template('runlog.html', in_progress=running)
+
 @app.route('/<path:filename>')
 def get_upload(filename):
     """Return the requested file from the server."""
@@ -132,11 +136,17 @@ def send_events():
                       namespace='/online')
         sleep(0.1)
 
+@socketio.on('generate runlog', namespace='/online')
+def generate_runlog():
+    print 'clicked'
+    sleep(0.5) #do something
+    emit('runlog ready')
+
 @socketio.on('refreshed', namespace='/online')
 def on_refresh():
     """when a client refreshes his page, this sends him a fresh batch of data"""
     if running:
-        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+        emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
 
 @socketio.on('connect', namespace='/online')

@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block body %}
+    <button id="generate">Generate Runlog</button>
+    <b id="runlog" style="display: none"><br><br>runlog goes here</b>
+    
+    <script type="text/javascript" charset="utf-8">
+       $(document).ready(function(){
+	   namespace = '/online';
+	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+	   
+	   socket.on('runlog ready', function() {
+	       $('#runlog').show();
+	   });
+       });
+
+      $('#generate').click(function() {
+      	  namespace = '/online';
+	  var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+	  socket.emit('generate runlog');
+      });
+    </script>
+    
+    
+{% endblock body %}
