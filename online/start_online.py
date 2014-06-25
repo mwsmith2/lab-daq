@@ -43,10 +43,6 @@ run_info['db_name'] = 'run_db'
 run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
 run_info['runlog'] = 'runlog.csv'
 
-#global flag denoting whether or not a run is in progress
-running = False
-cwd = cwd
-
 @app.route('/')
 def home():
     """display home page of online DAQ"""
