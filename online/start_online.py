@@ -59,10 +59,9 @@ def new_run():
 @app.route('/start', methods=['POST'])
 def start_run():
     """Check user form for completion. If it is complete, start the run.
-    This entails saving the user configuration in couchdb and launching the data getter
-    and emitter"""
+    This entails saving the user configuration in couchdb and 
+    launching the data getter and emitter"""
     data = copy_form_data(run_info, request)
-    print 'checking form'   
     complete = check_form_data(run_info, data)
     if not complete:
         error = "All fields in the form must be filled."
@@ -78,7 +77,6 @@ def start_run():
     #start the run and launch the data emitter
     global running
     running = True
-    print 'attempting to begin run'
     data_io.begin_run()
     
     t = threading.Thread(name='emitter', target=send_events)
@@ -156,7 +154,7 @@ def update_hist():
     plt.clf()
   
     try:
-        plt.hist(data_io.data)
+        plt.hist(data_io.data, np.sqrt(data_io.eventCount))
         plt.title('Event ' + str(data_io.eventCount))
     except IndexError:
         return 'failed'
@@ -212,12 +210,9 @@ def copy_form_data(info, req):
 def check_form_data(info, data):
     """Check each spot in the form data."""
     for key in info['attr']:
-        print key + ' : ' + data[key]
         if data[key] == '':
-            print 'form not complete'
             return False
-    
-    print 'form complete'
+
     return True
 
 def save_db_data(db, data):
