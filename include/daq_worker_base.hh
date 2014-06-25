@@ -51,7 +51,7 @@ class DaqWorkerBase {
     std::thread work_thread_;
 
     virtual void WorkLoop() = 0;
-
+    
 };
 
 } // daq

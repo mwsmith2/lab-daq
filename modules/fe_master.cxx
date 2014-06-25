@@ -22,12 +22,16 @@ using namespace boost::property_tree;
 //--- project includes -----------------------------------------------------//
 #include "daq_worker_fake.hh"
 #include "daq_worker_sis3350.hh"
+#include "daq_worker_sis3302.hh"
+#include "daq_worker_caen1785.hh"
 #include "event_builder.hh"
+#include "daq_structs.hh"
+
 using namespace daq;
 
-typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *> worker_ptr_types;
+int daq::vme::device = -1;
 
-// Anonymous namespace for "global" paramaters
+// Anonymous namespace for "global" parameters
 namespace {
   
   // simple declarations
@@ -93,25 +97,49 @@ int LoadConfig(){
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
 
+  // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
-
+    
     string name(v.first);
-    string conf_file(v.second.data());
+    string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, conf_file));
+    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
   } 
 
+  // Set up the sis3350 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.sis_3350")) {
+		conf.get_child("devices.sis_3350")) {
 
     string name(v.first);
-    string conf_file(v.second.data());
+    string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, conf_file));
+    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3302")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+  }
+
+  // Set up the sis3302 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_1785")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the data writers.
   daq_writers.push_back(new DaqWriterRoot(conf_file));
 
+  // Set up the event builder.
   event_builder = new EventBuilder(daq_workers, daq_writers);
 
   return 0;
@@ -140,6 +168,10 @@ int StartRun(){
     } else if ((*it).which() == 1) {
 
       boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
 
     }
   }
@@ -170,6 +202,10 @@ int StopRun(){
     } else if ((*it).which() == 1) {
 
       boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopWorker();
 
     }
   }

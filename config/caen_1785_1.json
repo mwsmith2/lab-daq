@@ -1,0 +1,4 @@
+{
+	"device":"/dev/sis1100_00remote",
+	"base_address":"0x02000000"
+}

@@ -2,7 +2,7 @@
 
 namespace daq {
 
-DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<event_struct>(name, conf)
+DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
   LoadConfig();
 
@@ -14,27 +14,31 @@ DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerBase<eve
 
 void DaqWorkerSis3350::LoadConfig()
 { 
+  // Open the configuration file.
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  if ((device_ = open(conf.get<string>("device").c_str(), O_RDWR, 0)) < 0) {
-      cerr << "Open vme device." << endl;
-  }
+  // Get the device filestream
+  queue_mutex_.lock();
+  if (vme::device == -1) {
 
-  cout << "device: " << device_ << endl;
+    string dev_path = conf.get<string>("device");
+    if ((vme::device = open(dev_path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
+      cerr << "Open vme device." << endl;
+    }
+  }
+  cout << "device: " << vme::device << endl;
+  queue_mutex_.unlock();
 
   // Get the base address.  Needs to be converted from hex.
-  string addr = conf.get<string>("base_address");
-  std::stringstream ss;
-  ss << addr;
-  ss >> std::hex >> base_address_;
+  base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
 
   int ret;
   uint msg = 0;
 
   // Check for device.
   Read(0x0, msg);
-  cout << "sis3350 found at 0x" << std::hex << base_address_ << ".\n";
+  cout << "sis3350 found at 0x%08x\n." << base_address_;
 
   // Reset device.
   msg = 1;
@@ -157,9 +161,7 @@ void DaqWorkerSis3350::LoadConfig()
   Write(0x01000020, msg);
 
   //ring buffer pre-trigger sample length
-  string pretrigger = conf.get<string>("pretrigger_samples");
-  ss << pretrigger;
-  ss >> pretrigger >> msg;
+  msg = std::stoi(conf.get<string>("pretrigger_samples"), nullptr, 0);
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V
@@ -224,11 +226,13 @@ void DaqWorkerSis3350::WorkLoop()
 {
   while (true) {
 
+    t0_ = high_resolution_clock::now();
+
     while (go_time_) {
 
       if (EventAvailable()) {
 
-        static event_struct bundle;
+        static sis_3350 bundle;
         GetEvent(bundle);
 
         queue_mutex_.lock();
@@ -248,17 +252,21 @@ void DaqWorkerSis3350::WorkLoop()
   }
 }
 
-event_struct DaqWorkerSis3350::PopEvent()
+sis_3350 DaqWorkerSis3350::PopEvent()
 {
   // Copy the data.
-  event_struct data = data_queue_.front();
+  sis_3350 data = data_queue_.front();
+
+  queue_mutex_.lock();
   data_queue_.pop();
+  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
   return data;
 }
+
 
 bool DaqWorkerSis3350::EventAvailable()
 {
@@ -273,7 +281,7 @@ bool DaqWorkerSis3350::EventAvailable()
 }
 
 // Pull the event.
-void DaqWorkerSis3350::GetEvent(event_struct &bundle)
+void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
 {
   int ch, offset, ret = 0;
 
@@ -291,6 +299,11 @@ void DaqWorkerSis3350::GetEvent(event_struct &bundle)
     Read(offset, next_sample_address[ch]);
   }
 
+  // Get the system time.
+  auto t1 = high_resolution_clock::now();
+  auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
+  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
+
   //todo: check it has the expected length
   uint trace[4][SIS_3350_LN / 2 + 4];
 
@@ -306,11 +319,11 @@ void DaqWorkerSis3350::GetEvent(event_struct &bundle)
   //decode the event (little endian arch)
   for (ch = 0; ch < SIS_3350_CH; ch++) {
 
-    bundle.timestamp[ch] = 0;
-    bundle.timestamp[ch] = trace[ch][1] & 0xfff;
-    bundle.timestamp[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfffULL) << 24;
-    bundle.timestamp[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
+    bundle.device_clock[ch] = 0;
+    bundle.device_clock[ch] = trace[ch][1] & 0xfff;
+    bundle.device_clock[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfffULL) << 24;
+    bundle.device_clock[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
 
     uint idx;
     for (idx = 0; idx < SIS_3350_LN / 2; idx++) {
@@ -318,64 +331,6 @@ void DaqWorkerSis3350::GetEvent(event_struct &bundle)
       bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xfff;
     }
   }
-}
-
-int DaqWorkerSis3350::Read(int addr, uint &msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_read(device_, base_address_ + addr, &msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not readable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3350::Write(int addr, uint msg)
-{
-  static int retval;
-  static int status;
-
-  status = (retval = vme_A32D32_write(device_, base_address_ + addr, msg));
-
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Address 0x%08x not writeable.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
-}
-
-int DaqWorkerSis3350::ReadTrace(int addr, uint *trace)
-{
-  static int retval;
-  static int status;
-  static uint num_got;
-
-  status = (retval = vme_A32_2EVME_read(device_,
-                                        base_address_ + addr,
-                                        trace,
-                                        SIS_3350_LN / 2 + 4,
-                                        &num_got));
-
-
-  for (int i = 0; i < 10; ++i) {
-    cout << trace[i] << endl;
-  }
-  
-  if (status != 0) {
-    char str[100];
-    sprintf(str, "Error reading trace at 0x%08x.\n", base_address_ + addr);
-    perror(str);
-  }
-
-  return retval;
 }
 
 } // ::daq

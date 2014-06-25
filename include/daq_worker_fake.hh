@@ -3,7 +3,10 @@
 
 //--- std includes ----------------------------------------------------------//
 #include <cmath>
+#include <chrono>
 #include <ctime>
+#include <thread>
+using namespace std::chrono;
 
 //--- other includes --------------------------------------------------------//
 
@@ -39,6 +42,7 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     double drop_rate_;
     event_struct event_data_;
     std::thread event_thread_;
+    high_resolution_clock::time_point t0_;
 
     bool EventAvailable() { return has_fake_event_; };
     void GetEvent(event_struct &bundle);

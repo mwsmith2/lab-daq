@@ -32,27 +32,56 @@ void DaqWriterRoot::StartWriter()
 
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
-    static int count = 0;
+    int count = 0;
     root_data_.fake.resize(count + 1);
 
     br_name = string(v.first);
-    sprintf(br_vars, "timestamp[%i]/l:trace[%i][%i]/s", 
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
       SIS_3350_CH, SIS_3350_CH, SIS_3350_LN);
 
     pt_->Branch(br_name.c_str(), &root_data_.fake[count++], br_vars);
 
   }
 
-  BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.sis_3350")) {
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3350")) {
 
-    static int count = 0;
+    int count = 0;
     root_data_.sis_fast.resize(count + 1);
 
     br_name = string(v.first);
-    sprintf(br_vars, "timestamp[%i]/l:trace[%i][%i]/s", 
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
       SIS_3350_CH, SIS_3350_CH, SIS_3350_LN);
 
     pt_->Branch(br_name.c_str(), &root_data_.sis_fast[count++], br_vars);
+
+  }
+
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3302")) {
+
+    int count = 0;
+    root_data_.sis_slow.resize(count + 1);
+
+    br_name = string(v.first);
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
+      SIS_3302_CH, SIS_3302_CH, SIS_3302_LN);
+
+    pt_->Branch(br_name.c_str(), &root_data_.sis_slow[count++], br_vars);
+
+  }
+
+    BOOST_FOREACH(const ptree::value_type &v, 
+                  conf.get_child("devices.caen_1785")) {
+
+    int count = 0;
+    root_data_.caen_adc.resize(count + 1);
+
+    br_name = string(v.first);
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:values[%i]/s", 
+      CAEN_1785_CH, CAEN_1785_CH);
+
+    pt_->Branch(br_name.c_str(), &root_data_.caen_adc[count++], br_vars);
 
   }
 }
