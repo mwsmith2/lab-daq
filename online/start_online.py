@@ -15,15 +15,22 @@ import os, glob
 import threading
 
 import data_io
+import zmq, json
 from time import sleep
 
 import numpy as np
 from matplotlib import pyplot as plt
 
+# global parameters
+# flag denoting whether or not a run is in progress
+running = False
+# current working directory
+cwd = os.path.dirname(os.path.realpath(__file__))
+
 #setup flask app
 app = Flask(__name__)
 app.config.update(dict(
-    UPLOAD_FOLDER=os.path.dirname(os.path.realpath(__file__))+'/uploads',
+    UPLOAD_FOLDER=cwd+'/uploads',
     IMAGE_UPLOADS=['.jpg', '.jpe', '.jpeg', '.png', '.gif', '.svg', '.bmp'],
     DEBUG=True))
 app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
@@ -35,9 +42,6 @@ run_info = {}
 run_info['db_name'] = 'run_db'
 run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
 run_info['runlog'] = 'runlog.csv'
-
-#global flag denoting whether or not a run is in progress
-running = False
 
 @app.route('/')
 def home():
@@ -79,6 +83,13 @@ def start_run():
     global running
     running = True
     data_io.begin_run()
+
+    # Send a start run signal to fe_master.
+    context = zmq.Context()
+    start_sck = context.socket(zmq.PUSH)
+    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    start_sck.connect(conf['master_port'])
+    start_sck.send("START:%05i:" % run_info['last_run'])
     
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
@@ -95,6 +106,13 @@ def end_run():
     if running:
         running = False
         data_io.end_run()
+
+    # Send a stop run signal to fe_master.
+    context = zmq.Context()
+    stop_sck = context.socket(zmq.PUSH)
+    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    stop_sck.connect(conf['master_port'])
+    stop_sck.send("STOP:")
     
     broadcast_refresh()
     return redirect(url_for('running_hist'))
@@ -239,7 +257,7 @@ def unique_filename(upload_file):
 def upload_path(filename):
     """Construct the full path of the uploaded file."""
     basename = os.path.basename(filename)
-    return os.path.join(os.path.dirname(os.path.realpath(__file__))+
+    return os.path.join(cwd+
                         '/uploads', basename)
 
 def copy_form_data(info, req):
