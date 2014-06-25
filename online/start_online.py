@@ -145,8 +145,8 @@ def send_events():
 def update_hist():
     """update the histogram upon request from client and then
     respond when it's ready"""
-    print 'generating hist'
     name, path = generate_hist()
+
     send_from_directory(app.config['UPLOAD_FOLDER'], name)
     emit('histogram ready', {"path" : path});
 
@@ -200,7 +200,7 @@ def generate_hist():
         plt.hist(data_io.data, np.sqrt(data_io.eventCount))
         plt.title('Event ' + str(data_io.eventCount))
     except IndexError:
-        return 'failed'
+        return 'failed', 'failed'
 
     for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_hist*'):
         os.remove(temp_file)
