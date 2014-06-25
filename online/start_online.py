@@ -102,7 +102,7 @@ def end_run():
 @app.route('/hist')
 def running_hist():
     """displays an online histogram"""
-    filepath = update_hist()
+    filename, filepath = generate_hist()
 
     if filepath == 'failed':
         return render_template('no_data.html')
@@ -140,6 +140,15 @@ def send_events():
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
         sleep(0.1)
+
+@socketio.on('update histogram', namespace='/online')
+def update_hist():
+    """update the histogram upon request from client and then
+    respond when it's ready"""
+    print 'generating hist'
+    name, path = generate_hist()
+    send_from_directory(app.config['UPLOAD_FOLDER'], name)
+    emit('histogram ready', {"path" : path});
 
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
@@ -183,7 +192,7 @@ def broadcast_refresh():
     or ends"""
     socketio.emit('refresh', {'data': ''}, namespace='/online')
 
-def update_hist():
+def generate_hist():
     """updates the online histogram"""
     plt.clf()
   
@@ -199,7 +208,7 @@ def update_hist():
     filepath = upload_path(filename)
     plt.savefig(filepath)
     
-    return filepath
+    return filename, filepath
 
 def generate_traces():
     """generates the online traces"""
