@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block body %}
+  Revise Run Number: 		
+  <input type=text id="selection"></input>
+  <button id="submit">Select</button>
+  <br></br>
+  <button id="show">Show Last 10 runs</button>
+  <button id="hide" style="display: none">Hide Last 10 runs</button>
+  <p id="contents" style="display: none">
+    {% for run in last_ten %}
+      <a href="{{url_for('revise',run_num=run)}}">Run {{run}} </a><br>
+    {% endfor %}
+  </p>
+  
+  <script type="text/javascript" charset="utf-8">
+      $('#show').click(function() {
+	  $('#contents').show();
+	  $('#show').hide();
+	  $('#hide').show();
+      });
+      
+      $('#hide').click(function() {
+	  $('#contents').hide();
+	  $('#show').show();
+	  $('#hide').hide();
+      });
+      
+      $('#submit').click(function() {
+	  location.replace("{{url_for('revise',run_num='')}}"+
+	      $('#selection').val());
+      });
+  </script>
+
+
+{% endblock body %}
