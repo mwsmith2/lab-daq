@@ -6,10 +6,11 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, render_template, send_from_directory, redirect, url_for
-from flask import session
+from flask import g, request
 from flask.ext.socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
+import couchdb
 import os, glob
 import threading
 
@@ -27,6 +28,12 @@ app.config.update(dict(
 app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
 socketio = SocketIO(app)
 
+
+#Define attributes of a run
+run_info = {}
+run_info['db_name'] = 'run_db'
+run_info['attr'] = ['Table x', 'Table y', 'Beam Energy [GeV]', 'Description']
+
 #global flag denoting whether or not a run is in progress
 running = False
 
@@ -34,8 +41,34 @@ running = False
 def home():
     return render_template('layout.html', in_progress=running)
 
-@app.route('/start')
+@app.route('/new')
+def new_run():
+    last_data ={}
+    if run_info['last_run'] != 0:
+        db = connect_db(run_info['db_name'])
+        last_data = db[db['toc'][str(run_info['last_run'])]]
+        last_data['Description'] = ''
+
+    return render_template('new_run.html', info=run_info, data=last_data, new=True)
+
+@app.route('/start', methods=['POST'])
 def start_run():
+    #check the form for completion
+    data = copy_form_data(run_info, request)
+    print 'checking form'   
+    complete = check_form_data(run_info, data)
+    if not complete:
+        error = "All fields in the form must be filled."
+        return render_template('new_run.html', info=run_info, 
+                                   data=data, error=error, new=True )
+
+    #save the run info
+    db = get_db(run_info['db_name'])
+    run_info['last_run'] += 1
+    data['run_number'] = run_info['last_run']
+    save_db_data(db, data)
+
+    #start the run and launch the data emitter
     global running
     running = True
     print 'attempting to begin run'
@@ -44,7 +77,8 @@ def start_run():
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
     
-    sleep(0.2)
+    sleep(0.1)
+    broadcast_refresh()
     return redirect(url_for('running_hist'))
 
 @app.route('/end')
@@ -53,7 +87,8 @@ def end_run():
     if running:
         running = False
         data_io.end_run()
-
+    
+    broadcast_refresh()
     return redirect(url_for('running_hist'))
 
 @app.route('/hist')
@@ -78,40 +113,38 @@ def reset():
     data_io.clear_data()
     return redirect(url_for('home'))
 
+@app.route('/<path:filename>')
+def get_upload(filename):
+    """Return the requested file from the server."""
+    filename = os.path.basename(filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 def send_events():
     while not data_io.e.isSet():
-        data_io.lock.acquire()
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
-        data_io.lock.release()
         sleep(0.1)
 
 @socketio.on('refreshed', namespace='/online')
 def on_refresh():
     if running:
-        data_io.lock.acquire()
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
-        data_io.lock.release()
-
-@socketio.on('update run status', namespace='/online')
-def broadcast_refresh():
-    emit('refresh', {'data': ''}, broadcast=True)
 
 @socketio.on('connect', namespace='/online')
 def test_connect():
     emit('my response', {'data': 'Connected'})
 
+def broadcast_refresh():
+    socketio.emit('refresh', {'data': ''}, namespace='/online')
+
 def update_hist():
     plt.clf()
   
-    data_io.lock.acquire()
     try:
         plt.hist(data_io.data)
         plt.title('Event ' + str(data_io.eventCount))
-        data_io.lock.release()
     except IndexError:
-        data_io.lock.release()
         return 'failed'
 
     for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_hist*'):
@@ -139,8 +172,7 @@ def generate_traces():
     plt.savefig(filepath)
     
     return filepath
-    
-    
+        
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""
      filename = os.path.basename(upload_file).split('.')[0]
@@ -154,12 +186,85 @@ def upload_path(filename):
     return os.path.join(os.path.dirname(os.path.realpath(__file__))+
                         '/uploads', basename)
 
-@app.route('/<path:filename>')
-def get_upload(filename):
-    """Return the requested file from the server."""
-    filename = os.path.basename(filename)
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+def copy_form_data(info, req):
+    """Copy the data in the form that is filled out."""
+    data = {}
+    for key in info['attr']:
+        data[key] = req.form[key]
+
+    return data
+
+def check_form_data(info, data):
+    """Check each spot in the form data."""
+    for key in info['attr']:
+        print key + ' : ' + data[key]
+        if data[key] == '':
+            print 'form not complete'
+            return False
+    
+    print 'form complete'
+    return True
+
+def save_db_data(db, data):
+    """Save the entry to the db and enter it into the table of contents."""
+    # Form a map to the most recent entry.
+    toc = db.get('toc')
+        
+    # Create if null.
+    if (toc == None):
+        toc = {}
+        toc['n_runs'] = 0
+        toc['_id'] = 'toc'
+
+    # Increment n_entries if necessary.
+    if run_info['last_run'] not in toc:
+        toc['n_runs'] += 1
+
+    # Save the data.
+    idx, ver = db.save(data)
+    
+    toc[run_info['last_run']] = idx
+    db.save(toc)
+
+def connect_db(db_name):
+    """Connect to the database if open, and start database if not running."""
+    try:
+        client = couchdb.Server()
+
+    except:
+        subprocess.call(['couchdb', '-b'])
+        time.sleep(2)
+        client = couchdb.Server()
+
+    try:
+        db = client[db_name]
+
+    except:
+        client.create(db_name)
+        db = client[db_name]
+        toc = {}
+        toc['n_runs'] = 0
+
+        toc['_id'] = 'toc'
+        db.save(toc)
+
+    return db
+
+
+def get_db(db_name):
+    """Place a handle to the database in the global variables."""
+    if not hasattr(g, 'client'):
+        g.client = {}
+
+    if not hasattr(g.client, db_name):
+        g.client[db_name] = connect_db(db_name)
+
+    return g.client[db_name]
+
+def last_run_number():
+    db = connect_db(run_info['db_name'])
+    return db['toc']['n_runs']
 
 if __name__ == '__main__':
-    print app.config['UPLOAD_FOLDER']
+    run_info['last_run'] = last_run_number()
     socketio.run(app, host='0.0.0.0')

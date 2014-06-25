@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1>Enter Run Info</h1>
+<b><font color="red">{{ error }}</font></b>
+<form action="{{ url_for('start_run') }}" 
+	enctype="multipart/form-data" method=post>
+<table>
+	<thead><h3>Starting Run {{ (info['last_run'] + 1|int)| string}} </h3></thead>
+
+	{% for attr in info['attr'] %}
+		<tr>
+			<td>{{ attr + ':' }}</td>
+			<td><input type=text name='{{ attr }}' value='{{data[attr]}}'></td>
+		</tr>
+	{% endfor %}
+</table>
+<br>
+<input type=submit value='Begin Run''>
+</form>
+
+{% endblock %}
