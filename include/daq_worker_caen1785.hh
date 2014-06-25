@@ -1,5 +1,5 @@
-#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
-#define SLAC_DAQ_INCLUDE_DAQ_WORKER_SIS3350_HH_
+#ifndef SLAC_DAQ_INCLUDE_DAQ_WORKER_CAEN1785_HH_
+#define SLAC_DAQ_INCLUDE_DAQ_WORKER_CAEN1785_HH_
 
 //--- std includes ----------------------------------------------------------//
 #include <chrono>
@@ -19,23 +19,24 @@ using std::endl;
 // This class pulls data from a sis_3350 device.
 namespace daq {
 
-class DaqWorkerSis3350 : public DaqWorkerVme<sis_3350> {
+class DaqWorkerCaen1785 : public DaqWorkerVme<caen_1785> {
 
 public:
   
   // ctor
-  DaqWorkerSis3350(string name, string conf);
+  DaqWorkerCaen1785(string name, string conf);
   
   void LoadConfig();
   void WorkLoop();
-  sis_3350 PopEvent();
+  caen_1785 PopEvent();
   
 private:
   
   high_resolution_clock::time_point t0_;
   
   bool EventAvailable();
-  void GetEvent(sis_3350 &bundle);
+  void ClearData() { Write16(0x1032, 0x4); };
+  void GetEvent(caen_1785 &bundle);
 
 };
 

@@ -11,6 +11,7 @@ using std::endl;
 #include <boost/property_tree/json_parser.hpp>
 #include <zmq.hpp>
 
+
 int main(int argc, char *argv[])
 {
   // Get the system configuration

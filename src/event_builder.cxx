@@ -38,6 +38,11 @@ bool EventBuilder::WorkersHaveEvents()
       auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
       all_have_events &= ptr->HasEvent();
 
+    } else if ((*it).which() == 2) {
+
+      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
+      all_have_events &= ptr->HasEvent();
+
     }
   }
 
@@ -51,12 +56,17 @@ void EventBuilder::GetEventData(event_data& bundle)
     if ((*it).which() == 0) {
 
       auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
-      bundle.fake.push_back(ptr->PopEvent());
+      bundle.sis_fast.push_back(ptr->PopEvent());
 
     } else if ((*it).which() == 1) {
 
       auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
       bundle.sis_slow.push_back(ptr->PopEvent());
+
+    } else if ((*it).which() == 2) {
+
+      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
+      bundle.caen_adc.push_back(ptr->PopEvent());
 
     }
   }
