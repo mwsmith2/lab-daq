@@ -149,6 +149,7 @@ def revision_select():
         end = run_info['last_run']-10
     
     return render_template("revision_select.html", 
+                           in_progress=running,
                            last_ten=range(run_info['last_run'],end,-1))
 
 @app.route('/revise/<string:run_num>')
