@@ -7,6 +7,8 @@ from flask.ext.socketio import emit
 data = []
 e = threading.Event()
 
+trace = np.zeros(1024)
+
 rate = 0 
 eventCount = 0
 
@@ -20,10 +22,6 @@ def clear_data():
 def pulse_shape(t):
     return -1.0*np.exp(-(t)/5.0)*(1-np.exp(-(t)/1.0))
     
-def fill_trace():
-    trace = np.array(xrange(50))
-    return pulse_shape(trace)
-
 def generate_data(e, data):
     while not e.isSet():
         if generate_data.counter != generate_data.maxsize:
@@ -36,13 +34,13 @@ def generate_data(e, data):
 
         global rate
         global eventCount
-
-        newValue = np.random.standard_normal(1)[0]
-        data.append(newValue)
-        
-        rate = float(generate_data.counter)/(now-past)
+        global trace
         eventCount+=1
 
+        trace = np.random.standard_normal(len(trace))
+        data.append(trace.max())
+        
+        rate = float(generate_data.counter)/(now-past)
 
         sleep(0.1)
 generate_data.maxsize = 10
