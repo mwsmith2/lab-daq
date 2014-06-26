@@ -44,6 +44,10 @@ run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
 run_info['log_info'] = ['Events', 'Date', 'Time']
 run_info['runlog'] = 'runlog.csv'
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error404.html'), 404
+
 @app.route('/')
 def home():
     """display home page of online DAQ"""
@@ -139,7 +143,13 @@ def running_hist():
 
     if filepath == 'failed':
         return render_template('no_data.html')
-    return render_template('hist.html', path=filepath, in_progress=running)
+
+    if 'refresh_rate' not in session:
+        session['refresh_rate'] = 1.
+
+    return render_template('hist.html', path=filepath, 
+                           in_progress=running, 
+                           r_rate=session['refresh_rate'])
 
 @app.route('/traces')
 def traces():
@@ -171,8 +181,7 @@ def revise(run_num):
     try:
         db = connect_db(run_info['db_name'])
         old_data = db[db['toc'][run_num]]
-        print 'found run'
-        print 'before: ' + old_data['_id']
+
         session['revision_number']=run_num
         return render_template('revise.html', num=run_num, 
                                info=run_info, data=old_data,
@@ -207,10 +216,6 @@ def runlog():
     runlog_path = upload_path(run_info['runlog'])
     return render_template('runlog.html', in_progress=running,
                            path=runlog_path)
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('error404.html'), 404
-
 @app.route('/<path:filename>')
 def get_upload(filename):
     """Return the requested file from the server."""
@@ -220,9 +225,10 @@ def get_upload(filename):
 def send_events():
     """sends data to the clients while a run is going"""
     while not data_io.e.isSet():
+        sleep(0.1)
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
-        sleep(0.1)
+        
 
 @socketio.on('update histogram', namespace='/online')
 def update_hist():
@@ -240,11 +246,22 @@ def start_continual():
     
 @socketio.on('continue updating', namespace='/online')
 def continue_updating():
-    sleep(0.2)
-    
+    sleep(1.0/session['refresh_rate'])
+
     if session['updating_hist']:
         update_hist()
         emit('updated')
+
+@socketio.on('refresh rate', namespace='/online')
+def set_refresh(msg):
+    try:
+        new_rate = float(msg)
+        if new_rate <= 5.0:
+            session['refresh_rate'] = new_rate
+    except ValueError:
+        pass
+        
+    emit('current rate', str(session['refresh_rate']))
 
 @socketio.on('stop continual update', namespace='/online')
 def stop_continual():
@@ -253,7 +270,6 @@ def stop_continual():
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
     """generates runlog upon request from client"""
-    print 'clicked'
     
     with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
         db = connect_db(run_info['db_name'])
