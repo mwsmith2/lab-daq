@@ -15,8 +15,6 @@
        $(document).ready(function(){
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-
-	   socket.emit('refresh rate', '')
 	   
 	   socket.on('histogram ready', function(msg) {
 	       $('#img').attr('src',msg.path);
