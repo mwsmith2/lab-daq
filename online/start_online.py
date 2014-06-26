@@ -16,7 +16,7 @@ import threading
 
 import data_io
 import zmq, json
-from time import sleep
+from time import sleep, time
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -280,7 +280,7 @@ def stop_continual():
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
     """generates runlog upon request from client"""
-    
+
     with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
         db = connect_db(run_info['db_name'])
         
@@ -291,8 +291,10 @@ def generate_runlog():
         for info in run_info['log_info']:
             runlog.write(', ' + info)
 
+        n_runs = int(db['toc']['n_runs'])
+
         #fill runlog data from database
-        for run_idx in xrange(int(db['toc']['n_runs'])):
+        for run_idx in xrange(n_runs):
             runlog.write('\n')
             run_num = str(run_idx+1)
             runlog.write(run_num)
@@ -308,6 +310,12 @@ def generate_runlog():
                     runlog.write(', ' + str(data[info]))
                 else:
                     runlog.write(', N/A')
+                    
+            progress = 100*float(run_idx+1)/n_runs
+
+            emit('progress', "%02i%s Percent Generated" % 
+                 (progress, "%"))
+                 
     emit('runlog ready')
 
 @socketio.on('refreshed', namespace='/online')
