@@ -1,3 +1,9 @@
+#Aaron Fienberg
+#Fienberg@uw.edu
+#grabs data for the online SLAC daq display
+#
+
+
 import numpy as np
 from time import sleep, time
 import threading
