@@ -24,6 +24,8 @@ using namespace boost::property_tree;
 #include "daq_worker_sis3350.hh"
 #include "daq_worker_sis3302.hh"
 #include "daq_worker_caen1785.hh"
+#include "daq_writer_online.hh"
+#include "daq_writer_root.hh"
 #include "event_builder.hh"
 #include "daq_structs.hh"
 
@@ -138,8 +140,20 @@ int LoadConfig(){
     daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
   }
 
-  // Set up the data writers.
-  daq_writers.push_back(new DaqWriterRoot(conf_file));
+  // Set up the writers.
+  BOOST_FOREACH(const ptree::value_type &v,
+                conf.get_child("writers")) {
+ 
+    if (string(v.first) == string("root")) {
+   
+      daq_writers.push_back(new DaqWriterRoot(conf_file));
+   
+    } else if (string(v.first) == string("online")) {
+   
+      daq_writers.push_back(new DaqWriterOnline(conf_file));
+   
+    }
+  }
 
   // Set up the event builder.
   event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
@@ -219,8 +233,20 @@ int ReloadConfig() {
     daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
   }
 
-  // Set up the data writers.
-  daq_writers.push_back(new DaqWriterRoot(conf_file));
+  // Set up the writers.
+  BOOST_FOREACH(const ptree::value_type &v,
+                conf.get_child("writers")) {
+ 
+    if (string(v.first) == string("root")) {
+   
+      daq_writers.push_back(new DaqWriterRoot(conf_file));
+   
+    } else if (string(v.first) == string("online")) {
+   
+      daq_writers.push_back(new DaqWriterOnline(conf_file));
+   
+    }
+  }
 
   // Set up the event builder.
   event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
