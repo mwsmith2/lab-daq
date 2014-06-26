@@ -33,7 +33,7 @@ void DaqWorkerFake::LoadConfig()
 void DaqWorkerFake::GenerateEvent()
 {
   // Make fake events.
-  while (true) {
+  while (thread_live_) {
 
     while (go_time_) {
 

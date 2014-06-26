@@ -34,13 +34,13 @@ void DaqWriterRoot::StartWriter()
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
     int count = 0;
-    root_data_.fake.resize(count + 1);
+    root_data_.sis_fast.resize(count + 1);
 
     br_name = string(v.first);
     sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
       SIS_3350_CH, SIS_3350_CH, SIS_3350_LN);
 
-    pt_->Branch(br_name.c_str(), &root_data_.fake[count++], br_vars);
+    pt_->Branch(br_name.c_str(), &root_data_.sis_fast[count++], br_vars);
 
   }
 
@@ -107,7 +107,7 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
 
 void DaqWriterRoot::EndOfBatch(bool bad_data)
 {
-  
+
 }
 
 } // ::daq

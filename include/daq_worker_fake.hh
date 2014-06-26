@@ -27,6 +27,11 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     // ctor
     DaqWorkerFake(string name, string conf);
 
+    ~DaqWorkerFake() {
+        thread_live_ = false;
+        event_thread_.join();
+    };
+
     void LoadConfig();
     void WorkLoop();
     event_struct PopEvent();

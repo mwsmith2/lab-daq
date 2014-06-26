@@ -176,6 +176,7 @@ int ReloadConfig() {
   for (auto &writer : daq_writers) {
     delete writer;
   }
+  daq_writers.resize(0);
 
   delete event_builder;
 

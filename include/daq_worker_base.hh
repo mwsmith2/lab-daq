@@ -32,8 +32,10 @@ class DaqWorkerBase {
                                                    has_event_(false) {};
 
     virtual ~DaqWorkerBase() {
-      thread_live_ = true;
-      work_thread_.join();
+      thread_live_ = false;
+      if (work_thread_.joinable()) {
+        work_thread_.join();
+      }
     };                                        
 
     // flow control functions                                  

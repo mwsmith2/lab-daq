@@ -27,7 +27,9 @@ class DaqWriterBase {
     DaqWriterBase(string conf_file) : conf_file_(conf_file), thread_live_(true) {};
     virtual ~DaqWriterBase() {
         thread_live_ = false;
-        writer_thread_.join();
+        if (writer_thread_.joinable()) {
+            writer_thread_.join();
+        }
     };
 
     // Basic functions
