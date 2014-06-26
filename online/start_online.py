@@ -236,7 +236,6 @@ def update_hist():
     respond when it's ready"""
     name, path = generate_hist()
 
-    send_from_directory(app.config['UPLOAD_FOLDER'], name)
     emit('histogram ready', {"path" : path});
 
 @socketio.on('start continual update', namespace='/online')
