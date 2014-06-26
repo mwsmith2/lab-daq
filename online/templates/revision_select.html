@@ -27,7 +27,14 @@
       
       $('#submit').click(function() {
 	  location.replace("{{url_for('revise',run_num='')}}"+
-	      $('#selection').val());
+			   $('#selection').val());
+      });
+
+      $('#selection').keydown(function (e){
+	  if(e.keyCode == 13){
+              location.replace("{{url_for('revise',run_num='')}}"+
+			       $('#selection').val()); 
+	  }
       });
   </script>
 

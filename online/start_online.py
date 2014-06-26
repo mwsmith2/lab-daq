@@ -118,6 +118,11 @@ def end_run():
     stop_sck.connect(conf['master_port'])
     stop_sck.send("STOP:")
     
+    db = connect_db(run_info['db_name'])
+    data = db[db['toc'][str(run_info['last_run'])]]
+    data['n_events'] = len(data_io.data)
+    db.save(data)
+
     broadcast_refresh()
     return redirect(url_for('running_hist'))
 
@@ -146,7 +151,7 @@ def no_data():
 def revision_select():
     """display page where user can select a run to revise"""
     if run_info['last_run']<10:
-        end = 1
+        end = 0
     else:
         end = run_info['last_run']-10
     
@@ -173,26 +178,26 @@ def revise(run_num):
 @app.route('/save_revision', methods=['POST'])
 def save_revision():
     """save run revision information"""
-    data = copy_form_data(run_info, request)
-    complete = check_form_data(run_info, data)
+    new_data = copy_form_data(run_info, request)
+    complete = check_form_data(run_info, new_data)
     if not complete:
         error = "All fields in the form must be filled."
         return render_template('revise.html',num=session['revision_number'], 
-                               info=run_info, data=data,error=error, 
+                               info=run_info, data=new_data,error=error, 
                                in_progress=running)
         
     #save the revision    
     db = connect_db(run_info['db_name'])
-    data['_id'] = db[db['toc'][session['revision_number']]]['_id']
-    data['_rev'] = db[db['toc'][session['revision_number']]]['_rev']
-    data['run_number'] = session['revision_number']
+    data = db[db['toc'][str(session['revision_number'])]]
+    for attr in run_info['attr']:
+        data[attr] = new_data[attr]
+
     save_db_data(db, data)
     return render_template('revision_success.html', in_progress=running)
 
 @app.route('/runlog')
 def runlog():
     """renders page from which user can request the runlog"""
-
     runlog_path = upload_path(run_info['runlog'])
     return render_template('runlog.html', in_progress=running,
                            path=runlog_path)
@@ -236,7 +241,8 @@ def generate_runlog():
         runlog.write('run number')
         for attr in run_info['attr']:
             runlog.write(', ' + attr)
-        
+        runlog.write(', Events')
+
         #fill runlog data from database
         for run_idx in xrange(int(db['toc']['n_runs'])):
             runlog.write('\n')
@@ -245,7 +251,14 @@ def generate_runlog():
             
             data = db[db['toc'][run_num]]
             for attr in run_info['attr']:
-                runlog.write(', ' + data[attr])
+                if attr in data:
+                    runlog.write(', ' + data[attr])
+                else: 
+                    runlog.write(', N/A')
+            if 'n_events' in data:
+                runlog.write(', ' + str(data['n_events']))
+            else:
+                runlog.write(', ' + ' N/A')
 
     emit('runlog ready')
 
