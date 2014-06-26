@@ -1,8 +1,32 @@
 {% extends "layout.html" %}
-{% block body %}	 
-  <img src={{url_for('get_upload', filename=path) }} width="80%"></img>	
-  <br></br>
-  <form action = {{url_for('traces')}}>
-    <input type=submit value=Update></form>
-  {% endblock body %}
-	  						  
+{% block body %}
+  <img id="img" 
+       src="" width="80%" style="display: none"></img>
+    <br>
+  <button id="update">Update Trace</button>
+
+  <script type="text/javascript" charset="utf-8">
+       $(document).ready(function(){
+	   namespace = '/online';
+	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+
+           socket.emit('update trace');
+
+	   socket.on('trace ready', function(msg) {
+               $('#img').show();
+	       $('#img').attr('src',msg.path);
+	   });
+
+       });
+
+      $('#update').click(function() {
+      	  namespace = '/online';
+	  var socket = io.connect('http://' + document.domain + 
+				  ':' + location.port + namespace);
+	  socket.emit('update trace');
+      });
+     
+    </script>
+
+{% endblock body %}
+X

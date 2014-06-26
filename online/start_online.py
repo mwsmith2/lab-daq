@@ -151,8 +151,10 @@ def running_hist():
 @app.route('/traces')
 def traces():
     """Displays online traces"""
-    filepath = generate_traces()
-    return render_template('traces.html', path=filepath, in_progress=running)
+    if len(data_io.data)==0:
+        return render_template('no_data.html')
+
+    return render_template('traces.html', in_progress=running)
 
 @app.route('/nodata')
 def no_data():
@@ -234,6 +236,14 @@ def update_hist():
     name, path = generate_hist()
 
     emit('histogram ready', {"path" : path});
+
+@socketio.on('update trace', namespace='/online')
+def update_trace():
+    """update the histogram upon request from client and then
+    respond when it's ready"""
+    name, path = generate_trace()
+
+    emit('trace ready', {"path" : path});
 
 @socketio.on('start continual update', namespace='/online')
 def start_continual():
@@ -334,26 +344,22 @@ def generate_hist():
     plt.savefig(filepath)
     
     return filename, filepath
-
-def generate_traces():
-    """generates the online traces"""
-    trace = data_io.fill_trace()
-    
+ 
+def generate_trace():
+    """generate the trace plot"""
     plt.clf()
-    for i in xrange(4):
-        for j in xrange(7):
-            plt.subplot(4, 7, i*7+j+1)
-            plt.axis('off')
-            plt.plot(trace)
+    plt.plot(data_io.trace)
+    plt.xlim([0,1024])
 
-    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_traces*'):
+    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):
         os.remove(tempFile)
-    filename = unique_filename('temp_traces.png')
+    filename = unique_filename('temp_trace.png')
     filepath = upload_path(filename)
     plt.savefig(filepath)
     
-    return filepath
-        
+    return filename, filepath
+    
+   
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""
      filename = os.path.basename(upload_file).split('.')[0]
