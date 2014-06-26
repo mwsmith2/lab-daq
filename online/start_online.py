@@ -79,8 +79,8 @@ def start_run():
     run_info['last_run'] += 1
     data['run_number'] = run_info['last_run']
     now = datetime.datetime.now()
-    data['Date'] = "%s/%s" % (now.month, now.day)
-    data['Time'] = "%s:%s" % (now.hour, now.minute)
+    data['Date'] = "%02i/%02i" % (now.month, now.day)
+    data['Time'] = "%02i:%02i" % (now.hour, now.minute)
     save_db_data(db, data)
 
     #start the run and launch the data emitter
@@ -89,18 +89,18 @@ def start_run():
     data_io.begin_run()
 
     # Send a start run signal to fe_master.
-    context = zmq.Context()
-    start_sck = context.socket(zmq.PUSH)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    start_sck.connect(conf['master_port'])
-    start_sck.send("START:%05i:" % run_info['last_run'])
+    # context = zmq.Context()
+    # start_sck = context.socket(zmq.PUSH)
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # start_sck.connect(conf['master_port'])
+    # start_sck.send("START:%05i:" % run_info['last_run'])
     
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
 
     sleep(0.1)
     broadcast_refresh()
-    context.destroy()
+#   context.destroy()           
 
     return redirect(url_for('running_hist'))
 
@@ -114,12 +114,12 @@ def end_run():
         data_io.end_run()
 
     # Send a stop run signal to fe_master.
-    context = zmq.Context()
-    stop_sck = context.socket(zmq.PUSH)
-    stop_sck.set(zmq.SNDTIMEO, 5e5)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    stop_sck.connect(conf['master_port'])
-    stop_sck.send("STOP:")
+    # context = zmq.Context()
+    # stop_sck = context.socket(zmq.PUSH)
+    # stop_sck.set(zmq.SNDTIMEO, int(5e5))
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # stop_sck.connect(conf['master_port'])
+    # stop_sck.send("STOP:")
 
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
@@ -128,7 +128,7 @@ def end_run():
 
     sleep(0.1)
     broadcast_refresh()
-    context.destroy()
+   # context.destroy()
 
     return redirect(url_for('running_hist'))
 
@@ -211,8 +211,6 @@ def runlog():
 def page_not_found(e):
     return render_template('error404.html'), 404
 
-
-
 @app.route('/<path:filename>')
 def get_upload(filename):
     """Return the requested file from the server."""
@@ -234,6 +232,23 @@ def update_hist():
 
     send_from_directory(app.config['UPLOAD_FOLDER'], name)
     emit('histogram ready', {"path" : path});
+
+@socketio.on('start continual update', namespace='/online')
+def start_continual():
+    session['updating_hist'] = True
+    continue_updating()
+    
+@socketio.on('continue updating', namespace='/online')
+def continue_updating():
+    sleep(0.2)
+    
+    if session['updating_hist']:
+        update_hist()
+        emit('updated')
+
+@socketio.on('stop continual update', namespace='/online')
+def stop_continual():
+    session['updating_hist'] = False
 
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
