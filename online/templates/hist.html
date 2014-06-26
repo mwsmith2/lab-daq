@@ -7,7 +7,7 @@
   {% if in_progress %}
     <button id="continual">Start Continual Refresh</button>
     <button id="stop" style="display: none">Stop Continual Refresh</button>
-    <input type=text id="rep_rate" size="1" value="{{rate}}">
+    <input type=text id="rep_rate" size="1" value="{{r_rate}}">
       Refresh Rate (Hz)</input>
   {% endif %}
 
@@ -15,7 +15,7 @@
        $(document).ready(function(){
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-	   
+
 	   socket.on('histogram ready', function(msg) {
 	       $('#img').attr('src',msg.path);
 	   });
