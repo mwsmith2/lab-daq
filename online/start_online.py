@@ -87,17 +87,16 @@ def start_run():
     # Send a start run signal to fe_master.
     context = zmq.Context()
     start_sck = context.socket(zmq.PUSH)
-    start_sck.set(zmq.SNDTIMEO, 5e5)
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     start_sck.connect(conf['master_port'])
     start_sck.send("START:%05i:" % run_info['last_run'])
     
-
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
 
     sleep(0.1)
     broadcast_refresh()
+    context.destroy()
 
     return redirect(url_for('running_hist'))
 
@@ -117,8 +116,11 @@ def end_run():
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     stop_sck.connect(conf['master_port'])
     stop_sck.send("STOP:")
-    
+
+    sleep(0.1)
     broadcast_refresh()
+    context.destroy()
+
     return redirect(url_for('running_hist'))
 
 @app.route('/hist')
