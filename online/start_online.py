@@ -11,7 +11,7 @@ from flask.ext.socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import couchdb
-import os, glob
+import os, glob, datetime
 import threading
 
 import data_io
@@ -41,6 +41,7 @@ socketio = SocketIO(app)
 run_info = {}
 run_info['db_name'] = 'run_db'
 run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
+run_info['log_info'] = ['Events', 'Date', 'Time']
 run_info['runlog'] = 'runlog.csv'
 
 @app.route('/')
@@ -77,6 +78,9 @@ def start_run():
     db = get_db(run_info['db_name'])
     run_info['last_run'] += 1
     data['run_number'] = run_info['last_run']
+    now = datetime.datetime.now()
+    data['Date'] = "%s/%s" % (now.month, now.day)
+    data['Time'] = "%s:%s" % (now.hour, now.minute)
     save_db_data(db, data)
 
     #start the run and launch the data emitter
@@ -120,7 +124,7 @@ def end_run():
     
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
-    data['n_events'] = len(data_io.data)
+    data['Events'] = len(data_io.data)
     db.save(data)
 
     broadcast_refresh()
@@ -241,7 +245,8 @@ def generate_runlog():
         runlog.write('run number')
         for attr in run_info['attr']:
             runlog.write(', ' + attr)
-        runlog.write(', Events')
+        for info in run_info['log_info']:
+            runlog.write(', ' + info)
 
         #fill runlog data from database
         for run_idx in xrange(int(db['toc']['n_runs'])):
@@ -255,11 +260,11 @@ def generate_runlog():
                     runlog.write(', ' + data[attr])
                 else: 
                     runlog.write(', N/A')
-            if 'n_events' in data:
-                runlog.write(', ' + str(data['n_events']))
-            else:
-                runlog.write(', ' + ' N/A')
-
+            for info in run_info['log_info']:
+                if info in data:
+                    runlog.write(', ' + str(data[info]))
+                else:
+                    runlog.write(', N/A')
     emit('runlog ready')
 
 @socketio.on('refreshed', namespace='/online')
