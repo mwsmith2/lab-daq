@@ -33,7 +33,7 @@ void DaqWorkerFake::LoadConfig()
 void DaqWorkerFake::GenerateEvent()
 {
   // Make fake events.
-  while (true) {
+  while (thread_live_) {
 
     while (go_time_) {
 
@@ -78,7 +78,7 @@ void DaqWorkerFake::GetEvent(event_struct &bundle)
 
 void DaqWorkerFake::WorkLoop() 
 {
-  while (true) {
+  while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
 

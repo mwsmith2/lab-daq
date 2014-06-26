@@ -47,7 +47,7 @@ void DaqWorkerCaen1785::LoadConfig()
 
 void DaqWorkerCaen1785::WorkLoop()
 {
-  while (true) {
+  while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
 

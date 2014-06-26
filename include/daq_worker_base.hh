@@ -27,8 +27,16 @@ class DaqWorkerBase {
     //ctor
     DaqWorkerBase(string name, string conf_file) : name_(name),
                                                    conf_file_(conf_file),
+                                                   thread_live_(true),
                                                    go_time_(false), 
                                                    has_event_(false) {};
+
+    virtual ~DaqWorkerBase() {
+      thread_live_ = false;
+      if (work_thread_.joinable()) {
+        work_thread_.join();
+      }
+    };                                        
 
     // flow control functions                                  
     void StartWorker() { go_time_ = true; };
@@ -43,8 +51,9 @@ class DaqWorkerBase {
 
     string name_;
     string conf_file_;
-    std::atomic<bool> has_event_;
+    std::atomic<bool> thread_live_;
     std::atomic<bool> go_time_;
+    std::atomic<bool> has_event_;
 
     std::queue<T> data_queue_;
     std::mutex queue_mutex_;

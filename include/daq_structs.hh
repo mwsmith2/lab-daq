@@ -16,7 +16,6 @@ using std::vector;
 //--- other includes --------------------------------------------------------//
 #include <boost/variant.hpp>
 
-
 //--- projects includes -----------------------------------------------------//
 #include "daq_worker_base.hh"
 
@@ -43,7 +42,6 @@ struct caen_1785 {
 
 // Built from basic structs 
 struct event_data {
-  vector<sis_3350> fake;
   vector<sis_3350> sis_fast;
   vector<sis_3302> sis_slow;
   vector<caen_1785> caen_adc;

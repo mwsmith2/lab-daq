@@ -224,7 +224,7 @@ void DaqWorkerSis3350::LoadConfig()
 
 void DaqWorkerSis3350::WorkLoop()
 {
-  while (true) {
+  while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
 

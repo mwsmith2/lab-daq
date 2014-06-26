@@ -34,9 +34,17 @@ class EventBuilder {
 
   public:
 
-    //ctors
+    // ctor
     EventBuilder(const vector<worker_ptr_types>& daq_workers, 
-                 const vector<DaqWriterBase *> daq_writers);
+                 const vector<DaqWriterBase *> daq_writers,
+                 string conf_file);
+
+    // dtor
+    ~EventBuilder() {
+        thread_live_ = false;
+        builder_thread_.join();
+        push_data_thread_.join();
+    }
 
     // member functions
     void StartBuilder() { go_time_ = true; };
@@ -46,10 +54,18 @@ class EventBuilder {
   private:
 
     // Simple variable declarations
-    const int max_queue_length_ = 10;
+    const int kMaxQueueLength = 10;
     string conf_file_;
+    int live_time;
+    int dead_time;
+    int live_ticks;
+    int batch_start;
+
+    std::atomic<bool> thread_live_;
     std::atomic<bool> go_time_;
     std::atomic<bool> push_new_data_;
+    std::atomic<bool> flush_time_;
+    std::atomic<bool> got_last_event_;
 
     // Data accumulation variables
     vector<worker_ptr_types> daq_workers_;
@@ -67,7 +83,8 @@ class EventBuilder {
     void GetEventData(event_data& bundle);
     void BuilderLoop();
     void PushDataLoop();
-
+    void StopWorkers();
+    void StartWorkers();
 };
 
 } // ::daq
