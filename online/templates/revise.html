@@ -5,7 +5,7 @@
 <form action="{{ url_for('save_revision') }}" 
 	enctype="multipart/form-data" method=post>
 <table>
-	<thead><h3>Revising Run {{run_num}} </h3></thead>
+	<thead><h3>Revising Run {{num}} </h3></thead>
 
 	{% for attr in info['attr'] %}
 		<tr>
@@ -15,7 +15,7 @@
 	{% endfor %}
 </table>
 <br>
-<input type=submit value='Enter Revision''>
+<input type=submit value='Submit Revision''>
 </form>
 
 {% endblock %}
