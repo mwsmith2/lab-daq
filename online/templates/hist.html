@@ -16,6 +16,8 @@
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
+           socket.emit('stop continual update');
+
 	   socket.on('histogram ready', function(msg) {
 	       $('#img').attr('src',msg.path);
 	   });

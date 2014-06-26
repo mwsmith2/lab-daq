@@ -241,11 +241,13 @@ def update_hist():
 
 @socketio.on('start continual update', namespace='/online')
 def start_continual():
+    """begins the chain of continual histogram updates"""
     session['updating_hist'] = True
     continue_updating()
     
 @socketio.on('continue updating', namespace='/online')
 def continue_updating():
+    """updates the histogram and then informs the client"""
     sleep(1.0/session['refresh_rate'])
 
     if session['updating_hist']:
@@ -254,9 +256,10 @@ def continue_updating():
 
 @socketio.on('refresh rate', namespace='/online')
 def set_refresh(msg):
+    """sets the histogram refresh rate"""
     try:
         new_rate = float(msg)
-        if new_rate <= 5.0:
+        if 0 < new_rate <= 5.0:
             session['refresh_rate'] = new_rate
     except ValueError:
         pass
@@ -265,6 +268,7 @@ def set_refresh(msg):
 
 @socketio.on('stop continual update', namespace='/online')
 def stop_continual():
+    """ends the chain of continual histogram updates"""
     session['updating_hist'] = False
 
 @socketio.on('generate runlog', namespace='/online')
