@@ -139,16 +139,13 @@ def end_run():
 @app.route('/hist')
 def running_hist():
     """displays an online histogram"""
-    filename, filepath = generate_hist()
-
-    if filepath == 'failed':
+    if len(data_io.data)==0:
         return render_template('no_data.html')
 
     if 'refresh_rate' not in session:
         session['refresh_rate'] = 1.
 
-    return render_template('hist.html', path=filepath, 
-                           in_progress=running, 
+    return render_template('hist.html', in_progress=running, 
                            r_rate=session['refresh_rate'])
 
 @app.route('/traces')
