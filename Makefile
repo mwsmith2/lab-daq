@@ -26,7 +26,7 @@ FLAGS += -Iinclude
 LIBS = $(shell root-config --libs)
 LIBS += -lm -lzmq -ljson_spirit
 
-all: $(OBJECTS) $(OBJ_VME) $(TARGETS)
+all: $(OBJECTS) $(OBJ_VME) $(TARGETS) build
 
 fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
@@ -37,10 +37,10 @@ fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME)
 build:
 	mkdir build
 
-build/%.o: src/%.cxx build
+build/%.o: src/%.cxx
 	$(CXX) -c $< -o $@ $(FLAGS)
 
-build/%.o: include/vme/%.c build
+build/%.o: include/vme/%.c
 	$(CC) -c $< -o $@
 
 clean:

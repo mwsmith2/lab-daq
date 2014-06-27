@@ -78,6 +78,10 @@ def pull_event(e, data):
         try:
             message = data_sck.recv(zmq.NOBLOCK)
             # print "Got a message."
+
+            if (message[0:7] == '__EOB__'):
+                continue
+
             new_data = json.loads(message.split('__EOM__')[0])
 
             if generate_data.counter != generate_data.maxsize:
@@ -90,16 +94,17 @@ def pull_event(e, data):
             #pull_event.event_data.put(data)
             eventCount += 1
             
-            trace = np.array(new_data['sis_fast_0']['trace'][0][:])
+            trace = np.array(new_data['sis_fast_1']['trace'][0][:])
             # print 'trace: ' + str(len(trace)) + ", " + str(trace.max())
             data.append(trace.max())
+            eventCount = new_data['event_number']
         
             # print len(data)
 
             rate = float(generate_data.counter)/(now-past)
 
 
-        except(zmq.ZMQError):
+        except:
             pass
 
         sleep(1000e-6)
