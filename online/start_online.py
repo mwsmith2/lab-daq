@@ -55,8 +55,8 @@ def home():
 
 @app.route('/new')
 def new_run():
-    """a new run is about to begin. Load the data from 
-    the previous run and prompt user"""
+    """User wants to start a new run. Load the data from 
+    the previous run and prompt user for summary information"""
     
     last_data = {}
     if run_info['last_run'] != 0:
@@ -312,7 +312,7 @@ def generate_runlog():
                     
             progress = 100*float(run_idx+1)/n_runs
 
-            emit('progress', "%02i%s Percent Generated" % 
+            emit('progress', "%02i%s Generated" % 
                  (progress, "%"))
                  
     emit('runlog ready')
