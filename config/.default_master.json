@@ -7,7 +7,9 @@
 		"fake":{
 			"fake_0":"config/fake_conf.json",
 			"fake_1":"config/fake_conf.json",
-			"fake_2":"config/fake_conf.json"
+			"fake_2":"config/fake_conf.json",
+			"fake_3":"config/fake_conf.json",
+			"fake_4":"config/fake_conf.json"
 		},
 
 		"sis_3350":{
