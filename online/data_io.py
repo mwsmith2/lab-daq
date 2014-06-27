@@ -44,7 +44,7 @@ def pull_event(e, data):
         
         "sis_fast_<id>:{
             "system_clock":value,
-            "device_clock":array[8],
+            "device_clock":array[4],
             "trace":array[4][1024]
         },
 
