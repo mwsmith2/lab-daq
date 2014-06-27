@@ -75,6 +75,7 @@ class EventBuilder {
 
     // Concurrency variables
     std::mutex queue_mutex_;
+    std::mutex push_data_mutex_;
     std::thread builder_thread_;
     std::thread push_data_thread_;
 

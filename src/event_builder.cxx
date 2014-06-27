@@ -138,6 +138,7 @@ void EventBuilder::PushDataLoop()
 
         cout << "Pushing data." << endl;
 
+        push_data_mutex_.lock();
         push_data_vec_.resize(0);
 
         for (int i = 0; i < kMaxQueueLength; ++i) {
@@ -158,24 +159,26 @@ void EventBuilder::PushDataLoop()
           (*it)->PushData(push_data_vec_);
 
         }
+        push_data_mutex_.unlock();
       }
 
       if (flush_time_ && got_last_event_) {
 
         cout << "Pushing end of batch." << endl;
 
+        push_data_mutex_.lock();
         push_data_vec_.resize(0);
 
+        queue_mutex_.lock();
         while (pull_data_que_.size() != 0) {
 
           cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
 
-          queue_mutex_.lock();
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
-          queue_mutex_.unlock();
 
         }
+        queue_mutex_.unlock();
 
         push_new_data_ = false;
 
@@ -208,6 +211,7 @@ void EventBuilder::PushDataLoop()
           (*it)->EndOfBatch(bad_data);
 
         }
+        push_data_mutex_.unlock();
 
         flush_time_ = false;
         got_last_event_ = false;

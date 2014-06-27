@@ -15,6 +15,7 @@ using std::vector;
 
 //--- other includes --------------------------------------------------------//
 #include <boost/variant.hpp>
+#include "TFile.h"
 
 //--- projects includes -----------------------------------------------------//
 #include "daq_worker_base.hh"
@@ -23,21 +24,21 @@ namespace daq {
 
 // Basic structs
 struct sis_3350 {
-  unsigned long long system_clock;
-  unsigned long long device_clock[SIS_3350_CH];
-  ushort trace[SIS_3350_CH][SIS_3350_LN];
+  ULong64_t system_clock;
+  ULong64_t device_clock[SIS_3350_CH];
+  UShort_t trace[SIS_3350_CH][SIS_3350_LN];
 };
 
 struct sis_3302 {
-  unsigned long long system_clock;
-  unsigned long long device_clock[SIS_3302_CH];
-  ushort trace[SIS_3302_CH][SIS_3302_LN];
+  ULong64_t system_clock;
+  ULong64_t device_clock[SIS_3302_CH];
+  UShort_t trace[SIS_3302_CH][SIS_3302_LN];
 };
 
 struct caen_1785 {
-  unsigned long long system_clock;
-  unsigned long long device_clock[CAEN_1785_CH];
-  ushort value[CAEN_1785_CH];
+  ULong64_t system_clock;
+  ULong64_t device_clock[CAEN_1785_CH];
+  UShort_t value[CAEN_1785_CH];
 };
 
 // Built from basic structs 
