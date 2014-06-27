@@ -4,6 +4,8 @@ import threading
 import Queue
 from flask.ext.socketio import emit
 
+import zmq, json
+
 data = []
 e = threading.Event()
 
@@ -23,6 +25,52 @@ def pulse_shape(t):
 def fill_trace():
     trace = np.array(xrange(50))
     return pulse_shape(trace)
+
+def pull_event(e, data):
+    """The function constantly tries to pull new event data which arrives
+    in json format. The basic structure of the data is as follows:
+    {
+        "run_number":run_number, # @bug Hardcoded for now
+        
+        "event_number":event_number # @bug Hardcoded for now
+        
+        "sis_fast_<id>:{
+            "system_clock":value,
+            "device_clock":array[8],
+            "trace":array[8][1024]
+        },
+
+        "sis_slow_<id>:{
+            "system_clock":value,
+            "device_clock":array[8],
+            "trace":array[8][1024]
+        },
+
+        "caen_adc<id>:{
+            "system_clock":value,
+            "device_clock":array[8],
+            "value":array[8]
+        }
+    }
+
+    """
+
+    context = zmq.Context()
+    data_sck = context.socket(zmq.PULL)
+    data_sck.bind("tcp://127.0.0.1:42043")
+
+    while not e.isSet():
+
+        try:
+            message = data_sck.recv(zmq.NOBLOCK)
+            print "Got a message."
+            data = json.loads(message)
+            pull_event.event_data.put(data)
+
+        except:
+            sleep(100e-6)
+
+pull_event.event_data = Queue.Queue()
 
 def generate_data(e, data):
     while not e.isSet():
@@ -59,7 +107,9 @@ def begin_run():
     for unused_i in xrange(10):
         generate_data.times.put(start)
 
-    t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
+    #t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
+    t = threading.Thread(name='data-puller', target=pull_event, args=(e, data))
+
     start = time()
     print 'starting'
     t.start()

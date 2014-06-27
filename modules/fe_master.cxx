@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
   while (true) {
 
     // Check for a message.
-    rc = master_sck.recv(&message, ZMQ_NOBLOCK);
+    rc = master_sck.recv(&message);
 
     if (rc == true) {
 
@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
 
       }
     }
+
+    usleep(100);
   }
 
   return 0;

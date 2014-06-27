@@ -116,7 +116,6 @@ def end_run():
     # Send a stop run signal to fe_master.
     context = zmq.Context()
     stop_sck = context.socket(zmq.PUSH)
-    stop_sck.set(zmq.SNDTIMEO, 5e5)
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     stop_sck.connect(conf['master_port'])
     stop_sck.send("STOP:")

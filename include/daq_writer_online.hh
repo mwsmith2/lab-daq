@@ -34,8 +34,8 @@ class DaqWriterOnline : public DaqWriterBase {
 
     // Member Functions
     void LoadConfig();
-    void StartWriter() {go_time_ = true; };
-    void StopWriter() {go_time_ = false; };
+    void StartWriter() { go_time_ = true; };
+    void StopWriter() { go_time_ = false; };
 
     void PushData(const vector<event_data> &data_buffer);
     void EndOfBatch(bool bad_data);
@@ -46,6 +46,7 @@ class DaqWriterOnline : public DaqWriterBase {
     int message_size_;
     std::atomic<bool> message_ready_;
     std::atomic<bool> go_time_;
+    std::atomic<bool> queue_has_data_;
     std::queue<event_data> data_queue_;
 
     // zmq stuff

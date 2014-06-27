@@ -7,6 +7,7 @@ DaqWriterOnline::DaqWriterOnline(string conf_file) : DaqWriterBase(conf_file), o
   thread_live_ = true;
   go_time_ = false;
   end_of_batch_ = false;
+  queue_has_data_ = false;
   LoadConfig();
 
   writer_thread_ = std::thread(&DaqWriterOnline::SendMessageLoop, this);
@@ -17,11 +18,9 @@ void DaqWriterOnline::LoadConfig()
   ptree conf;
   read_json(conf_file_, conf);
 
-  //  online_sck_ = zmq::socket_t(online_ctx, ZMQ_PUSH);
   online_sck_.connect(conf.get<string>("writers.online.port").c_str());
 
   message_size_ = conf.get<int>("writers.online.message_size");
-  message_ = zmq::message_t(message_size_);
 }
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
@@ -34,6 +33,9 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
     ++it;
 
   }
+
+  cout << "Online writer was pushed some data." << endl;
+  queue_has_data_ = true;
 }
 
 void DaqWriterOnline::EndOfBatch(bool bad_data)
@@ -45,19 +47,28 @@ void DaqWriterOnline::SendMessageLoop()
 {
   while (thread_live_) {
 
-    while (go_time_ && (data_queue_.size() > 0)) {
+    while (go_time_ && queue_has_data_) {
 
-      PackMessage();
+      if (!message_ready_) {
+        PackMessage();
+      }
 
       while (message_ready_) {
 
-        bool rc = online_sck_.send(message_, ZMQ_NOBLOCK);
+        writer_mutex_.lock();
+        cout << "Online writer is sending message." << endl;
+        bool rc = online_sck_.send(message_);
+        writer_mutex_.unlock();
 
         if (rc == true) {
 
+          cout << "Message sent successfully." << endl;
           message_ready_ = false;
 
         }
+
+        usleep(100);
+        std::this_thread::yield();
       }
 
     usleep(100);
@@ -72,17 +83,24 @@ void DaqWriterOnline::SendMessageLoop()
 
 void DaqWriterOnline::PackMessage()
 {
-  string buffer;
-  buffer.reserve(message_size_);
+  cout << "Packing message." << endl;
+  message_ = zmq::message_t(message_size_);
+
   int count = 0;
   char str[50];
 
   json_spirit::Object json_map;
 
+  writer_mutex_.lock();
+  event_data data = data_queue_.front();
+  data_queue_.pop();
+  if (data_queue_.size() == 0) queue_has_data_ = false;
+  writer_mutex_.unlock();
+
   json_map.push_back(json_spirit::Pair("run_number", 0));
   json_map.push_back(json_spirit::Pair("event_number", 1));
 
-  for (auto &sis : data_queue_.front().sis_fast) {
+  for (auto &sis : data.sis_fast) {
 
     json_spirit::Object sis_map;
 
@@ -109,7 +127,7 @@ void DaqWriterOnline::PackMessage()
     json_map.push_back(json_spirit::Pair(str, sis_map));
   }
 
-  for (auto &sis : data_queue_.front().sis_slow) {
+  for (auto &sis : data.sis_slow) {
 
     json_spirit::Object sis_map;
 
@@ -137,7 +155,7 @@ void DaqWriterOnline::PackMessage()
   }
 
   count = 0;
-  for (auto &caen : data_queue_.front().caen_adc) {
+  for (auto &caen : data.caen_adc) {
 
     json_spirit::Object caen_map;
 
@@ -160,17 +178,16 @@ void DaqWriterOnline::PackMessage()
     json_map.push_back(json_spirit::Pair(str, caen_map));
   }
 
-  buffer = json_spirit::write(json_map);
-  buffer.append(":EOF");
-
-  memcpy(message_.data(), buffer.c_str(), sizeof(buffer));
+  string buffer = json_spirit::write(json_map);
+  memcpy(message_.data(), buffer.c_str(), buffer.size());
 
   // Code for testing output.
-//  std::ofstream out;
-//  out.open("test.json");
-//  json_spirit::write(json_map, out);
-//  out.close();
+  // std::ofstream out;
+  // out.open("test.json");
+  // json_spirit::write(json_map, out);
+  // out.close();
 
+  cout << "Online writer message ready." << endl;
   message_ready_ = true;
 }
 
