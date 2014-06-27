@@ -83,6 +83,8 @@ void DaqWriterOnline::SendMessageLoop()
 
 void DaqWriterOnline::PackMessage()
 {
+  using boost::uint64_t;
+
   cout << "Packing message." << endl;
   message_ = zmq::message_t(message_size_);
 
@@ -105,7 +107,7 @@ void DaqWriterOnline::PackMessage()
     json_spirit::Object sis_map;
 
     sprintf(str, "system_clock");
-    sis_map.push_back(json_spirit::Pair(str, sis.system_clock));
+    sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
 
     sprintf(str, "device_clock");
     sis_map.push_back(json_spirit::Pair(str, 
@@ -132,7 +134,7 @@ void DaqWriterOnline::PackMessage()
     json_spirit::Object sis_map;
 
     sprintf(str, "system_clock");
-    sis_map.push_back(json_spirit::Pair(str, sis.system_clock));
+    sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
 
     sprintf(str, "device_clock");
     sis_map.push_back(json_spirit::Pair(str, 
@@ -160,7 +162,7 @@ void DaqWriterOnline::PackMessage()
     json_spirit::Object caen_map;
 
     sprintf(str, "system_clock");
-    caen_map.push_back(json_spirit::Pair(str, caen.system_clock));
+    caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
 
     sprintf(str, "device_clock");
     caen_map.push_back(json_spirit::Pair(str, 
