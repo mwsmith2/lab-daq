@@ -44,8 +44,8 @@ def pull_event(e, data):
         
         "sis_fast_<id>:{
             "system_clock":value,
-            "device_clock":array[8],
-            "trace":array[8][1024]
+            "device_clock":array[4],
+            "trace":array[4][1024]
         },
 
         "sis_slow_<id>:{
@@ -71,7 +71,6 @@ def pull_event(e, data):
 
         try:
             message = data_sck.recv(zmq.NOBLOCK)
-            print "Got a message."
             data = json.loads(message)
             pull_event.event_data.put(data)
 

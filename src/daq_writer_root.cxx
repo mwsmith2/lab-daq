@@ -31,9 +31,9 @@ void DaqWriterRoot::StartWriter()
   string br_name;
   char br_vars[100];
 
+  int count = 0;
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
 
-    int count = 0;
     root_data_.sis_fast.resize(count + 1);
 
     br_name = string(v.first);
@@ -44,10 +44,10 @@ void DaqWriterRoot::StartWriter()
 
   }
 
+  count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.sis_3350")) {
 
-    int count = 0;
     root_data_.sis_fast.resize(count + 1);
 
     br_name = string(v.first);
@@ -58,10 +58,10 @@ void DaqWriterRoot::StartWriter()
 
   }
 
+  count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.sis_3302")) {
 
-    int count = 0;
     root_data_.sis_slow.resize(count + 1);
 
     br_name = string(v.first);
@@ -72,10 +72,10 @@ void DaqWriterRoot::StartWriter()
 
   }
 
-    BOOST_FOREACH(const ptree::value_type &v, 
+  count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
                   conf.get_child("devices.caen_1785")) {
 
-    int count = 0;
     root_data_.caen_adc.resize(count + 1);
 
     br_name = string(v.first);
