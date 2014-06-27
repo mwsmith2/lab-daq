@@ -34,7 +34,9 @@ class DaqWriterOnline : public DaqWriterBase {
 
     // Member Functions
     void LoadConfig();
-    void StartWriter() { go_time_ = true; };
+    void StartWriter() { 
+        go_time_ = true; 
+        number_of_events_ = 0; };
     void StopWriter() { go_time_ = false; };
 
     void PushData(const vector<event_data> &data_buffer);
@@ -44,6 +46,7 @@ class DaqWriterOnline : public DaqWriterBase {
 
     const int kMaxQueueSize = 20;
     int message_size_;
+    int number_of_events_;
     std::atomic<bool> message_ready_;
     std::atomic<bool> go_time_;
     std::atomic<bool> queue_has_data_;

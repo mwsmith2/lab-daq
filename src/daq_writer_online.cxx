@@ -25,8 +25,9 @@ void DaqWriterOnline::LoadConfig()
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 {
-  auto it = data_buffer.begin();
+  number_of_events_ += data_buffer.size();
 
+  auto it = data_buffer.begin();
   while (data_queue_.size() < kMaxQueueSize && it != data_buffer.end()) {
 
     data_queue_.push(*it);
@@ -41,6 +42,9 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 void DaqWriterOnline::EndOfBatch(bool bad_data)
 {
   data_queue_.empty();
+  zmq::message_t msg(10);
+  memcpy(msg.data(), string("__EOB__").c_str(), 10);
+  online_sck_.send(msg);
 }
 
 void DaqWriterOnline::SendMessageLoop()
@@ -67,16 +71,16 @@ void DaqWriterOnline::SendMessageLoop()
 
         }
 
-        usleep(100);
+        usleep(daq::short_sleep);
         std::this_thread::yield();
       }
 
-    usleep(100);
+    usleep(daq::short_sleep);
     std::this_thread::yield();
 
     }
 
-    usleep(100);
+    usleep(daq::long_sleep);
     std::this_thread::yield();
   }
 }
@@ -98,8 +102,7 @@ void DaqWriterOnline::PackMessage()
   if (data_queue_.size() == 0) queue_has_data_ = false;
   writer_mutex_.unlock();
 
-  json_map.push_back(json_spirit::Pair("run_number", 0));
-  json_map.push_back(json_spirit::Pair("event_number", 1));
+  json_map.push_back(json_spirit::Pair("event_number", number_of_events_));
 
   for (auto &sis : data.sis_fast) {
 

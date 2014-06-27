@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    usleep(100);
+    usleep(daq::long_sleep);
   }
 
   return 0;

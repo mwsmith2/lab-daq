@@ -64,12 +64,12 @@ void DaqWorkerCaen1785::WorkLoop()
 
       std::this_thread::yield();
 
-      usleep(100);
+      usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
 
-    usleep(100);
+    usleep(daq::long_sleep);
   }
 }
 

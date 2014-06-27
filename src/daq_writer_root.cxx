@@ -32,7 +32,8 @@ void DaqWriterRoot::StartWriter()
   char br_vars[100];
 
   int count = 0;
-  BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3350")) {
 
     root_data_.sis_fast.resize(count + 1);
 
@@ -44,9 +45,8 @@ void DaqWriterRoot::StartWriter()
 
   }
 
-  count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.sis_3350")) {
+                conf.get_child("devices.fake")) {
 
     root_data_.sis_fast.resize(count + 1);
 
@@ -98,10 +98,22 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
 {
   for (auto it = data_buffer.begin(); it != data_buffer.end(); ++it) {
 
-    root_data_ = *it;
+    int count = 0;
+    for (auto &sis : (*it).sis_fast) {
+      root_data_.sis_fast[count++] = sis;
+    }
+
+    count = 0;
+    for (auto &sis : (*it).sis_slow) {
+      root_data_.sis_slow[count++] = sis;
+    }
+
+    count = 0;
+    for (auto &caen: (*it).caen_adc) {
+      root_data_.caen_adc[count++] = caen;
+    }
 
     pt_->Fill();
-
   }
 }
 

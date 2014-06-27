@@ -57,6 +57,9 @@ extern int device;
 
 } // ::vme
 
+static int short_sleep = 100;
+static int long_sleep = 5000;
+
 } // ::daq
 
 #endif
