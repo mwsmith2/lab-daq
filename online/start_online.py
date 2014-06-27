@@ -154,7 +154,7 @@ def running_hist():
 def traces():
     """Displays online traces"""
     if len(data_io.data)==0:
-        return render_template('no_data.html')
+        return render_template('no_data.html', in_progress=running)
 
     return render_template('traces.html', in_progress=running)
 

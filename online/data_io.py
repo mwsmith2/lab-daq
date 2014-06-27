@@ -71,7 +71,7 @@ def pull_event(e, data):
 
         try:
             message = data_sck.recv(zmq.NOBLOCK)
-            print "Got a message."
+           # print "Got a message."
             new_data = json.loads(message)
 
             if generate_data.counter != generate_data.maxsize:
@@ -88,8 +88,11 @@ def pull_event(e, data):
             eventCount += 1
             
             trace = np.array(new_data['sis_fast_0'][0])
+            print 'trace: ' + str(len(trace))
             data.append(trace.max())
         
+            print len(data)
+
             rate = float(generate_data.counter)/(now-past)
 
         except:
