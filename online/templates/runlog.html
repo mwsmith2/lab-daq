@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-    <button id="generate">Generate Runlog</button>
+    <button id="generate">Generate Runlog</button> <b id="progress"></b>
     <a id="runlog" style="display: none"
 		 href="{{url_for('get_upload', filename=path) }}">
        <br><br>runlog.csv </a>
@@ -10,6 +10,10 @@
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 	   
+           socket.on('progress', function(msg) {
+	       $('#progress').text(msg);
+	   });
+      
 	   socket.on('runlog ready', function() {
 	       $('#runlog').show();
 	   });

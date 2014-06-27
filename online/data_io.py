@@ -1,3 +1,9 @@
+#Aaron Fienberg
+#Fienberg@uw.edu
+#grabs data for the online SLAC daq display
+#
+
+
 import numpy as np
 from time import sleep, time
 import threading
@@ -8,6 +14,8 @@ import zmq, json
 
 data = []
 e = threading.Event()
+
+trace = np.zeros(1024)
 
 rate = 0 
 eventCount = 0
@@ -85,13 +93,13 @@ def generate_data(e, data):
 
         global rate
         global eventCount
-
-        newValue = np.random.standard_normal(1)[0]
-        data.append(newValue)
-        
-        rate = float(generate_data.counter)/(now-past)
+        global trace
         eventCount+=1
 
+        trace = np.random.standard_normal(len(trace))
+        data.append(trace.max())
+        
+        rate = float(generate_data.counter)/(now-past)
 
         sleep(0.1)
 generate_data.maxsize = 10

@@ -16,7 +16,7 @@ import threading
 
 import data_io
 import zmq, json
-from time import sleep
+from time import sleep, time
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -43,6 +43,10 @@ run_info['db_name'] = 'run_db'
 run_info['attr'] = ['Description', 'Table x', 'Table y', 'Beam Energy [GeV]']
 run_info['log_info'] = ['Events', 'Date', 'Time']
 run_info['runlog'] = 'runlog.csv'
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error404.html'), 404
 
 @app.route('/')
 def home():
@@ -79,8 +83,8 @@ def start_run():
     run_info['last_run'] += 1
     data['run_number'] = run_info['last_run']
     now = datetime.datetime.now()
-    data['Date'] = "%s/%s" % (now.month, now.day)
-    data['Time'] = "%s:%s" % (now.hour, now.minute)
+    data['Date'] = "%02i/%02i" % (now.month, now.day)
+    data['Time'] = "%02i:%02i" % (now.hour, now.minute)
     save_db_data(db, data)
 
     #start the run and launch the data emitter
@@ -89,18 +93,18 @@ def start_run():
     data_io.begin_run()
 
     # Send a start run signal to fe_master.
-    context = zmq.Context()
-    start_sck = context.socket(zmq.PUSH)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    start_sck.connect(conf['master_port'])
-    start_sck.send("START:%05i:" % run_info['last_run'])
+    # context = zmq.Context()
+    # start_sck = context.socket(zmq.PUSH)
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # start_sck.connect(conf['master_port'])
+    # start_sck.send("START:%05i:" % run_info['last_run'])
     
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
 
     sleep(0.1)
     broadcast_refresh()
-    context.destroy()
+#   context.destroy()           
 
     return redirect(url_for('running_hist'))
 
@@ -114,11 +118,11 @@ def end_run():
         data_io.end_run()
 
     # Send a stop run signal to fe_master.
-    context = zmq.Context()
-    stop_sck = context.socket(zmq.PUSH)
-    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    stop_sck.connect(conf['master_port'])
-    stop_sck.send("STOP:")
+    # context = zmq.Context()
+    # stop_sck = context.socket(zmq.PUSH)
+    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    # stop_sck.connect(conf['master_port'])
+    # stop_sck.send("STOP:")
 
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
@@ -127,24 +131,29 @@ def end_run():
 
     sleep(0.1)
     broadcast_refresh()
-    context.destroy()
+   # context.destroy()
 
     return redirect(url_for('running_hist'))
 
 @app.route('/hist')
 def running_hist():
     """displays an online histogram"""
-    filename, filepath = generate_hist()
-
-    if filepath == 'failed':
+    if len(data_io.data)==0:
         return render_template('no_data.html')
-    return render_template('hist.html', path=filepath, in_progress=running)
+
+    if 'refresh_rate' not in session:
+        session['refresh_rate'] = 1.
+
+    return render_template('hist.html', in_progress=running, 
+                           r_rate=session['refresh_rate'])
 
 @app.route('/traces')
 def traces():
     """Displays online traces"""
-    filepath = generate_traces()
-    return render_template('traces.html', path=filepath, in_progress=running)
+    if len(data_io.data)==0:
+        return render_template('no_data.html')
+
+    return render_template('traces.html', in_progress=running)
 
 @app.route('/nodata')
 def no_data():
@@ -170,8 +179,7 @@ def revise(run_num):
     try:
         db = connect_db(run_info['db_name'])
         old_data = db[db['toc'][run_num]]
-        print 'found run'
-        print 'before: ' + old_data['_id']
+
         session['revision_number']=run_num
         return render_template('revise.html', num=run_num, 
                                info=run_info, data=old_data,
@@ -206,12 +214,6 @@ def runlog():
     runlog_path = upload_path(run_info['runlog'])
     return render_template('runlog.html', in_progress=running,
                            path=runlog_path)
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('error404.html'), 404
-
-
-
 @app.route('/<path:filename>')
 def get_upload(filename):
     """Return the requested file from the server."""
@@ -221,9 +223,10 @@ def get_upload(filename):
 def send_events():
     """sends data to the clients while a run is going"""
     while not data_io.e.isSet():
+        sleep(0.1)
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
-        sleep(0.1)
+        
 
 @socketio.on('update histogram', namespace='/online')
 def update_hist():
@@ -231,14 +234,52 @@ def update_hist():
     respond when it's ready"""
     name, path = generate_hist()
 
-    send_from_directory(app.config['UPLOAD_FOLDER'], name)
     emit('histogram ready', {"path" : path});
+
+@socketio.on('update trace', namespace='/online')
+def update_trace():
+    """update the histogram upon request from client and then
+    respond when it's ready"""
+    name, path = generate_trace()
+
+    emit('trace ready', {"path" : path});
+
+@socketio.on('start continual update', namespace='/online')
+def start_continual():
+    """begins the chain of continual histogram updates"""
+    session['updating_hist'] = True
+    continue_updating()
+    
+@socketio.on('continue updating', namespace='/online')
+def continue_updating():
+    """updates the histogram and then informs the client"""
+    sleep(1.0/session['refresh_rate'])
+
+    if session['updating_hist']:
+        update_hist()
+        emit('updated')
+
+@socketio.on('refresh rate', namespace='/online')
+def set_refresh(msg):
+    """sets the histogram refresh rate"""
+    try:
+        new_rate = float(msg)
+        if 0 < new_rate <= 5.0:
+            session['refresh_rate'] = new_rate
+    except ValueError:
+        pass
+        
+    emit('current rate', str(session['refresh_rate']))
+
+@socketio.on('stop continual update', namespace='/online')
+def stop_continual():
+    """ends the chain of continual histogram updates"""
+    session['updating_hist'] = False
 
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
     """generates runlog upon request from client"""
-    print 'clicked'
-    
+
     with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
         db = connect_db(run_info['db_name'])
         
@@ -249,8 +290,10 @@ def generate_runlog():
         for info in run_info['log_info']:
             runlog.write(', ' + info)
 
+        n_runs = int(db['toc']['n_runs'])
+
         #fill runlog data from database
-        for run_idx in xrange(int(db['toc']['n_runs'])):
+        for run_idx in xrange(n_runs):
             runlog.write('\n')
             run_num = str(run_idx+1)
             runlog.write(run_num)
@@ -266,6 +309,12 @@ def generate_runlog():
                     runlog.write(', ' + str(data[info]))
                 else:
                     runlog.write(', N/A')
+                    
+            progress = 100*float(run_idx+1)/n_runs
+
+            emit('progress', "%02i%s Percent Generated" % 
+                 (progress, "%"))
+                 
     emit('runlog ready')
 
 @socketio.on('refreshed', namespace='/online')
@@ -302,26 +351,22 @@ def generate_hist():
     plt.savefig(filepath)
     
     return filename, filepath
-
-def generate_traces():
-    """generates the online traces"""
-    trace = data_io.fill_trace()
-    
+ 
+def generate_trace():
+    """generate the trace plot"""
     plt.clf()
-    for i in xrange(4):
-        for j in xrange(7):
-            plt.subplot(4, 7, i*7+j+1)
-            plt.axis('off')
-            plt.plot(trace)
+    plt.plot(data_io.trace)
+    plt.xlim([0,1024])
 
-    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_traces*'):
+    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):
         os.remove(tempFile)
-    filename = unique_filename('temp_traces.png')
+    filename = unique_filename('temp_trace.png')
     filepath = upload_path(filename)
     plt.savefig(filepath)
     
-    return filepath
-        
+    return filename, filepath
+    
+   
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""
      filename = os.path.basename(upload_file).split('.')[0]
