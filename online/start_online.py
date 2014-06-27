@@ -313,7 +313,7 @@ def generate_runlog():
                     
             progress = 100*float(run_idx+1)/n_runs
 
-            emit('progress', "%02i%s Percent Generated" % 
+            emit('progress', "%02i%s Generated" % 
                  (progress, "%"))
                  
     emit('runlog ready')
