@@ -96,18 +96,18 @@ def start_run():
     data_io.begin_run()
 
     # Send a start run signal to fe_master.
-    # context = zmq.Context()
-    # start_sck = context.socket(zmq.PUSH)
-    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    # start_sck.connect(conf['master_port'])
-    # start_sck.send("START:%05i:" % run_info['last_run'])
+    context = zmq.Context()
+    start_sck = context.socket(zmq.PUSH)
+    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    start_sck.connect(conf['master_port'])
+    start_sck.send("START:%05i:" % run_info['last_run'])
     
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
 
     sleep(0.1)
     broadcast_refresh()
-#   context.destroy()           
+    context.destroy()           
 
     return redirect(url_for('running_hist'))
 
@@ -121,11 +121,11 @@ def end_run():
         data_io.end_run()
 
     # Send a stop run signal to fe_master.
-    # context = zmq.Context()
-    # stop_sck = context.socket(zmq.PUSH)
-    # conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
-    # stop_sck.connect(conf['master_port'])
-    # stop_sck.send("STOP:")
+    context = zmq.Context()
+    stop_sck = context.socket(zmq.PUSH)
+    conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
+    stop_sck.connect(conf['master_port'])
+    stop_sck.send("STOP:")
 
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
@@ -134,7 +134,7 @@ def end_run():
 
     sleep(0.1)
     broadcast_refresh()
-   # context.destroy()
+    context.destroy()
 
     return redirect(url_for('running_hist'))
 
