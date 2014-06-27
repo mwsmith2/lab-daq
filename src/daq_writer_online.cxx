@@ -111,8 +111,8 @@ void DaqWriterOnline::PackMessage()
     sprintf(str, "device_clock");
     sis_map.push_back(json_spirit::Pair(str, 
       json_spirit::Array(
-        &sis.device_clock[0], 
-        &sis.device_clock[SIS_3350_CH])));
+        (uint64_t *)&sis.device_clock[0], 
+        (uint64_t *)&sis.device_clock[SIS_3350_CH])));
 
     json_spirit::Array arr;
     for (int ch = 0; ch < SIS_3350_CH; ++ch) {
@@ -138,8 +138,8 @@ void DaqWriterOnline::PackMessage()
     sprintf(str, "device_clock");
     sis_map.push_back(json_spirit::Pair(str, 
       json_spirit::Array(
-        &sis.device_clock[0], 
-        &sis.device_clock[SIS_3302_CH])));
+        (uint64_t *)&sis.device_clock[0], 
+        (uint64_t *)&sis.device_clock[SIS_3302_CH])));
 
     json_spirit::Array arr;
     for (int ch = 0; ch < SIS_3302_CH; ++ch) {
@@ -166,8 +166,8 @@ void DaqWriterOnline::PackMessage()
     sprintf(str, "device_clock");
     caen_map.push_back(json_spirit::Pair(str, 
       json_spirit::Array(
-        &caen.device_clock[0], 
-        &caen.device_clock[CAEN_1785_CH])));
+        (uint64_t *)&caen.device_clock[0], 
+        (uint64_t *)&caen.device_clock[CAEN_1785_CH])));
 
     sprintf(str, "value");
     caen_map.push_back(json_spirit::Pair(str, 

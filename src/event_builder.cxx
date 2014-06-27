@@ -277,9 +277,4 @@ void EventBuilder::StopWorkers() {
   }
 }
 
-
-
-
-
-
 } // ::daq
