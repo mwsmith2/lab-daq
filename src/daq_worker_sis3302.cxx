@@ -19,7 +19,6 @@ void DaqWorkerSis3302::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
-  queue_mutex_.lock();
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
@@ -28,7 +27,6 @@ void DaqWorkerSis3302::LoadConfig()
     }
   }
   cout << "device: " << vme::device << endl;
-  queue_mutex_.unlock();
 
   // Get the base address for the device.  Convert from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
@@ -155,16 +153,16 @@ void DaqWorkerSis3302::WorkLoop()
 
 sis_3302 DaqWorkerSis3302::PopEvent()
 {
+  queue_mutex_.lock();
+
   // Copy the data.
   sis_3302 data = data_queue_.front();
-
-  queue_mutex_.lock();
   data_queue_.pop();
-  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
+  queue_mutex_.unlock();
   return data;
 }
 
@@ -204,7 +202,7 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   // Get the system time
   auto t1 = high_resolution_clock::now();
   auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
-  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();  
+  bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
   uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
@@ -236,101 +234,5 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
     }
   }
 }
-//   int sis_idx = 0;
-//   bundle.is_bad_event = 0;
-
-//   if (sis_idx > 0) {
-//     unsigned int status = 0;
-  //   high_resolution_clock::time_point t1 = high_resolution_clock::now();
-  //   do {
-  //     int ret = 0;
-  //     if ((ret = Read(0x10, &status)) != 0) {
-  // printf("error reading sis3302 acq register\n");
-  //     }
-
-  //     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-  //     duration<double> time_span = duration_cast<duration<double>>(t2-t1);
-  //     if (time_span.count() > 3e-3) {
-  // printf("sis3302 readout timeout address: 0x%08x\n",  base_address_);
-  // printf("time span: %lf\n", time_span.count());
-  // break;
-  //     }
-  
-  //   } while((status & 0x10000));
-  
-  //   // MWS - setting the high res system clock here
-  //   high_resolution_clock::duration dtn = t1.time_since_epoch();
-  //   mSystemTime = duration_cast<nanoseconds>(dtn).count();  
-
-//     if (status & 0x10000) {
-//       bundle.is_bad_event++;
-//     }
-//   }
-
-//   int ch, offset, ret = 0;
-//   //pull the event
-
-//   //check how long the event is
-//   //expected mTraceLength + 8
-//   unsigned int next_sample_address[4] = {0, 0, 0, 0};
-//   for (ch = 0; ch < 4; ch++) {
-//     offset = 0x02000010;
-//     offset |= (ch >> 1) << 24;
-//     offset |= (ch & 0x1) << 2;
-
-//     if ((ret = Read(offset, next_sample_address + ch)) != 0) {
-//       printf("error sis3302 reading trace length\n");
-//     }
-//   }
-
-//   //todo: check it has the expected length
-
-//   unsigned int trace[4][mTraceLength / 2 + 4];
-
-//   for (ch = 0; ch < 4; ch++) {
-//     //offset = (0x4 + ch) << 24;
-//     offset = 0x04000000 + 0x00800000 * ch;
-//     unsigned int got_num_words;
-//     //if ((ret = vme_A32MBLT64_read(mDevice,
-//     if ((ret = ReadBlock(offset,
-//        (unsigned int*)(trace[ch]),
-//        mTraceLength / 2 + 4,
-//        &got_num_words)) != 0)
-//       {
-//   printf("error sis3302 reading trace length\n");
-//       }
-
-//     /*
-//       printf("adc%d: ", ch);
-//       for(unsigned int sample = 0; sample < 8; sample++) {
-//       printf("%08x ", trace[ch][sample]);
-//       }
-//       printf("\n");
-//     */
-//   }
-
-//   //arm the logic
-//   unsigned int armit = 1;
-//   if ((ret = Write(0x410, armit)) != 0) {
-//     printf("error sis3302 arming sampling logic sis %d\n", sis_idx);
-//   }
-
-//   //decode the event (little endian arch)
-//   for (ch = 0; ch < 4; ch++) {
-//     bundle.timestamp[sis_idx*4+ch] = 0;
-//     bundle.timestamp[sis_idx*4+ch] = trace[ch][1] & 0xfff;
-//     bundle.timestamp[sis_idx*4+ch] |= (trace[ch][1] & 0xfff0000) >> 4;
-//     bundle.timestamp[sis_idx*4+ch] |= (trace[ch][0] & 0xfffULL) << 24;
-//     bundle.timestamp[sis_idx*4+ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
-
-//     unsigned int idx;
-//     for (idx = 0; idx < mTraceLength / 2; idx++) {
-//       bundle.trace[sis_idx*4+ch][2*idx] = trace[ch][idx + 4] & 0xffff;
-//       bundle.trace[sis_idx*4+ch][2*idx + 1] = (trace[ch][idx + 4] >> 16) & 0xffff;
-//     }
-//   }
-
-//   sis_idx++;
-// }
 
 } // ::daq

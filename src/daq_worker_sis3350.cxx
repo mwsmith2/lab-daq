@@ -19,7 +19,6 @@ void DaqWorkerSis3350::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
-  queue_mutex_.lock();
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
@@ -28,7 +27,6 @@ void DaqWorkerSis3350::LoadConfig()
     }
   }
   cout << "device: " << vme::device << endl;
-  queue_mutex_.unlock();
 
   // Get the base address.  Needs to be converted from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
@@ -254,16 +252,16 @@ void DaqWorkerSis3350::WorkLoop()
 
 sis_3350 DaqWorkerSis3350::PopEvent()
 {
+  queue_mutex_.lock();
+
   // Copy the data.
   sis_3350 data = data_queue_.front();
-
-  queue_mutex_.lock();
   data_queue_.pop();
-  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
+  queue_mutex_.unlock();
   return data;
 }
 
@@ -302,7 +300,7 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
   // Get the system time.
   auto t1 = high_resolution_clock::now();
   auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
-  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
+  bundle.system_clock = duration_cast<milliseconds>(dtn).count();
 
   //todo: check it has the expected length
   uint trace[4][SIS_3350_LN / 2 + 4];

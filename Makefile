@@ -34,10 +34,13 @@ fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME)
 %_daq: modules/%_daq.cxx 
 	$(CXX) $< -o $@  $(FLAGS) $(LIBS)
 
-build/%.o: src/%.cxx
+build:
+	mkdir build
+
+build/%.o: src/%.cxx build
 	$(CXX) -c $< -o $@ $(FLAGS)
 
-build/%.o: include/vme/%.c
+build/%.o: include/vme/%.c build
 	$(CC) -c $< -o $@
 
 clean:
