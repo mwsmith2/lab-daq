@@ -19,7 +19,6 @@ void DaqWorkerCaen1785::LoadConfig()
   boost::property_tree::read_json(conf_file_, conf);
 
   // Get the device filestream
-  queue_mutex_.lock();
   if (vme::device == -1) {
 
     string dev_path = conf.get<string>("device");
@@ -28,7 +27,6 @@ void DaqWorkerCaen1785::LoadConfig()
     }
   }
   cout << "device: " << vme::device << endl;
-  queue_mutex_.unlock();
 
   // Get the base address for the device.  Convert from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
@@ -77,16 +75,16 @@ void DaqWorkerCaen1785::WorkLoop()
 
 caen_1785 DaqWorkerCaen1785::PopEvent()
 {
+  queue_mutex_.lock();
+
   // Copy the data.
   caen_1785 data = data_queue_.front();
-
-  queue_mutex_.lock();
   data_queue_.pop();
-  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
+  queue_mutex_.unlock();
   return data;
 }
 
@@ -117,7 +115,7 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
   // Get the system time
   auto t1 = high_resolution_clock::now();
   auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
-  bundle.system_clock = duration_cast<nanoseconds>(dtn).count();
+  bundle.system_clock = duration_cast<milliseconds>(dtn).count();
 
   // Get the event header for each high or low value
   for (ch = 0; ch < CAEN_1785_CH; ++ch) {
