@@ -46,7 +46,7 @@ run_info['runlog'] = 'runlog.csv'
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error404.html'), 404
+    return render_template('error404.html', in_progress=running), 404
 
 @app.route('/')
 def home():
@@ -64,19 +64,23 @@ def new_run():
         last_data = db[db['toc'][str(run_info['last_run'])]]
         last_data['Description'] = ''
 
-    return render_template('new_run.html', info=run_info, data=last_data, new=True)
+    return render_template('new_run.html', info=run_info, data=last_data, 
+                           new=True, in_progress=running)
 
 @app.route('/start', methods=['POST'])
 def start_run():
     """Check user form for completion. If it is complete, start the run.
     This entails saving the user configuration in couchdb and 
     launching the data getter and emitter"""
+    global running
+
     data = copy_form_data(run_info, request)
     complete = check_form_data(run_info, data)
     if not complete:
         error = "All fields in the form must be filled."
         return render_template('new_run.html', info=run_info, 
-                                   data=data, error=error, new=True )
+                               data=data, error=error, new=True,
+                               in_progress=running)
 
     #save the run info
     db = get_db(run_info['db_name'])
@@ -88,7 +92,6 @@ def start_run():
     save_db_data(db, data)
 
     #start the run and launch the data emitter
-    global running
     running = True
     data_io.begin_run()
 
@@ -139,7 +142,7 @@ def end_run():
 def running_hist():
     """displays an online histogram"""
     if len(data_io.data)==0:
-        return render_template('no_data.html')
+        return render_template('no_data.html', in_progress=running)
 
     if 'refresh_rate' not in session:
         session['refresh_rate'] = 1.
