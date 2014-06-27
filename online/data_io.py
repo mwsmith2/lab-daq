@@ -72,14 +72,30 @@ def pull_event(e, data):
         try:
             message = data_sck.recv(zmq.NOBLOCK)
             print "Got a message."
-            data = json.loads(message)
-            pull_event.event_data.put(data)
+            new_data = json.loads(message)
+
+            if generate_data.counter != generate_data.maxsize:
+                generate_data.counter += 1
+
+            now = time()
+            past = generate_data.times.get()
+            generate_data.times.put(now)
+
+            #pull_event.event_data.put(data)
+            global rate
+            global eventCount
+            global trace
+            eventCount += 1
+            
+            trace = np.array(new_data['sis_fast_0'][0])
+            data.append(trace.max())
+        
+            rate = float(generate_data.counter)/(now-past)
 
         except:
             sleep(100e-6)
 
 pull_event.event_data = Queue.Queue()
-
 
 def generate_data(e, data):
     while not e.isSet():
@@ -119,7 +135,6 @@ def begin_run():
     #t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
     t = threading.Thread(name='data-puller', target=pull_event, args=(e, data))
 
-    start = time()
     print 'starting'
     t.start()
 
