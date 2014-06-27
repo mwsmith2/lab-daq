@@ -86,7 +86,6 @@ void DaqWriterOnline::PackMessage()
   using boost::uint64_t;
 
   cout << "Packing message." << endl;
-  message_ = zmq::message_t(message_size_);
 
   int count = 0;
   char str[50];
@@ -181,6 +180,9 @@ void DaqWriterOnline::PackMessage()
   }
 
   string buffer = json_spirit::write(json_map);
+  buffer.append("__EOM__");
+
+  message_ = zmq::message_t(message_size_);
   memcpy(message_.data(), buffer.c_str(), buffer.size());
 
   cout << "Online writer message ready." << endl;
