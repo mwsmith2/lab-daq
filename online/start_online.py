@@ -104,12 +104,11 @@ def start_run():
     
     t = threading.Thread(name='emitter', target=send_events)
     t.start()
-
-    sleep(0.1)
+    
     broadcast_refresh()
     context.destroy()           
 
-    return redirect(url_for('running_hist'))
+    return redirect(url_for('home'))
 
 @app.route('/end')
 def end_run():
