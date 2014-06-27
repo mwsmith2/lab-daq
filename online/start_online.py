@@ -114,17 +114,17 @@ def start_run():
 def end_run():
     """Ends the run, broadcasts a refresh message to all clients"""
 
-    global running
-    if running:
-        running = False
-        data_io.end_run()
-
     # Send a stop run signal to fe_master.
     context = zmq.Context()
     stop_sck = context.socket(zmq.PUSH)
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json'))) 
     stop_sck.connect(conf['master_port'])
     stop_sck.send("STOP:")
+
+    global running
+    if running:
+        running = False
+        data_io.end_run()
 
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
@@ -239,12 +239,26 @@ def update_hist():
     emit('histogram ready', {"path" : path});
 
 @socketio.on('update trace', namespace='/online')
-def update_trace():
+def update_trace(msg):
     """update the histogram upon request from client and then
     respond when it's ready"""
-    name, path = generate_trace()
+    try: 
+        xmin = int(msg['x_min'])
+        xmax = int(msg['x_max'])
+        if xmin < 0:
+            xmin = 0
+        if xmax > 1024:
+            xmax = 1024
+        if xmin >= xmax:
+            xmin = 0
+            xmax = 1024
+    except:
+        xmin = 0
+        xmax = 1024
 
-    emit('trace ready', {"path" : path});
+    name, path = generate_trace(xmin, xmax)
+
+    emit('trace ready', {"path" : path, "x_min" : xmin, "x_max" : xmax});
 
 @socketio.on('start continual update', namespace='/online')
 def start_continual():
@@ -354,11 +368,12 @@ def generate_hist():
     
     return filename, filepath
  
-def generate_trace():
+def generate_trace(xmin, xmax):
     """generate the trace plot"""
     plt.clf()
     plt.plot(data_io.trace)
-    plt.xlim([0,1024])
+    plt.title('Event %i' % data_io.eventCount)
+    plt.xlim([xmin,xmax])
 
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):
         os.remove(tempFile)
