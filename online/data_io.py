@@ -14,12 +14,14 @@ import gevent
 import zmq, json
 
 data = []
-e = threading.Event()
+runOver = threading.Event()
 
 trace = np.zeros(1024)
 
 rate = 0 
 eventCount = 0
+
+
 
 def clear_data():
     global data
@@ -63,12 +65,15 @@ def pull_event(e, data):
     }
 
     """
+    global rate
+    global eventCount
+    global trace
 
     context = zmq.Context()
     data_sck = context.socket(zmq.PULL)
     data_sck.bind("tcp://127.0.0.1:42043")
 
-    while not e.isSet():
+    while not runOver.isSet():
 
         try:
             message = data_sck.recv(zmq.NOBLOCK)
@@ -83,9 +88,6 @@ def pull_event(e, data):
             generate_data.times.put(now)
 
             #pull_event.event_data.put(data)
-            global rate
-            global eventCount
-            global trace
             eventCount += 1
             
             trace = np.array(new_data['sis_fast_0']['trace'][0][:])
@@ -105,7 +107,7 @@ def pull_event(e, data):
 pull_event.event_data = Queue.Queue()
 
 def generate_data(e, data):
-    while not e.isSet():
+    while not runOver.isSet():
         if generate_data.counter != generate_data.maxsize:
             generate_data.counter += 1
             
@@ -131,23 +133,23 @@ generate_data.times = Queue.Queue(maxsize=generate_data.maxsize)
 
 
 def begin_run():
-    global e
+    global runOver
     print 'starting'
-    e.clear()
+    runOver.clear()
     clear_data()
     start = time()
     for unused_i in xrange(10):
         generate_data.times.put(start)
 
-    #t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
-    t = threading.Thread(name='data-puller', target=pull_event, args=(e, data))
+    #t = threading.Thread(name='data-generator', target=generate_data, args=(runOver,data))
+    t = threading.Thread(name='data-puller', target=pull_event, args=(runOver, data))
 
     print 'starting'
     t.start()
 
 def end_run():
-    global e
-    e.set()
+    global runOver
+    runOver.set()
     for i in xrange(10):
         generate_data.times.get()
          

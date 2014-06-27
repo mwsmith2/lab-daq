@@ -224,7 +224,7 @@ def get_upload(filename):
 
 def send_events():
     """sends data to the clients while a run is going"""
-    while not data_io.e.isSet():
+    while not data_io.runOver.isSet():
         sleep(0.1)
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
