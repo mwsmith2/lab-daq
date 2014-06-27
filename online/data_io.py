@@ -9,6 +9,7 @@ from time import sleep, time
 import threading
 import Queue
 from flask.ext.socketio import emit
+import gevent
 
 import zmq, json
 
@@ -71,8 +72,8 @@ def pull_event(e, data):
 
         try:
             message = data_sck.recv(zmq.NOBLOCK)
-            print "Got a message."
-            new_data = json.loads(message)
+            # print "Got a message."
+            new_data = json.loads(message.split('__EOM__')[0])
 
             if generate_data.counter != generate_data.maxsize:
                 generate_data.counter += 1
@@ -87,16 +88,19 @@ def pull_event(e, data):
             global trace
             eventCount += 1
             
-            trace = np.array(new_data['sis_fast_0']['trace'][0])
-            print 'trace: ' + str(len(trace))
+            trace = np.array(new_data['sis_fast_0']['trace'][0][:])
+            # print 'trace: ' + str(len(trace)) + ", " + str(trace.max())
             data.append(trace.max())
         
-            print len(data)
+            # print len(data)
 
             rate = float(generate_data.counter)/(now-past)
 
-        except:
-            sleep(100e-6)
+
+        except(zmq.ZMQError):
+            pass
+
+        sleep(1000e-6)
 
 pull_event.event_data = Queue.Queue()
 
