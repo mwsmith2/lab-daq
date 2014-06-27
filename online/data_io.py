@@ -46,7 +46,7 @@ def pull_event(e, data):
             "trace":array[8][1024]
         },
 
-        "caen_adc<id>:{
+        "caen_adc_<id>:{
             "system_clock":value,
             "device_clock":array[8],
             "value":array[8]
@@ -71,6 +71,7 @@ def pull_event(e, data):
             sleep(100e-6)
 
 pull_event.event_data = Queue.Queue()
+
 
 def generate_data(e, data):
     while not e.isSet():

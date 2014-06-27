@@ -45,9 +45,12 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     double rate_;
     double jitter_;
     double drop_rate_;
+    high_resolution_clock::time_point t0_;
+
+    // Concurrent data generation.
     event_struct event_data_;
     std::thread event_thread_;
-    high_resolution_clock::time_point t0_;
+    std::mutex event_mutex_;
 
     bool EventAvailable() { return has_fake_event_; };
     void GetEvent(event_struct &bundle);

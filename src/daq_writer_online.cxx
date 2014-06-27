@@ -181,12 +181,6 @@ void DaqWriterOnline::PackMessage()
   string buffer = json_spirit::write(json_map);
   memcpy(message_.data(), buffer.c_str(), buffer.size());
 
-  // Code for testing output.
-  // std::ofstream out;
-  // out.open("test.json");
-  // json_spirit::write(json_map, out);
-  // out.close();
-
   cout << "Online writer message ready." << endl;
   message_ready_ = true;
 }

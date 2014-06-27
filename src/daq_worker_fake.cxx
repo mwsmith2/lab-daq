@@ -37,10 +37,9 @@ void DaqWorkerFake::GenerateEvent()
 
     while (go_time_) {
 
-      usleep(1.0e6 / rate_);
-
       cout << name_ << " generated an event." << endl;
 
+      event_mutex_.lock(); // mutex guard
       // Get the system time
       auto t1 = high_resolution_clock::now();
       auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();     
@@ -58,22 +57,26 @@ void DaqWorkerFake::GenerateEvent()
       }
 
       has_fake_event_ = true;
+      event_mutex_.unlock();
   
+      usleep(1.0e6 / rate_);
       std::this_thread::yield();
     }
 
-    std::this_thread::yield();
-
     usleep(100);
+    std::this_thread::yield();
   }
 }
 
 void DaqWorkerFake::GetEvent(event_struct &bundle)
 {
+  event_mutex_.lock();
+
   // Copy the data.
   bundle = event_data_;
-
   has_fake_event_ = false;
+
+  event_mutex_.unlock();
 }
 
 void DaqWorkerFake::WorkLoop() 
@@ -92,9 +95,9 @@ void DaqWorkerFake::WorkLoop()
         queue_mutex_.lock();
         data_queue_.push(bundle);
         has_event_ = true;
-        queue_mutex_.unlock();
 
         cout << name_ << " pushed an event into the queue." << endl;
+        queue_mutex_.unlock();
 
       }
 
@@ -112,8 +115,10 @@ void DaqWorkerFake::WorkLoop()
 event_struct DaqWorkerFake::PopEvent()
 {
   // Copy the data.
+  queue_mutex_.lock();
   event_struct data = data_queue_.front();
   data_queue_.pop();
+  queue_mutex_.unlock();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
