@@ -14,12 +14,14 @@ import gevent
 import zmq, json
 
 data = []
-e = threading.Event()
+runOver = threading.Event()
 
 trace = np.zeros(1024)
 
 rate = 0 
 eventCount = 0
+
+
 
 def clear_data():
     global data
@@ -35,7 +37,7 @@ def fill_trace():
     trace = np.array(xrange(50))
     return pulse_shape(trace)
 
-def pull_event(e, data):
+def pull_event(e, data, start):
     """The function constantly tries to pull new event data which arrives
     in json format. The basic structure of the data is as follows:
     {
@@ -63,44 +65,37 @@ def pull_event(e, data):
     }
 
     """
+    global rate
+    global eventCount
+    global trace
 
     context = zmq.Context()
     data_sck = context.socket(zmq.PULL)
     data_sck.bind("tcp://127.0.0.1:42043")
+    last_message = ''
+    message = ''
 
-    while not e.isSet():
+    while not runOver.isSet():
 
         try:
+            last_message = message
             message = data_sck.recv(zmq.NOBLOCK)
-            # print "Got a message."
 
             if (message[0:7] == '__EOB__'):
+                print 'got EOB'
                 continue
 
             new_data = json.loads(message.split('__EOM__')[0])
-
             if generate_data.counter != generate_data.maxsize:
                 generate_data.counter += 1
 
-            now = time()
-            past = generate_data.times.get()
-            generate_data.times.put(now)
-
-            #pull_event.event_data.put(data)
-            global rate
-            global eventCount
-            global trace
-            eventCount += 1
-            
-            trace = np.array(new_data['sis_fast_1']['trace'][0][:])
-            # print 'trace: ' + str(len(trace)) + ", " + str(trace.max())
+            trace = np.array(new_data['sis_fast_1']['trace'][0])
             data.append(trace.max())
             eventCount = new_data['event_number']
         
             # print len(data)
 
-            rate = float(generate_data.counter)/(now-past)
-
+            rate = float(eventCount)/(time()-start)
 
         except:
             pass
@@ -109,8 +104,9 @@ def pull_event(e, data):
 
 pull_event.event_data = Queue.Queue()
 
+
 def generate_data(e, data):
-    while not e.isSet():
+    while not runOver.isSet():
         if generate_data.counter != generate_data.maxsize:
             generate_data.counter += 1
             
@@ -136,24 +132,22 @@ generate_data.times = Queue.Queue(maxsize=generate_data.maxsize)
 
 
 def begin_run():
-    global e
+    global runOver
     print 'starting'
-    e.clear()
+    runOver.clear()
     clear_data()
     start = time()
     for unused_i in xrange(10):
         generate_data.times.put(start)
 
-    #t = threading.Thread(name='data-generator', target=generate_data, args=(e,data))
-    t = threading.Thread(name='data-puller', target=pull_event, args=(e, data))
+    #t = threading.Thread(name='data-generator', target=generate_data, args=(runOver,data))
+    t = threading.Thread(name='data-puller', target=pull_event, args=(runOver, data, start))
 
     print 'starting'
     t.start()
 
 def end_run():
-    global e
-    e.set()
+    global runOver
+    runOver.set()
     for i in xrange(10):
         generate_data.times.get()
-         
-    

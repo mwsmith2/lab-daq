@@ -3,30 +3,52 @@
   <img id="img" 
        src="" width="80%" style="display: none"></img>
     <br>
-  <button id="update">Update Trace</button>
+  <button id="update">Update Trace</button> <br><br>
+  x_min <input type=text id="min" size="1" value="0"></input>
+  x_max <input type=text id="max" size="1" value="1024"></input> 
 
   <script type="text/javascript" charset="utf-8">
        $(document).ready(function(){
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
-           socket.emit('update trace');
+	   socket.emit('update trace', {"x_min":$('#min').val(),
+					"x_max":$('#max').val()});
 
 	   socket.on('trace ready', function(msg) {
                $('#img').show();
 	       $('#img').attr('src',msg.path);
+	       $('#min').val(msg.x_min);
+	       $('#max').val(msg.x_max);
 	   });
 
        });
 
-      $('#update').click(function() {
-      	  namespace = '/online';
-	  var socket = io.connect('http://' + document.domain + 
+       function update_trace(){
+	   namespace = '/online';
+	   var socket = io.connect('http://' + document.domain + 
 				  ':' + location.port + namespace);
-	  socket.emit('update trace');
+	   socket.emit('update trace', {"x_min":$('#min').val(),
+				       "x_max":$('#max').val()});
+       }
+
+      $('#update').click(function () {
+	  update_trace();
       });
-     
+
+      $('#min').keydown(function (e){
+	  if(e.keyCode == 13){
+	      update_trace();
+	  }
+      });
+
+      $('#max').keydown(function (e){
+	  if(e.keyCode == 13){
+	      update_trace();
+	  }
+      });
+      
+
     </script>
 
 {% endblock body %}
-X
