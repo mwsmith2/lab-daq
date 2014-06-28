@@ -9,6 +9,9 @@
 
 #define CAEN_1785_CH 8
 
+#define CAEN_6742_CH 16
+#define CAEN_6742_LN 1024
+
 //--- std includes ----------------------------------------------------------//
 #include <vector>
 using std::vector;
@@ -41,11 +44,18 @@ struct caen_1785 {
   UShort_t value[CAEN_1785_CH];
 };
 
+struct caen_6742 {
+  ULong64_t system_clock;
+  ULong64_t device_clock[CAEN_6742_CH];
+  UShort_t trace[CAEN_6742_CH][CAEN_6742_LN];
+};
+
 // Built from basic structs 
 struct event_data {
   vector<sis_3350> sis_fast;
   vector<sis_3302> sis_slow;
   vector<caen_1785> caen_adc;
+  vector<caen_6742> caen_drs;
 };
 
 // typedef for all workers
