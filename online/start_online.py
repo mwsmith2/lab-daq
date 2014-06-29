@@ -294,46 +294,62 @@ def stop_continual():
     """ends the chain of continual histogram updates"""
     session['updating_hist'] = False
 
+
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
     """generates runlog upon request from client"""
-
-    with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
-        db = connect_db(run_info['db_name'])
+    #generate column headers
+    start = time()
+    runlog_headers = ''
+    for attr in run_info['attr']:
+        runlog_headers += ', ' + attr
+    for info in run_info['log_info']:
+        runlog_headers += ', ' + info
         
-        #write column headers
-        runlog.write('run number')
+    #fill runlog lines with database info
+    runlog_lines = []
+    db = connect_db(run_info['db_name'])
+    n_runs = int(db['toc']['n_runs'])
+    counter = 0
+    gen = (entry for entry in db)
+    for entry in gen:
+        data = db[entry]
+        if data['_id'] == 'toc':
+            continue
+        
+        runlog_lines.append('')
+        if 'run_number' in data:
+            runlog_lines[-1] += str(data['run_number'])
+        else:
+            runlog_lines[-1] += 'N/A'
         for attr in run_info['attr']:
-            runlog.write(', ' + attr)
-        for info in run_info['log_info']:
-            runlog.write(', ' + info)
-
-        n_runs = int(db['toc']['n_runs'])
-
-        #fill runlog data from database
-        for run_idx in xrange(n_runs):
-            runlog.write('\n')
-            run_num = str(run_idx+1)
-            runlog.write(run_num)
-            
-            data = db[db['toc'][run_num]]
-            for attr in run_info['attr']:
                 if attr in data:
-                    runlog.write(', ' + data[attr])
+                    runlog_lines[-1] += ', ' + str(data[attr])
                 else: 
-                    runlog.write(', N/A')
-            for info in run_info['log_info']:
-                if info in data:
-                    runlog.write(', ' + str(data[info]))
-                else:
-                    runlog.write(', N/A')
-                    
-            progress = 100*float(run_idx+1)/n_runs
+                    runlog_lines[-1] += (', N/A')
+        for info in run_info['log_info']:
+            if info in data:
+                runlog_lines[-1] += ', ' + str(data[info])
+            else:
+                runlog_lines[-1] += (', N/A')
 
-            emit('progress', "%02i%s Generated" % 
-                 (progress, "%"))
-                 
+        counter+=1
+        progress = 100*float(counter)/n_runs
+
+        emit('progress', "%02i%s Generated" % 
+             (progress, "%"))
+
+    runlog_lines.sort(key=lambda line: int(line.split(',')[0]))
+    
+    #write the file
+    with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
+        runlog.write(runlog_headers)
+        for line in runlog_lines:
+            runlog.write('\n' + line)
     emit('runlog ready')
+    print '%i seconds' % (time() - start)
+    
+
 
 @socketio.on('refreshed', namespace='/online')
 def on_refresh():
