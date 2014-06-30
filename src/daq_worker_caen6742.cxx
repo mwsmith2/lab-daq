@@ -124,11 +124,11 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
   
   ret = CAEN_DGTZ_GetEventInfo(device_, buffer_, bsize_, 0, &event_info_, &evtptr);
-  ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, &event_);
+  ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
 
   
 
-  ret = CAEN_DGTZ_FreeEvent(device_, &event_);
+  ret = CAEN_DGTZ_FreeEvent(device_, (void **)&event_);
 }
 
 } // ::daq
