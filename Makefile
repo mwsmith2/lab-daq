@@ -17,14 +17,14 @@ endif
 ifeq ($(UNAME_S), Linux)
 	CXX = g++
 	CC  = gcc
-	FLAGS = -std=c++0x -fpermissive
+	FLAGS = -std=c++0x
 endif
 
 FLAGS += $(shell root-config --cflags)
 FLAGS += -Iinclude 
 
 LIBS = $(shell root-config --libs)
-LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer
+LIBS += -lm -lzmq -ljson_spirit
 
 all: $(OBJECTS) $(OBJ_VME) $(TARGETS) build
 
