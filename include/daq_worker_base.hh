@@ -32,8 +32,8 @@ class DaqWorkerBase {
                                                    has_event_(false) {};
 
     virtual ~DaqWorkerBase() {
-      thread_live_ = false;
       if (work_thread_.joinable()) {
+        thread_live_ = false;
         work_thread_.join();
       }
     };                                        

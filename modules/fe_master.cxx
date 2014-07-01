@@ -20,10 +20,7 @@ using namespace boost::property_tree;
 #include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
-#include "daq_worker_fake.hh"
-#include "daq_worker_sis3350.hh"
-#include "daq_worker_sis3302.hh"
-#include "daq_worker_caen1785.hh"
+#include "daq_worker_list.hh"
 #include "daq_writer_online.hh"
 #include "daq_writer_root.hh"
 #include "event_builder.hh"
@@ -50,7 +47,7 @@ namespace {
   zmq::message_t message(10);
 
   // project declarations
-  vector<worker_ptr_types> daq_workers;
+  DaqWorkerList daq_workers;
   vector<DaqWriterBase *> daq_writers;
   EventBuilder *event_builder = nullptr;
 }
@@ -124,7 +121,7 @@ int LoadConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -134,7 +131,7 @@ int LoadConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -144,7 +141,7 @@ int LoadConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
   // Set up the sis3302 devices.
@@ -154,7 +151,7 @@ int LoadConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -184,23 +181,7 @@ int ReloadConfig() {
   read_json(conf_file, conf);
 
   // Delete the allocated workers.
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      delete boost::get<DaqWorkerBase<sis_3350> *>(*it);
-
-    } else if ((*it).which() == 1) {
-
-      delete boost::get<DaqWorkerBase<sis_3302> *>(*it);
-
-    } else if ((*it).which() == 2) {
-
-      delete boost::get<DaqWorkerBase<caen_1785> *>(*it);
-
-    }
-  }
-  daq_workers.resize(0);
+  daq_workers.ClearList();
 
   // Delete the allocated writers.
   for (auto &writer : daq_writers) {
@@ -284,22 +265,7 @@ int StartRun() {
   }
 
   // Start the data gatherers
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
-
-    }
-  }
+  daq_workers->StartWorkers();
 
   return 0;
 }
