@@ -89,7 +89,7 @@ def pull_event(e, data, start):
             if generate_data.counter != generate_data.maxsize:
                 generate_data.counter += 1
 
-            trace = np.array(new_data['sis_fast_1']['trace'][0])
+            trace = np.array(new_data['sis_slow_0']['trace'][1])
             data.append(trace.max())
             eventCount = new_data['event_number']
         

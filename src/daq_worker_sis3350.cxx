@@ -4,10 +4,10 @@ namespace daq {
 
 DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
-  LoadConfig();
-
   num_ch_ = SIS_3350_CH;
   len_tr_ = SIS_3350_LN;
+
+  LoadConfig();
 
   work_thread_ = std::thread(&DaqWorkerSis3350::WorkLoop, this);
 }
@@ -36,7 +36,7 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Check for device.
   Read(0x0, msg);
-  cout << "sis3350 found at 0x%08x\n." << base_address_;
+  printf("sis3350 found at 0x%08x\n.", base_address_);
 
   // Reset device.
   msg = 1;
@@ -218,6 +218,10 @@ void DaqWorkerSis3350::LoadConfig()
     Write(offset, msg);
     printf("adc %d gain %d\n", ch, msg);
   }
+
+  //arm the logic
+  uint armit = 1;
+  Write(0x410, armit);
 } // LoadConfig
 
 void DaqWorkerSis3350::WorkLoop()

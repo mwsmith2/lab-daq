@@ -211,7 +211,7 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
     offset = (0x8 + ch) << 23;
     Read(0x10000, trace[ch][0]);
     Read(0x10001, trace[ch][1]);
-    ReadTrace(offset, trace[ch] + 4);
+    ReadTrace(offset, &trace[ch][4]);
   }
 
   //arm the logic
@@ -229,8 +229,8 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
 
     uint idx;
     for (idx = 0; idx < SIS_3302_LN / 2; idx++) {
-      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xfff;
-      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xfff;
+      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xffff;
+      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xffff;
     }
   }
 }

@@ -64,6 +64,8 @@ int StopRun();
 int main(int argc, char *argv[])
 {
   LoadConfig();
+  vmesysreset(vme::device);
+  ReloadConfig();
 
   while (true) {
 

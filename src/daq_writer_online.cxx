@@ -131,6 +131,7 @@ void DaqWriterOnline::PackMessage()
     json_map.push_back(json_spirit::Pair(str, sis_map));
   }
 
+  count = 0;
   for (auto &sis : data.sis_slow) {
 
     json_spirit::Object sis_map;
