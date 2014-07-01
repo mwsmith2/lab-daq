@@ -116,6 +116,27 @@ void DaqWorkerSis3350::LoadConfig()
   msg |= 0x1; //load shift register DAC
   Write(0x50, msg);
 
+  //gain
+  //factory default 18 -> 5V
+  for (auto &val : conf.get_child("channel_gain")) {
+    static int ch = 0;
+    //  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    msg = val.second.get_value<int>();
+
+    int offset = 0x02000048;
+    offset |= (ch >> 1) << 24;
+    offset |= (ch % 2) << 2;
+    Write(offset, msg);
+    printf("addr: %08x", offset);
+    printf("adc %d gain %d\n", ch, msg);
+
+    Read(offset, msg);
+    printf("adc %d gain %d\n", ch, msg);
+    
+    ++ch;
+  }
+
+
   uint timeout_max = 1000;
   uint timeout_cnt = 0;
   do {
@@ -165,13 +186,16 @@ void DaqWorkerSis3350::LoadConfig()
   //range -1.5 to +0.3 V
   uint ch;
   //DAC offsets
-  for (ch = 0; ch < SIS_3350_CH; ch++) {
+  for (auto &val : conf.get_child("channel_offset")) {
+    static int ch = 0;
     
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
-    msg = 39000; // ??? V
-    Write(offset, msg);
+    float volts = val.second.get_value<float>();
+    msg = (int)(33000 + 3377.77 * volts + 0.5);
+    cout << msg << endl;
+    Write(offset | 4, msg);
 
     msg = 0;
     msg |= (ch % 2) << 4;
@@ -206,18 +230,10 @@ void DaqWorkerSis3350::LoadConfig()
     if (timeout_cnt == timeout_max) {
       printf("error loading adc dac\n");
     }
+
+    ++ch;
   }
 
-  //gain
-  //factory default 18 -> 5V
-  for (ch = 0; ch < SIS_3350_CH; ch++) {
-    msg = 45;
-    int offset = 0x02000048;
-    offset |= (ch >> 1) << 24;
-    offset |= (ch % 2) << 2;
-    Write(offset, msg);
-    printf("adc %d gain %d\n", ch, msg);
-  }
 
   //arm the logic
   uint armit = 1;

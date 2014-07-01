@@ -90,8 +90,8 @@ def start_run():
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json')))
     start_sck.connect(conf['master_port'])
 
-    sleep(1000e-6)
-    start_sck.send("START:%05i:" % run_info['last_run'])
+    sleep(5000e-6)
+    start_sck.send("START:%05i:" % (run_info['last_run'] + 1))
     
     #save the run info
     db = get_db(run_info['db_name'])
@@ -126,7 +126,7 @@ def end_run():
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json')))
     stop_sck.connect(conf['master_port'])
 
-    sleep(1000e-6)
+    sleep(5000e-6)
     stop_sck.send("STOP:")
 
     global running

@@ -238,18 +238,36 @@ void EventBuilder::StartWorkers() {
   // Start the data gatherers
   for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
 
+    static bool started = false;
+
     if ((*it).which() == 0) {
 
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartWorker();
+      auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
+      ptr->StartWorker();
+      if (started == false) {
+	while (!ptr->HasEvent()) {};
+	ptr->PopEvent();
+	started = true;
+      }
 
     } else if ((*it).which() == 1) {
 
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
-
+      auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
+      ptr->StartWorker();
+      if (started == false) {
+	while (!ptr->HasEvent()) {};
+	ptr->PopEvent();
+	started = true;
+      }
     } else if ((*it).which() == 2) {
 
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
-
+      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
+      ptr->StartWorker();
+      if (started == false) {
+	while (!ptr->HasEvent()) {};
+	ptr->PopEvent();
+	started = true;
+      }
     }
   }
 }

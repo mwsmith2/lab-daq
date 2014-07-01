@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   usleep(1000);
 
   // Create the start message
-  std::string trigger("START:");
+  std::string trigger("START:test:");
   zmq::message_t start_msg(trigger.size());
 
   memcpy(start_msg.data(), trigger.c_str(), trigger.size());
