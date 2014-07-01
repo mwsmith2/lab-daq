@@ -2,4 +2,4 @@
 
 killall fe_master
 
-./fe_master &> log &
+./fe_master $1 &> log &

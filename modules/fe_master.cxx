@@ -42,10 +42,11 @@ namespace {
 
   // std declarations
   string msg_string;
+  string conf_file;
 
   // zmq declarations
   zmq::context_t master_ctx(1);
-  zmq::socket_t master_sck(master_ctx, ZMQ_PULL);
+  zmq::socket_t master_sck(master_ctx, ZMQ_SUB);
   zmq::message_t message(10);
 
   // project declarations
@@ -63,9 +64,19 @@ int StopRun();
 // The main loop
 int main(int argc, char *argv[])
 {
+  // If there was a command line argument, grab that file.
+  if (argc > 0) {
+
+    conf_file = string(argv[1]);
+
+  } else {
+
+    conf_file = string("config/.default_master.json"); // default
+
+  }
+
+  // Load the configuration
   LoadConfig();
-  vmesysreset(vme::device);
-  ReloadConfig();
 
   while (true) {
 
@@ -96,14 +107,16 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int LoadConfig(){
-  // load up the configuration.
-  string conf_file("config/.default_master.json");
+int LoadConfig() 
+{
+  // Load up the configuration file
+  cout << "Opening config file: " << conf_file << endl;
   ptree conf;
   read_json(conf_file, conf);
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
+  master_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
   // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
@@ -167,7 +180,6 @@ int LoadConfig(){
 
 int ReloadConfig() {
   // load up the configuration.
-  string conf_file("config/.default_master.json");
   ptree conf;
   read_json(conf_file, conf);
 
