@@ -22,6 +22,7 @@ using std::endl;
 
 //--- projects includes -----------------------------------------------------//
 #include "daq_structs.hh"
+#include "daq_worker_list.hh"
 #include "daq_worker_base.hh"
 #include "daq_worker_fake.hh"
 #include "daq_writer_base.hh"
@@ -35,7 +36,7 @@ class EventBuilder {
   public:
 
     // ctor
-    EventBuilder(const vector<worker_ptr_types>& daq_workers, 
+    EventBuilder(const DaqWorkerList &daq_workers, 
                  const vector<DaqWriterBase *> daq_writers,
                  string conf_file);
 
@@ -68,7 +69,7 @@ class EventBuilder {
     std::atomic<bool> got_last_event_;
 
     // Data accumulation variables
-    vector<worker_ptr_types> daq_workers_;
+    DaqWorkerList daq_workers_;
     vector<DaqWriterBase *> daq_writers_;
     vector<event_data> push_data_vec_;
     std::queue<event_data> pull_data_que_;
@@ -80,8 +81,6 @@ class EventBuilder {
     std::thread push_data_thread_;
 
     // Private member functions
-    bool WorkersHaveEvents();
-    void GetEventData(event_data& bundle);
     void BuilderLoop();
     void PushDataLoop();
     void StopWorkers();

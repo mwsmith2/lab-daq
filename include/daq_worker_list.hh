@@ -8,6 +8,7 @@
 #include <boost/variant.hpp>
 
 //--- project includes ------------------------------------------------------//
+#include "daq_structs.hh"
 #include "daq_worker_fake.hh"
 #include "daq_worker_sis3350.hh"
 #include "daq_worker_sis3302.hh"
@@ -30,12 +31,16 @@ class DaqWorkerList {
     void StopRun();
     void StartWorkers();
     void StopWorkers();
+    bool AllWorkersHaveEvent();
+    bool AnyWorkersHaveEvent();
+    void GetEventData(event_data &bundle);
 
     // Functions to structure the list
     void PushBack(worker_ptr_types daq_worker) {
       daq_workers_.push_back(daq_worker);
     }
 
+    void FreeList();
     void ClearList();
 
 

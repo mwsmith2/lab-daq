@@ -9,7 +9,6 @@ DaqWorkerList::DaqWorkerList()
 
 DaqWorkerList::~DaqWorkerList()
 {
-  ClearList();
 }
 
 void DaqWorkerList::StartRun()
@@ -64,7 +63,84 @@ void DaqWorkerList::StopWorkers()
   }
 }
 
+bool DaqWorkerList::AllWorkersHaveEvent()
+{
+  // Check each worker for an event.
+  bool has_event = true;
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      has_event &= boost::get<DaqWorkerBase<sis_3350> *>(*it)->HasEvent();
+
+    } else if ((*it).which() == 1) {
+
+      has_event &= boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent();
+
+    } else if ((*it).which() == 2) {
+
+      has_event &= boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent();
+
+    }
+  }
+
+  return has_event;
+}
+
+bool DaqWorkerList::AnyWorkersHaveEvent()
+{
+  // Check each worker for an event.
+  bool bad_data = false;
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      bad_data |= boost::get<DaqWorkerBase<sis_3350> *>(*it)->HasEvent();
+
+    } else if ((*it).which() == 1) {
+
+      bad_data |= boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent();
+
+    } else if ((*it).which() == 2) {
+
+      bad_data |= boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent();
+
+    }
+  }
+
+  return bad_data;
+}
+
+void DaqWorkerList::GetEventData(event_data &bundle)
+{
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
+      bundle.sis_fast.push_back(ptr->PopEvent());
+
+    } else if ((*it).which() == 1) {
+
+      auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
+      bundle.sis_slow.push_back(ptr->PopEvent());
+
+    } else if ((*it).which() == 2) {
+
+      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
+      bundle.caen_adc.push_back(ptr->PopEvent());
+
+    }
+  }
+}
+
 void DaqWorkerList::ClearList()
+{
+  // Remove the pointer references
+  daq_workers_.resize(0);
+}
+
+void DaqWorkerList::FreeList()
 {
   // Delete the allocated workers.
   for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {

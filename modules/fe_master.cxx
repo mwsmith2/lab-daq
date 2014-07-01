@@ -181,7 +181,7 @@ int ReloadConfig() {
   read_json(conf_file, conf);
 
   // Delete the allocated workers.
-  daq_workers.ClearList();
+  daq_workers.FreeList();
 
   // Delete the allocated writers.
   for (auto &writer : daq_writers) {
@@ -197,7 +197,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -207,7 +207,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -217,7 +217,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
   // Set up the sis3302 devices.
@@ -227,7 +227,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -265,7 +265,7 @@ int StartRun() {
   }
 
   // Start the data gatherers
-  daq_workers->StartWorkers();
+  daq_workers.StartRun();
 
   return 0;
 }
@@ -284,22 +284,7 @@ int StopRun() {
   }
 
   // Stop the data gatherers
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopWorker();
-
-    }
-  }
+  daq_workers.StopRun();
 
   return 0;
 }
