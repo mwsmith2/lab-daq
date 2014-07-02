@@ -47,7 +47,6 @@ class DaqWorkerList {
   private:
 
     std::vector<worker_ptr_types> daq_workers_;
-
 };
 
 } // ::daq
