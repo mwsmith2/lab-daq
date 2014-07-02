@@ -13,6 +13,7 @@
 #include "daq_worker_sis3350.hh"
 #include "daq_worker_sis3302.hh"
 #include "daq_worker_caen1785.hh"
+#include "daq_worker_caen6742.hh"
 
 namespace daq {
 

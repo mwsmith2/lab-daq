@@ -12,13 +12,17 @@
         {
             "sis_slow_0": "config\/sis_3302_0.json"
         },
-        "caen_1785": ""
+        "caen_1785": "",
+        "caen_6742":
+        {
+            "caen_drs_0": "config\/caen_6742_0.json"
+        }
     },
     "writers":
     {
         "root":
         {
-            "file": "data\/run_00121.root",
+            "file": "data\/run_test.root",
             "tree": "t"
         },
         "online":

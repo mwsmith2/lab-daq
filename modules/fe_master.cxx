@@ -154,7 +154,7 @@ int LoadConfig()
     daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
-  // Set up the sis3302 devices.
+  // Set up the caen1785 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_1785")) {
 
@@ -162,6 +162,16 @@ int LoadConfig()
     string dev_conf_file(v.second.data());
 
     daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the caen6742 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_6742")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -230,7 +240,7 @@ int ReloadConfig() {
     daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
-  // Set up the sis3302 devices.
+  // Set up the caen1785 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_1785")) {
 
@@ -238,6 +248,16 @@ int ReloadConfig() {
     string dev_conf_file(v.second.data());
 
     daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the caen6742 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_6742")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
   }
 
   // Set up the writers.
