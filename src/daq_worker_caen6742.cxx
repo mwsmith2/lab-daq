@@ -98,7 +98,7 @@ caen_6742 DaqWorkerCaen6742::PopEvent()
 bool DaqWorkerCaen6742::EventAvailable()
 {
   // Check acq reg.
-  uint num_events;
+  uint num_events = 0;
 
   CAEN_DGTZ_ReadData(device_, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, buffer_, &bsize_);
 
@@ -126,7 +126,11 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   ret = CAEN_DGTZ_GetEventInfo(device_, buffer_, bsize_, 0, &event_info_, &evtptr);
   ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
 
-  
+  for (uint ch = 0; ch < CAEN_6742_CH; ++ch) {
+    for (uint idx = 0; idx < event_->ChSize[ch]; ++idx) {
+      bundle.trace[ch][idx] = event_->DataChannel[ch][idx];
+    }
+  }
 
   ret = CAEN_DGTZ_FreeEvent(device_, (void **)&event_);
 }

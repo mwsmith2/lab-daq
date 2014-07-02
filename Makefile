@@ -24,7 +24,7 @@ FLAGS += $(shell root-config --cflags)
 FLAGS += -Iinclude 
 
 LIBS = $(shell root-config --libs)
-LIBS += -lm -lzmq -ljson_spirit
+LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer
 
 all: $(OBJECTS) $(OBJ_VME) $(TARGETS) build
 

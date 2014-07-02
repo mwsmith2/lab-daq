@@ -16,11 +16,12 @@
         "caen_1785": "",
         "caen_6742": ""
     },
+
     "writers":
     {
         "root":
         {
-            "file": "data\/run_00101.root",
+            "file": "data\/run_test.root",
             "tree": "t"
         },
         "online":
