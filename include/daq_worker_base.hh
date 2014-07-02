@@ -41,6 +41,7 @@ class DaqWorkerBase {
     // flow control functions
     void StartThread() {
       thread_live_ = true;
+      if (work_thread_.joinable()) work_thread_.join();
       work_thread_ = std::thread(&DaqWorkerBase<T>::WorkLoop, this); 
     };
 

@@ -163,11 +163,10 @@ void DaqWorkerSis3350::LoadConfig()
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V
-  uint ch;
+  uint ch = 0;
   //DAC offsets
   for (auto &val : conf.get_child("channel_offset")) {
-    static int ch = 0;
-    
+
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
@@ -215,8 +214,8 @@ void DaqWorkerSis3350::LoadConfig()
 
   //gain
   //factory default 18 -> 5V
+  ch = 0;
   for (auto &val : conf.get_child("channel_gain")) {
-    static int ch = 0;
     //  for (ch = 0; ch < SIS_3350_CH; ch++) {
     msg = val.second.get_value<int>();
 

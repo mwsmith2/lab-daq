@@ -33,14 +33,17 @@ void DaqWorkerCaen6742::LoadConfig()
 
   // Set the trace length.
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
-  
+
+  // Set the sampling rate.
+  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);
+
   // Set the channel enable mask.
   ret = CAEN_DGTZ_SetChannelEnableMask(device_, 0xFFFF); // all on
  
   // Enable external trigger.
-  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT); // ext in/out
+  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
 
-  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 1);
+  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 2);
   
   ret = CAEN_DGTZ_MallocReadoutBuffer(device_, &buffer_, &size_);
   
