@@ -134,6 +134,7 @@ void EventBuilder::PushDataLoop()
 
         // Check to make sure there are no straggling events.
         bool bad_data = daq_workers_.AnyWorkersHaveEvent();
+        daq_workers_.FlushEventData();
 
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
