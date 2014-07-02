@@ -38,14 +38,26 @@ class DaqWorkerBase {
       }
     };                                        
 
-    // flow control functions                                  
+    // flow control functions
+    void StartThread() {
+      thread_live_ = true;
+      work_thread_ = std::thread(&DaqWorkerBase<T>::WorkLoop, this); 
+    };
+
+    void StopThread() {
+      thread_live_ = false;
+      if (work_thread_.joinable()) work_thread_.join();
+    };
+
     void StartWorker() { go_time_ = true; };
     void StopWorker() { go_time_ = false; };
     bool HasEvent() { return has_event_; };
+    void FlushEvents() { data_queue_.empty(); };
 
     // Need to be implented by descendants.
     virtual void LoadConfig() = 0;
     virtual T PopEvent() = 0;
+
 
   protected:
 

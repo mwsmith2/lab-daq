@@ -23,9 +23,6 @@ using std::endl;
 //--- projects includes -----------------------------------------------------//
 #include "daq_structs.hh"
 #include "daq_worker_list.hh"
-#include "daq_worker_base.hh"
-#include "daq_worker_fake.hh"
-#include "daq_writer_base.hh"
 #include "daq_writer_root.hh"
 
 namespace daq {

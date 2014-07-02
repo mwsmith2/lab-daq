@@ -30,11 +30,15 @@ class DaqWorkerList {
     // Functions to control the runs.
     void StartRun();
     void StopRun();
+
+    void StartThreads();
+    void StopThreads();
     void StartWorkers();
     void StopWorkers();
     bool AllWorkersHaveEvent();
     bool AnyWorkersHaveEvent();
     void GetEventData(event_data &bundle);
+    void FlushEventData();
 
     // Functions to structure the list
     void PushBack(worker_ptr_types daq_worker) {

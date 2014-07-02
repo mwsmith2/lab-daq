@@ -14,9 +14,6 @@ DaqWorkerFake::DaqWorkerFake(string name, string conf) : DaqWorkerBase<event_str
   num_ch_ = SIS_3350_CH;
   len_tr_ = SIS_3350_LN;
   has_fake_event_ = false;
-
-  work_thread_ = std::thread(&DaqWorkerFake::WorkLoop, this);
-  event_thread_ = std::thread(&DaqWorkerFake::GenerateEvent, this);
 }
 
 void DaqWorkerFake::LoadConfig() 

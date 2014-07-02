@@ -38,6 +38,8 @@ void EventBuilder::BuilderLoop()
 {
   while (thread_live_) {
 
+    batch_start = clock();
+
     while (go_time_) {
 
       flush_time_ = (clock() - batch_start) > live_ticks;
@@ -62,9 +64,7 @@ void EventBuilder::BuilderLoop()
 
           got_last_event_ = true;
           StopWorkers();
-          batch_start = clock();
         }
-
       } 
 
       std::this_thread::yield();
@@ -148,7 +148,12 @@ void EventBuilder::PushDataLoop()
         got_last_event_ = false;
 
         sleep(dead_time);
+
+        // Start thw workers and make sure they start in sync.
         StartWorkers();
+        while (!daq_workers_ .AnyWorkersHaveEvent()) {
+          daq_workers_.FlushEventData();
+        }
       }
 
       std::this_thread::yield();

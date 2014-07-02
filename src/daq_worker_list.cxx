@@ -13,12 +13,14 @@ DaqWorkerList::~DaqWorkerList()
 
 void DaqWorkerList::StartRun()
 {
+  StartThreads();
   StartWorkers();
 }
 
 void DaqWorkerList::StopRun()
 {
   StopWorkers();
+  StopThreads();
 }
 
 void DaqWorkerList::StartWorkers()
@@ -46,6 +48,31 @@ void DaqWorkerList::StartWorkers()
   }
 }
 
+void DaqWorkerList::StartThreads()
+{
+  // Start the data gatherers
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartThread();
+
+    } else if ((*it).which() == 1) {
+
+      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartThread();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartThread();
+
+    } else if ((*it).which() == 3) {
+
+      boost::get<DaqWorkerBase<caen_6742> *>(*it)->StartThread();
+
+    }
+  }
+}
+
 void DaqWorkerList::StopWorkers()
 {
   // Stop the data gathering
@@ -66,6 +93,31 @@ void DaqWorkerList::StopWorkers()
     } else if ((*it).which() == 3) {
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->StopWorker();
+
+    }
+  }
+}
+
+void DaqWorkerList::StopThreads()
+{
+  // Stop the data gathering
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StopThread();
+
+    } else if ((*it).which() == 1) {
+
+      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopThread();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopThread();
+
+    } else if ((*it).which() == 3) {
+
+      boost::get<DaqWorkerBase<caen_6742> *>(*it)->StopThread();
 
     }
   }
@@ -153,6 +205,30 @@ void DaqWorkerList::GetEventData(event_data &bundle)
 
     }
   }
+}
+
+void DaqWorkerList::FlushEventData()
+{
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      boost::get<DaqWorkerBase<sis_3350> *>(*it)->FlushEvents();
+
+    } else if ((*it).which() == 1) {
+
+      boost::get<DaqWorkerBase<sis_3302> *>(*it)->FlushEvents();
+
+    } else if ((*it).which() == 2) {
+
+      boost::get<DaqWorkerBase<caen_1785> *>(*it)->FlushEvents();
+
+    } else if ((*it).which() == 3) {
+
+      boost::get<DaqWorkerBase<caen_6742> *>(*it)->FlushEvents();
+
+    }
+  } 
 }
 
 void DaqWorkerList::ClearList()
