@@ -7,7 +7,7 @@ DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerVme<sis_
   LoadConfig();
 
   num_ch_ = SIS_3302_CH;
-  len_tr_ = SIS_3302_LN;
+  len_tr_ = SIS_3302_LN / 2; // only for vme ReadTrace
 
   work_thread_ = std::thread(&DaqWorkerSis3302::WorkLoop, this);
 }
@@ -205,7 +205,7 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
-  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 8];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;

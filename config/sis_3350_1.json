@@ -4,5 +4,19 @@
 	"pretrigger_samples":"0x100",
 	"invert_ext_lemo":false,
 	"user_led_on":false,
-	"enable_ext_lemo":true
+	"enable_ext_lemo":true,
+
+	"channel_offset":[
+		-0.2,
+		-0.2,
+		-0.2,
+		-0.2
+	],
+	
+	"channel_gain":[
+		80,
+		80,
+		80,
+		80
+	]
 }

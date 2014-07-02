@@ -142,7 +142,11 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
     }
 
     pt_->Fill();
+    if (pt_->GetEntries() == 1000) {
+      pt_->FlushBaskets();
+    }
   }
+
 }
 
 void DaqWriterRoot::EndOfBatch(bool bad_data)

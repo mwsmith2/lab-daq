@@ -62,7 +62,7 @@ int StopRun();
 int main(int argc, char *argv[])
 {
   // If there was a command line argument, grab that file.
-  if (argc > 0) {
+  if (argc > 1) {
 
     conf_file = string(argv[1]);
 
@@ -87,6 +87,16 @@ int main(int argc, char *argv[])
       std::getline(ss, msg_string, ':');
 
       if (msg_string == string("START") && !is_running) {
+	
+	string file_name("data/run_");
+	std::getline(ss, msg_string, ':');
+	file_name.append(msg_string);
+	file_name.append(".root");
+
+	ptree conf;
+	read_json(conf_file, conf);
+	conf.put("writers.root.file", file_name);
+	write_json(conf_file, conf);
 
         ReloadConfig();
         StartRun();
