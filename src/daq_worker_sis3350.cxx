@@ -5,7 +5,7 @@ namespace daq {
 DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
   num_ch_ = SIS_3350_CH;
-  len_tr_ = SIS_3350_LN;
+  len_tr_ = SIS_3350_LN / 2 + 4;
 
   LoadConfig();
 
@@ -116,27 +116,6 @@ void DaqWorkerSis3350::LoadConfig()
   msg |= 0x1; //load shift register DAC
   Write(0x50, msg);
 
-  //gain
-  //factory default 18 -> 5V
-  for (auto &val : conf.get_child("channel_gain")) {
-    static int ch = 0;
-    //  for (ch = 0; ch < SIS_3350_CH; ch++) {
-    msg = val.second.get_value<int>();
-
-    int offset = 0x02000048;
-    offset |= (ch >> 1) << 24;
-    offset |= (ch % 2) << 2;
-    Write(offset, msg);
-    printf("addr: %08x", offset);
-    printf("adc %d gain %d\n", ch, msg);
-
-    Read(offset, msg);
-    printf("adc %d gain %d\n", ch, msg);
-    
-    ++ch;
-  }
-
-
   uint timeout_max = 1000;
   uint timeout_cnt = 0;
   do {
@@ -234,6 +213,25 @@ void DaqWorkerSis3350::LoadConfig()
     ++ch;
   }
 
+  //gain
+  //factory default 18 -> 5V
+  for (auto &val : conf.get_child("channel_gain")) {
+    static int ch = 0;
+    //  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    msg = val.second.get_value<int>();
+
+    int offset = 0x02000048;
+    offset |= (ch >> 1) << 24;
+    offset |= (ch % 2) << 2;
+    Write(offset, msg);
+    printf("addr: %08x", offset);
+    printf("adc %d gain %d\n", ch, msg);
+
+    Read(offset, msg);
+    printf("adc %d gain %d\n", ch, msg);
+    
+    ++ch;
+  }
 
   //arm the logic
   uint armit = 1;

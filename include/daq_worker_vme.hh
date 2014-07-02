@@ -130,14 +130,14 @@ int DaqWorkerVme<T>::ReadTrace(int addr, uint *trace)
   status = (retval = vme_A32_2EVME_read(vme::device,
                                         base_address_ + addr,
                                         trace,
-                                        len_tr_ / 2 + 4,
+                                        len_tr_,
                                         &num_got));
 
   if (status != 0) {
     char str[100];
     sprintf(str, "Error reading trace at 0x%08x.\n", base_address_ + addr);
     perror(str);
-    cout << "asked for: " << len_tr_ / 2 + 4 << ", got: " << num_got << endl;
+    cout << "asked for: " << len_tr_ << ", got: " << num_got << endl;
   }
 
   return retval;

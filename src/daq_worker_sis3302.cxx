@@ -7,7 +7,7 @@ DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerVme<sis_
   LoadConfig();
 
   num_ch_ = SIS_3302_CH;
-  len_tr_ = SIS_3302_LN;
+  len_tr_ = SIS_3302_LN / 2; // only for vme ReadTrace
 
   work_thread_ = std::thread(&DaqWorkerSis3302::WorkLoop, this);
 }
