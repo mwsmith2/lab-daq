@@ -18,7 +18,7 @@
     {
         "root":
         {
-            "file": "data\/run_00121.root",
+            "file": "data\/run_test.root",
             "tree": "t"
         },
         "online":

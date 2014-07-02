@@ -1,7 +1,10 @@
 fe_master
 start_daq
 stop_daq
+log
 build/*
 data/*
+config/.temp_master.json
 */#*
 */.#*
+*/*~
