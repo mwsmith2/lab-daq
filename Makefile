@@ -17,7 +17,7 @@ endif
 ifeq ($(UNAME_S), Linux)
 	CXX = g++
 	CC  = gcc
-	FLAGS = -std=c++0x -fpermissive
+	FLAGS = -std=c++0x
 endif
 
 FLAGS += $(shell root-config --cflags)

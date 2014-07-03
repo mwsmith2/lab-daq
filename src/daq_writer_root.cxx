@@ -31,7 +31,19 @@ void DaqWriterRoot::StartWriter()
   string br_name;
   char br_vars[100];
 
+  // Count the devices, reserve memory for them, then assign an address.
   int count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3350")) {
+    count++;
+  }
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.fake")) {
+    count++;
+  }
+  root_data_.sis_fast.reserve(count + 1);
+
+  count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.sis_3350")) {
 
@@ -48,7 +60,7 @@ void DaqWriterRoot::StartWriter()
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.fake")) {
 
-    root_data_.sis_fast.resize(count + 1);
+    root_data_.sis_fast.resize(count);
 
     br_name = string(v.first);
     sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
@@ -57,6 +69,14 @@ void DaqWriterRoot::StartWriter()
     pt_->Branch(br_name.c_str(), &root_data_.sis_fast[count++], br_vars);
 
   }
+
+  // Again, count, reserve then assign the slow struck.
+  count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.sis_3302")) {
+    count++;
+  }
+  root_data_.sis_slow.reserve(count);
 
   count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
@@ -72,6 +92,14 @@ void DaqWriterRoot::StartWriter()
 
   }
 
+  // Now set up the caen adc.
+  count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
+                  conf.get_child("devices.caen_1785")) {
+    count++;
+  }
+  root_data_.caen_adc.reserve(count);
+
   count = 0;
   BOOST_FOREACH(const ptree::value_type &v, 
                   conf.get_child("devices.caen_1785")) {
@@ -83,6 +111,28 @@ void DaqWriterRoot::StartWriter()
       CAEN_1785_CH, CAEN_1785_CH);
 
     pt_->Branch(br_name.c_str(), &root_data_.caen_adc[count++], br_vars);
+
+  }
+
+  // Now set up the caen adc.
+  count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
+                  conf.get_child("devices.caen_6742")) {
+    count++;
+  }
+  root_data_.caen_drs.reserve(count);
+
+  count = 0;
+  BOOST_FOREACH(const ptree::value_type &v, 
+                  conf.get_child("devices.caen_6742")) {
+
+    root_data_.caen_drs.resize(count + 1);
+
+    br_name = string(v.first);
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:trace[%i][%i]/s", 
+	    CAEN_6742_CH, CAEN_6742_CH, CAEN_6742_LN);
+
+    pt_->Branch(br_name.c_str(), &root_data_.caen_drs[count++], br_vars);
 
   }
 }
@@ -113,8 +163,17 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
       root_data_.caen_adc[count++] = caen;
     }
 
+    count = 0;
+    for (auto &caen: (*it).caen_drs) {
+      root_data_.caen_drs[count++] = caen;
+    }
+
     pt_->Fill();
+    if (pt_->GetEntries() == 1000) {
+      pt_->FlushBaskets();
+    }
   }
+
 }
 
 void DaqWriterRoot::EndOfBatch(bool bad_data)

@@ -20,10 +20,7 @@ using namespace boost::property_tree;
 #include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
-#include "daq_worker_fake.hh"
-#include "daq_worker_sis3350.hh"
-#include "daq_worker_sis3302.hh"
-#include "daq_worker_caen1785.hh"
+#include "daq_worker_list.hh"
 #include "daq_writer_online.hh"
 #include "daq_writer_root.hh"
 #include "event_builder.hh"
@@ -42,14 +39,16 @@ namespace {
 
   // std declarations
   string msg_string;
+  string conf_file;
+  string int_conf_file("config/.temp_master.json");
 
   // zmq declarations
   zmq::context_t master_ctx(1);
-  zmq::socket_t master_sck(master_ctx, ZMQ_PULL);
+  zmq::socket_t master_sck(master_ctx, ZMQ_SUB);
   zmq::message_t message(10);
 
   // project declarations
-  vector<worker_ptr_types> daq_workers;
+  DaqWorkerList daq_workers;
   vector<DaqWriterBase *> daq_writers;
   EventBuilder *event_builder = nullptr;
 }
@@ -63,6 +62,18 @@ int StopRun();
 // The main loop
 int main(int argc, char *argv[])
 {
+  // If there was a command line argument, grab that file.
+  if (argc > 1) {
+
+    conf_file = string(argv[1]);
+
+  } else {
+
+    conf_file = string("config/.default_master.json"); // default
+
+  }
+
+  // Load the configuration
   LoadConfig();
 
   while (true) {
@@ -77,6 +88,16 @@ int main(int argc, char *argv[])
       std::getline(ss, msg_string, ':');
 
       if (msg_string == string("START") && !is_running) {
+	
+	string file_name("data/run_");
+	std::getline(ss, msg_string, ':');
+	file_name.append(msg_string);
+	file_name.append(".root");
+
+	ptree conf;
+	read_json(int_conf_file, conf);
+	conf.put("writers.root.file", file_name);
+	write_json(int_conf_file, conf);
 
         ReloadConfig();
         StartRun();
@@ -94,14 +115,19 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-int LoadConfig(){
-  // load up the configuration.
-  string conf_file("config/.default_master.json");
+int LoadConfig() 
+{
+  // Load up the configuration file
+  cout << "Opening config file: " << conf_file << endl;
   ptree conf;
   read_json(conf_file, conf);
+  write_json(int_conf_file, conf);
+
+  read_json(int_conf_file, conf);
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
+  master_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
   // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
@@ -109,7 +135,7 @@ int LoadConfig(){
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -119,7 +145,7 @@ int LoadConfig(){
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -129,17 +155,27 @@ int LoadConfig(){
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
-  // Set up the sis3302 devices.
+  // Set up the caen1785 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_1785")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the caen6742 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_6742")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -165,28 +201,14 @@ int LoadConfig(){
 
 int ReloadConfig() {
   // load up the configuration.
-  string conf_file("config/.default_master.json");
   ptree conf;
   read_json(conf_file, conf);
+  write_json(int_conf_file, conf);
+
+  read_json(int_conf_file, conf);
 
   // Delete the allocated workers.
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      delete boost::get<DaqWorkerBase<sis_3350> *>(*it);
-
-    } else if ((*it).which() == 1) {
-
-      delete boost::get<DaqWorkerBase<sis_3302> *>(*it);
-
-    } else if ((*it).which() == 2) {
-
-      delete boost::get<DaqWorkerBase<caen_1785> *>(*it);
-
-    }
-  }
-  daq_workers.resize(0);
+  daq_workers.FreeList();
 
   // Delete the allocated writers.
   for (auto &writer : daq_writers) {
@@ -202,7 +224,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerFake(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -212,7 +234,7 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3350(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -222,17 +244,27 @@ int ReloadConfig() {
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerSis3302(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
   }
 
-  // Set up the sis3302 devices.
+  // Set up the caen1785 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_1785")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.push_back(new DaqWorkerCaen1785(name, dev_conf_file));
+    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
+  }
+
+  // Set up the caen6742 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.caen_6742")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -270,22 +302,7 @@ int StartRun() {
   }
 
   // Start the data gatherers
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
-
-    }
-  }
+  daq_workers.StartRun();
 
   return 0;
 }
@@ -304,22 +321,7 @@ int StopRun() {
   }
 
   // Stop the data gatherers
-  for (auto it = daq_workers.begin(); it != daq_workers.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopWorker();
-
-    }
-  }
+  daq_workers.StopRun();
 
   return 0;
 }

@@ -8,8 +8,6 @@ DaqWorkerCaen1785::DaqWorkerCaen1785(string name, string conf) : DaqWorkerVme<ca
 
   num_ch_ = CAEN_1785_CH;
   len_tr_ = 1;
-
-  work_thread_ = std::thread(&DaqWorkerCaen1785::WorkLoop, this);
 }
 
 void DaqWorkerCaen1785::LoadConfig()

@@ -59,7 +59,7 @@ struct event_data {
 };
 
 // typedef for all workers
-typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *, DaqWorkerBase<caen_1785> *> worker_ptr_types;
+typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *, DaqWorkerBase<caen_1785> *, DaqWorkerBase<caen_6742> *> worker_ptr_types;
 
 namespace vme {
 
@@ -68,7 +68,7 @@ extern int device;
 } // ::vme
 
 static int short_sleep = 100;
-static int long_sleep = 5000;
+static int long_sleep = 1000;
 
 } // ::daq
 

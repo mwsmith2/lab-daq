@@ -2,7 +2,7 @@
 
 namespace daq {
 
-EventBuilder::EventBuilder(const vector<worker_ptr_types>& daq_workers, 
+EventBuilder::EventBuilder(const DaqWorkerList &daq_workers, 
                            const vector<DaqWriterBase *> daq_writers,
                            string conf_file)
 {
@@ -27,75 +27,26 @@ void EventBuilder::LoadConfig()
   push_new_data_ = false; 
   got_last_event_ = false;
 
-  live_time = conf.get<int>("trigger_control.live_time");
-  dead_time = conf.get<int>("trigger_control.dead_time");
+  live_time_ = conf.get<int>("trigger_control.live_time");
+  dead_time_ = conf.get<int>("trigger_control.dead_time");
 
-  live_ticks = live_time * CLOCKS_PER_SEC;
-  batch_start = clock();
-}
-
-bool EventBuilder::WorkersHaveEvents()
-{
-  bool all_have_events = true;
-
-  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
-      all_have_events &= ptr->HasEvent();
-
-    } else if ((*it).which() == 1) {
-
-      auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
-      all_have_events &= ptr->HasEvent();
-
-    } else if ((*it).which() == 2) {
-
-      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
-      all_have_events &= ptr->HasEvent();
-
-    }
-  }
-
-  return all_have_events;
-}
-
-void EventBuilder::GetEventData(event_data& bundle)
-{
-  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
-      bundle.sis_fast.push_back(ptr->PopEvent());
-
-    } else if ((*it).which() == 1) {
-
-      auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
-      bundle.sis_slow.push_back(ptr->PopEvent());
-
-    } else if ((*it).which() == 2) {
-
-      auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
-      bundle.caen_adc.push_back(ptr->PopEvent());
-
-    }
-  }
+  live_ticks_ = live_time_ * CLOCKS_PER_SEC;
 }
 
 void EventBuilder::BuilderLoop()
 {
   while (thread_live_) {
 
+    batch_start_ = clock();
+
     while (go_time_) {
 
-      flush_time_ = (clock() - batch_start) > live_ticks;
+      flush_time_ = (clock() - batch_start_) > live_ticks_;
 
-      if (WorkersHaveEvents()){
+      if (daq_workers_.AllWorkersHaveEvent()){
 
         event_data bundle;
-        GetEventData(bundle);
+        daq_workers_.GetEventData(bundle);
 
         queue_mutex_.lock();
         pull_data_que_.push(bundle);
@@ -112,9 +63,7 @@ void EventBuilder::BuilderLoop()
 
           got_last_event_ = true;
           StopWorkers();
-          batch_start = clock();
         }
-
       } 
 
       std::this_thread::yield();
@@ -183,27 +132,8 @@ void EventBuilder::PushDataLoop()
         push_new_data_ = false;
 
         // Check to make sure there are no straggling events.
-        bool bad_data = false;     
-
-        for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
-
-          if ((*it).which() == 0) {
-
-            auto ptr = boost::get<DaqWorkerBase<sis_3350> *>(*it);
-            bad_data |= ptr->HasEvent();
-
-          } else if ((*it).which() == 1) {
-
-            auto ptr = boost::get<DaqWorkerBase<sis_3302> *>(*it);
-            bad_data |= ptr->HasEvent();
-
-          } else if ((*it).which() == 2) {
-
-            auto ptr = boost::get<DaqWorkerBase<caen_1785> *>(*it);
-            bad_data |= ptr->HasEvent();
-
-          }
-        }
+        bool bad_data = daq_workers_.AnyWorkersHaveEvent();
+        daq_workers_.FlushEventData();
 
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
@@ -216,8 +146,15 @@ void EventBuilder::PushDataLoop()
         flush_time_ = false;
         got_last_event_ = false;
 
-        sleep(dead_time);
+        sleep(dead_time_);
+
+        // Start thw workers and make sure they start in sync.
         StartWorkers();
+        while (!daq_workers_ .AnyWorkersHaveEvent()) {
+          daq_workers_.FlushEventData();
+        }
+
+	batch_start_ = clock();
       }
 
       std::this_thread::yield();
@@ -234,47 +171,13 @@ void EventBuilder::PushDataLoop()
 // Start the workers taking data.
 void EventBuilder::StartWorkers() {
   cout << "Event Builder is starting workers." << endl;
-
-  // Start the data gatherers
-  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StartWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StartWorker();
-
-    }
-  }
+  daq_workers_.StartWorkers();
 }
 
 // Write the data file and reset workers.
 void EventBuilder::StopWorkers() {
   cout << "Event Builder is stopping workers." << endl;
-
-  // Stop the data gatherers
-  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
-
-    if ((*it).which() == 0) {
-
-      boost::get<DaqWorkerBase<sis_3350> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 1) {
-
-      boost::get<DaqWorkerBase<sis_3302> *>(*it)->StopWorker();
-
-    } else if ((*it).which() == 2) {
-
-      boost::get<DaqWorkerBase<caen_1785> *>(*it)->StopWorker();
-
-    }
-  }
+  daq_workers_.StopWorkers();
 }
 
 } // ::daq

@@ -5,8 +5,12 @@ namespace daq {
 DaqWorkerCaen6742::DaqWorkerCaen6742(string name, string conf) : DaqWorkerBase<caen_6742>(name, conf)
 {
   LoadConfig();
+}
 
-  work_thread_ = std::thread(&DaqWorkerCaen6742::WorkLoop, this);
+DaqWorkerCaen6742::~DaqWorkerCaen6742()
+{
+  CAEN_DGTZ_FreeReadoutBuffer(&buffer_);
+  CAEN_DGTZ_CloseDigitizer(device_);
 }
 
 void DaqWorkerCaen6742::LoadConfig()
@@ -24,7 +28,7 @@ void DaqWorkerCaen6742::LoadConfig()
 
   // Get the board info.
   ret = CAEN_DGTZ_GetInfo(device_, &board_info_);
-  printf("\nFound caen %s.",board_info_.ModelName);
+  printf("\nFound caen %s.\n",board_info_.ModelName);
   printf("\tROC FPGA Release is %s\n", board_info_.ROC_FirmwareRel);
   printf("\tAMC FPGA Release is %s\n", board_info_.AMC_FirmwareRel);
 
@@ -33,24 +37,31 @@ void DaqWorkerCaen6742::LoadConfig()
 
   // Set the trace length.
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
-  
+
+  // Set the sampling rate.
+  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);
+
   // Set the channel enable mask.
   ret = CAEN_DGTZ_SetChannelEnableMask(device_, 0xFFFF); // all on
  
   // Enable external trigger.
-  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT); // ext in/out
+  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
 
-  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 1);
+  // Set the acquisition mode.
+  ret = CAEN_DGTZ_SetAcquisitionMode(device_, CAEN_DGTZ_S_IN_CONTROLLED);
+
+  // Set max events to 1 our purposes.
+  //  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 1);
   
+  // Allocated the readout buffer.
   ret = CAEN_DGTZ_MallocReadoutBuffer(device_, &buffer_, &size_);
-  
-  // Start acquisition.
-  ret = CAEN_DGTZ_SWStartAcquisition(device_);
   
 } // LoadConfig
 
 void DaqWorkerCaen6742::WorkLoop()
 {
+  int ret = CAEN_DGTZ_SWStartAcquisition(device_);
+
   while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
@@ -77,6 +88,8 @@ void DaqWorkerCaen6742::WorkLoop()
 
     usleep(daq::long_sleep);
   }
+
+  ret = CAEN_DGTZ_SWStopAcquisition(device_);
 }
 
 caen_6742 DaqWorkerCaen6742::PopEvent()
@@ -98,7 +111,7 @@ caen_6742 DaqWorkerCaen6742::PopEvent()
 bool DaqWorkerCaen6742::EventAvailable()
 {
   // Check acq reg.
-  uint num_events;
+  uint num_events = 0;
 
   CAEN_DGTZ_ReadData(device_, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, buffer_, &bsize_);
 
@@ -124,11 +137,15 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
   
   ret = CAEN_DGTZ_GetEventInfo(device_, buffer_, bsize_, 0, &event_info_, &evtptr);
-  ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, &event_);
+  ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
 
-  
+  for (uint ch = 0; ch < CAEN_6742_CH; ++ch) {
+    for (uint idx = 0; idx < event_->ChSize[ch]; ++idx) {
+      bundle.trace[ch][idx] = event_->DataChannel[ch][idx];
+    }
+  }
 
-  ret = CAEN_DGTZ_FreeEvent(device_, &event_);
+  ret = CAEN_DGTZ_FreeEvent(device_, (void **)&event_);
 }
 
 } // ::daq

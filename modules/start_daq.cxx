@@ -3,6 +3,7 @@
 //--- std includes ----------------------------------------------------------//
 #include <iostream>
 #include <string>
+#include <ctime>
 using std::cout;
 using std::endl;
 
@@ -18,12 +19,13 @@ int main(int argc, char *argv[])
   boost::property_tree::read_json("config/.default_master.json", conf);
 
   zmq::context_t ctx(1);
-  zmq::socket_t start_sck(ctx, ZMQ_PUSH);
+  zmq::socket_t start_sck(ctx, ZMQ_PUB);
 
   start_sck.connect(conf.get<std::string>("master_port").c_str());
+  usleep(1000);
 
   // Create the start message
-  std::string trigger("START:");
+  std::string trigger("START:test:");
   zmq::message_t start_msg(trigger.size());
 
   memcpy(start_msg.data(), trigger.c_str(), trigger.size());

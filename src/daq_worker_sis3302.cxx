@@ -7,9 +7,7 @@ DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerVme<sis_
   LoadConfig();
 
   num_ch_ = SIS_3302_CH;
-  len_tr_ = SIS_3302_LN;
-
-  work_thread_ = std::thread(&DaqWorkerSis3302::WorkLoop, this);
+  len_tr_ = SIS_3302_LN / 2; // only for vme ReadTrace
 }
 
 void DaqWorkerSis3302::LoadConfig()
@@ -63,14 +61,17 @@ void DaqWorkerSis3302::LoadConfig()
   // Set and check the control/status register.
   msg = 0;
 
+/*
   if (conf.get<bool>("invert_ext_lemo")) {
     msg |= 0x10; // invert EXT TRIG
   }
+*/
 
-  if (conf.get<bool>("user_led_on")) {
+ if (conf.get<bool>("user_led_on")) {
     msg |= 0x1; // LED on
   }
-
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= ~0xfffefffe; //reserved bits
   Write(0x0, msg);
   
   msg = 0;
@@ -87,7 +88,8 @@ void DaqWorkerSis3302::LoadConfig()
 
   // Set the clock source: 0x0 = Internal, 100MHz
   msg |= conf.get<int>("clock_settings", 0x0) << 12;
-  msg &= 0x00007df0; // zero reserved bits / disable bits
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= 0x7df07df0; // zero reserved bits / disable bits
 
   printf("sis 3302 setting acq reg to 0x%08x\n", msg);
   Write(0x10, msg);
@@ -205,13 +207,13 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
-  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 8];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;
     Read(0x10000, trace[ch][0]);
     Read(0x10001, trace[ch][1]);
-    ReadTrace(offset, trace[ch] + 4);
+    ReadTrace(offset, &trace[ch][4]);
   }
 
   //arm the logic
@@ -229,8 +231,8 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
 
     uint idx;
     for (idx = 0; idx < SIS_3302_LN / 2; idx++) {
-      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xfff;
-      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xfff;
+      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xffff;
+      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xffff;
     }
   }
 }

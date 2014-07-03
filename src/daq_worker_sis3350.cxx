@@ -4,12 +4,10 @@ namespace daq {
 
 DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
-  LoadConfig();
-
   num_ch_ = SIS_3350_CH;
-  len_tr_ = SIS_3350_LN;
+  len_tr_ = SIS_3350_LN / 2 + 4;
 
-  work_thread_ = std::thread(&DaqWorkerSis3350::WorkLoop, this);
+  LoadConfig();
 }
 
 void DaqWorkerSis3350::LoadConfig()
@@ -36,7 +34,7 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Check for device.
   Read(0x0, msg);
-  cout << "sis3350 found at 0x%08x\n." << base_address_;
+  printf("sis3350 found at 0x%08x\n.", base_address_);
 
   // Reset device.
   msg = 1;
@@ -163,15 +161,17 @@ void DaqWorkerSis3350::LoadConfig()
   Write(0x01000024, msg);
 
   //range -1.5 to +0.3 V
-  uint ch;
+  uint ch = 0;
   //DAC offsets
-  for (ch = 0; ch < SIS_3350_CH; ch++) {
-    
+  for (auto &val : conf.get_child("channel_offset")) {
+
     int offset = 0x02000050;
     offset |= (ch >> 1) << 24;
 
-    msg = 39000; // ??? V
-    Write(offset, msg);
+    float volts = val.second.get_value<float>();
+    msg = (int)(33000 + 3377.77 * volts + 0.5);
+    cout << msg << endl;
+    Write(offset | 4, msg);
 
     msg = 0;
     msg |= (ch % 2) << 4;
@@ -206,18 +206,31 @@ void DaqWorkerSis3350::LoadConfig()
     if (timeout_cnt == timeout_max) {
       printf("error loading adc dac\n");
     }
+
+    ++ch;
   }
 
-  //gain
-  //factory default 18 -> 5V
-  for (ch = 0; ch < SIS_3350_CH; ch++) {
-    msg = 45;
+  usleep(20000); // Magic sleep needed before setting gain.
+
+  //gain - factory default 18 -> 5V
+  ch = 0;
+  for (auto &val : conf.get_child("channel_gain")) {
+    //  for (ch = 0; ch < SIS_3350_CH; ch++) {
+    msg = val.second.get_value<int>();
+
     int offset = 0x02000048;
     offset |= (ch >> 1) << 24;
     offset |= (ch % 2) << 2;
     Write(offset, msg);
     printf("adc %d gain %d\n", ch, msg);
+
+    ++ch;
+    usleep(20000);
   }
+
+  //arm the logic
+  uint armit = 1;
+  Write(0x410, armit);
 } // LoadConfig
 
 void DaqWorkerSis3350::WorkLoop()

@@ -2,4 +2,7 @@
 
 killall fe_master
 
-./fe_master &> log &
+sleep 1
+
+./fe_master $1 &> data/log &
+

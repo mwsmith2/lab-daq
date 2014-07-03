@@ -22,9 +22,7 @@ using std::endl;
 
 //--- projects includes -----------------------------------------------------//
 #include "daq_structs.hh"
-#include "daq_worker_base.hh"
-#include "daq_worker_fake.hh"
-#include "daq_writer_base.hh"
+#include "daq_worker_list.hh"
 #include "daq_writer_root.hh"
 
 namespace daq {
@@ -35,7 +33,7 @@ class EventBuilder {
   public:
 
     // ctor
-    EventBuilder(const vector<worker_ptr_types>& daq_workers, 
+    EventBuilder(const DaqWorkerList &daq_workers, 
                  const vector<DaqWriterBase *> daq_writers,
                  string conf_file);
 
@@ -56,10 +54,10 @@ class EventBuilder {
     // Simple variable declarations
     const int kMaxQueueLength = 10;
     string conf_file_;
-    int live_time;
-    int dead_time;
-    int live_ticks;
-    int batch_start;
+    int live_time_;
+    int dead_time_;
+    int live_ticks_;
+    int batch_start_;
 
     std::atomic<bool> thread_live_;
     std::atomic<bool> go_time_;
@@ -68,7 +66,7 @@ class EventBuilder {
     std::atomic<bool> got_last_event_;
 
     // Data accumulation variables
-    vector<worker_ptr_types> daq_workers_;
+    DaqWorkerList daq_workers_;
     vector<DaqWriterBase *> daq_writers_;
     vector<event_data> push_data_vec_;
     std::queue<event_data> pull_data_que_;
@@ -80,8 +78,6 @@ class EventBuilder {
     std::thread push_data_thread_;
 
     // Private member functions
-    bool WorkersHaveEvents();
-    void GetEventData(event_data& bundle);
     void BuilderLoop();
     void PushDataLoop();
     void StopWorkers();
