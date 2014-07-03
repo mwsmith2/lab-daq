@@ -380,7 +380,7 @@ def generate_hist():
   
     try:
         plt.hist(data_io.data, np.sqrt(data_io.eventCount))
-        plt.title('Event ' + str(data_io.eventCount))
+        plt.title('Run %i Event %i' % (run_info['last_run'], dataio.eventCount))
     except IndexError:
         return 'failed', 'failed'
 
@@ -396,7 +396,7 @@ def generate_trace(xmin, xmax):
     """generate the trace plot"""
     plt.clf()
     plt.plot(data_io.trace)
-    plt.title('Event %i' % data_io.eventCount)
+    plt.title('Run %i Event %i' % (run_info['last_run'], dataio.eventCount))
     plt.xlim([xmin,xmax])
 
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):
