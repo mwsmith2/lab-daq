@@ -27,22 +27,21 @@ void EventBuilder::LoadConfig()
   push_new_data_ = false; 
   got_last_event_ = false;
 
-  live_time = conf.get<int>("trigger_control.live_time");
-  dead_time = conf.get<int>("trigger_control.dead_time");
+  live_time_ = conf.get<int>("trigger_control.live_time");
+  dead_time_ = conf.get<int>("trigger_control.dead_time");
 
-  live_ticks = live_time * CLOCKS_PER_SEC;
-  batch_start = clock();
+  live_ticks_ = live_time_ * CLOCKS_PER_SEC;
 }
 
 void EventBuilder::BuilderLoop()
 {
   while (thread_live_) {
 
-    batch_start = clock();
+    batch_start_ = clock();
 
     while (go_time_) {
 
-      flush_time_ = (clock() - batch_start) > live_ticks;
+      flush_time_ = (clock() - batch_start_) > live_ticks_;
 
       if (daq_workers_.AllWorkersHaveEvent()){
 
@@ -147,13 +146,15 @@ void EventBuilder::PushDataLoop()
         flush_time_ = false;
         got_last_event_ = false;
 
-        sleep(dead_time);
+        sleep(dead_time_);
 
         // Start thw workers and make sure they start in sync.
         StartWorkers();
         while (!daq_workers_ .AnyWorkersHaveEvent()) {
           daq_workers_.FlushEventData();
         }
+
+	batch_start_ = clock();
       }
 
       std::this_thread::yield();

@@ -5,8 +5,12 @@ namespace daq {
 DaqWorkerCaen6742::DaqWorkerCaen6742(string name, string conf) : DaqWorkerBase<caen_6742>(name, conf)
 {
   LoadConfig();
+}
 
-  work_thread_ = std::thread(&DaqWorkerCaen6742::WorkLoop, this);
+DaqWorkerCaen6742::~DaqWorkerCaen6742()
+{
+  CAEN_DGTZ_FreeReadoutBuffer(&buffer_);
+  CAEN_DGTZ_CloseDigitizer(device_);
 }
 
 void DaqWorkerCaen6742::LoadConfig()
@@ -24,7 +28,7 @@ void DaqWorkerCaen6742::LoadConfig()
 
   // Get the board info.
   ret = CAEN_DGTZ_GetInfo(device_, &board_info_);
-  printf("\nFound caen %s.",board_info_.ModelName);
+  printf("\nFound caen %s.\n",board_info_.ModelName);
   printf("\tROC FPGA Release is %s\n", board_info_.ROC_FirmwareRel);
   printf("\tAMC FPGA Release is %s\n", board_info_.AMC_FirmwareRel);
 
@@ -43,17 +47,21 @@ void DaqWorkerCaen6742::LoadConfig()
   // Enable external trigger.
   ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
 
-  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 2);
+  // Set the acquisition mode.
+  ret = CAEN_DGTZ_SetAcquisitionMode(device_, CAEN_DGTZ_S_IN_CONTROLLED);
+
+  // Set max events to 1 our purposes.
+  //  ret = CAEN_DGTZ_SetMaxNumEventsBLT(device_, 1);
   
+  // Allocated the readout buffer.
   ret = CAEN_DGTZ_MallocReadoutBuffer(device_, &buffer_, &size_);
-  
-  // Start acquisition.
-  ret = CAEN_DGTZ_SWStartAcquisition(device_);
   
 } // LoadConfig
 
 void DaqWorkerCaen6742::WorkLoop()
 {
+  int ret = CAEN_DGTZ_SWStartAcquisition(device_);
+
   while (thread_live_) {
 
     t0_ = high_resolution_clock::now();
@@ -80,6 +88,8 @@ void DaqWorkerCaen6742::WorkLoop()
 
     usleep(daq::long_sleep);
   }
+
+  ret = CAEN_DGTZ_SWStopAcquisition(device_);
 }
 
 caen_6742 DaqWorkerCaen6742::PopEvent()

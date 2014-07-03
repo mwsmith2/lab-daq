@@ -8,8 +8,6 @@ DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_
   len_tr_ = SIS_3350_LN / 2 + 4;
 
   LoadConfig();
-
-  work_thread_ = std::thread(&DaqWorkerSis3350::WorkLoop, this);
 }
 
 void DaqWorkerSis3350::LoadConfig()
@@ -214,6 +212,7 @@ void DaqWorkerSis3350::LoadConfig()
 
   //gain
   //factory default 18 -> 5V
+  usleep(20000);
   ch = 0;
   for (auto &val : conf.get_child("channel_gain")) {
     //  for (ch = 0; ch < SIS_3350_CH; ch++) {
@@ -223,13 +222,10 @@ void DaqWorkerSis3350::LoadConfig()
     offset |= (ch >> 1) << 24;
     offset |= (ch % 2) << 2;
     Write(offset, msg);
-    printf("addr: %08x", offset);
     printf("adc %d gain %d\n", ch, msg);
 
-    Read(offset, msg);
-    printf("adc %d gain %d\n", ch, msg);
-    
     ++ch;
+    usleep(20000);
   }
 
   //arm the logic

@@ -26,6 +26,7 @@ void DaqWorkerList::StopRun()
 void DaqWorkerList::StartWorkers()
 {
   // Start the data gatherers
+  cout << "Starting workers." << endl;
   for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
 
     if ((*it).which() == 0) {

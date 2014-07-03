@@ -61,14 +61,17 @@ void DaqWorkerSis3302::LoadConfig()
   // Set and check the control/status register.
   msg = 0;
 
+/*
   if (conf.get<bool>("invert_ext_lemo")) {
     msg |= 0x10; // invert EXT TRIG
   }
+*/
 
-  if (conf.get<bool>("user_led_on")) {
+ if (conf.get<bool>("user_led_on")) {
     msg |= 0x1; // LED on
   }
-
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= ~0xfffefffe; //reserved bits
   Write(0x0, msg);
   
   msg = 0;
@@ -85,7 +88,8 @@ void DaqWorkerSis3302::LoadConfig()
 
   // Set the clock source: 0x0 = Internal, 100MHz
   msg |= conf.get<int>("clock_settings", 0x0) << 12;
-  msg &= 0x00007df0; // zero reserved bits / disable bits
+  msg = ((~msg & 0xffff) << 16) | msg; // j/k
+  msg &= 0x7df07df0; // zero reserved bits / disable bits
 
   printf("sis 3302 setting acq reg to 0x%08x\n", msg);
   Write(0x10, msg);

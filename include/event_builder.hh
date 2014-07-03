@@ -54,10 +54,10 @@ class EventBuilder {
     // Simple variable declarations
     const int kMaxQueueLength = 10;
     string conf_file_;
-    int live_time;
-    int dead_time;
-    int live_ticks;
-    int batch_start;
+    int live_time_;
+    int dead_time_;
+    int live_ticks_;
+    int batch_start_;
 
     std::atomic<bool> thread_live_;
     std::atomic<bool> go_time_;

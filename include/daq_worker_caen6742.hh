@@ -25,6 +25,9 @@ public:
   
   // ctor
   DaqWorkerCaen6742(string name, string conf);
+
+  // dtor
+  ~DaqWorkerCaen6742();
   
   void LoadConfig();
   void WorkLoop();
