@@ -40,6 +40,7 @@ namespace {
   // std declarations
   string msg_string;
   string conf_file;
+  string int_conf_file("config/.temp_master.json");
 
   // zmq declarations
   zmq::context_t master_ctx(1);
@@ -94,9 +95,9 @@ int main(int argc, char *argv[])
 	file_name.append(".root");
 
 	ptree conf;
-	read_json(conf_file, conf);
+	read_json(int_conf_file, conf);
 	conf.put("writers.root.file", file_name);
-	write_json(conf_file, conf);
+	write_json(int_conf_file, conf);
 
         ReloadConfig();
         StartRun();
@@ -120,6 +121,9 @@ int LoadConfig()
   cout << "Opening config file: " << conf_file << endl;
   ptree conf;
   read_json(conf_file, conf);
+  write_json(int_conf_file, conf);
+
+  read_json(int_conf_file, conf);
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
@@ -199,6 +203,9 @@ int ReloadConfig() {
   // load up the configuration.
   ptree conf;
   read_json(conf_file, conf);
+  write_json(int_conf_file, conf);
+
+  read_json(int_conf_file, conf);
 
   // Delete the allocated workers.
   daq_workers.FreeList();

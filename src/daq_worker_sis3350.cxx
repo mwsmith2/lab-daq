@@ -210,9 +210,9 @@ void DaqWorkerSis3350::LoadConfig()
     ++ch;
   }
 
-  //gain
-  //factory default 18 -> 5V
-  usleep(20000);
+  usleep(20000); // Magic sleep needed before setting gain.
+
+  //gain - factory default 18 -> 5V
   ch = 0;
   for (auto &val : conf.get_child("channel_gain")) {
     //  for (ch = 0; ch < SIS_3350_CH; ch++) {
