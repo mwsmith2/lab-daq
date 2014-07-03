@@ -3,6 +3,7 @@
 //--- std includes ----------------------------------------------------------//
 #include <cassert>
 #include <ctime>
+#include <cstdio>
 #include <iostream>
 #include <vector>
 using std::cout;
@@ -40,7 +41,7 @@ namespace {
   // std declarations
   string msg_string;
   string conf_file;
-  string int_conf_file("config/.temp_master.json");
+  string tmp_conf_file(tmpnam(nullptr));
 
   // zmq declarations
   zmq::context_t master_ctx(1);
@@ -95,9 +96,9 @@ int main(int argc, char *argv[])
 	file_name.append(".root");
 
 	ptree conf;
-	read_json(int_conf_file, conf);
+	read_json(tmp_conf_file, conf);
 	conf.put("writers.root.file", file_name);
-	write_json(int_conf_file, conf);
+	write_json(tmp_conf_file, conf);
 
         ReloadConfig();
         StartRun();
@@ -121,9 +122,7 @@ int LoadConfig()
   cout << "Opening config file: " << conf_file << endl;
   ptree conf;
   read_json(conf_file, conf);
-  write_json(int_conf_file, conf);
-
-  read_json(int_conf_file, conf);
+  write_json(tmp_conf_file, conf);
 
   // Connect the socket.
   master_sck.bind(conf.get<string>("master_port").c_str());
@@ -202,10 +201,7 @@ int LoadConfig()
 int ReloadConfig() {
   // load up the configuration.
   ptree conf;
-  read_json(conf_file, conf);
-  write_json(int_conf_file, conf);
-
-  read_json(int_conf_file, conf);
+  read_json(tmp_conf_file, conf);
 
   // Delete the allocated workers.
   daq_workers.FreeList();
@@ -273,17 +269,17 @@ int ReloadConfig() {
  
     if (string(v.first) == string("root")) {
    
-      daq_writers.push_back(new DaqWriterRoot(conf_file));
+      daq_writers.push_back(new DaqWriterRoot(tmp_conf_file));
    
     } else if (string(v.first) == string("online")) {
    
-      daq_writers.push_back(new DaqWriterOnline(conf_file));
+      daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
    
     }
   }
 
   // Set up the event builder.
-  event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
+  event_builder = new EventBuilder(daq_workers, daq_writers, tmp_conf_file);
 
   return 0;
 }
