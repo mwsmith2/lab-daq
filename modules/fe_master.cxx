@@ -45,8 +45,10 @@ namespace {
 
   // zmq declarations
   zmq::context_t master_ctx(1);
-  zmq::socket_t master_sck(master_ctx, ZMQ_SUB);
+  zmq::socket_t trigger_sck(master_ctx, ZMQ_SUB);
+  zmq::socket_t handshake_sck(master_ctx, ZMQ_REP);
   zmq::message_t message(10);
+  zmq::message_t message_2(10);
 
   // project declarations
   DaqWorkerList daq_workers;
@@ -59,6 +61,7 @@ int LoadConfig();
 int ReloadConfig();
 int StartRun();
 int StopRun();
+void HandshakeLoop();
 
 // The main loop
 int main(int argc, char *argv[])
@@ -77,10 +80,12 @@ int main(int argc, char *argv[])
   // Load the configuration
   LoadConfig();
 
+  std::thread handshake_thread(HandshakeLoop);
+
   while (true) {
 
     // Check for a message.
-    rc = master_sck.recv(&message);
+    rc = trigger_sck.recv(&message);
 
     if (rc == true) {
 
@@ -124,9 +129,10 @@ int LoadConfig()
   read_json(conf_file, conf);
   write_json(tmp_conf_file, conf);
 
-  // Connect the socket.
-  master_sck.bind(conf.get<string>("master_port").c_str());
-  master_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+  // Connect the sockets.
+  trigger_sck.bind(conf.get<string>("trigger_port").c_str());
+  trigger_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+  handshake_sck.bind(conf.get<string>("handshake_port").c_str());
 
   // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
@@ -320,4 +326,20 @@ int StopRun() {
   daq_workers.StopRun();
 
   return 0;
+}
+
+void HandshakeLoop()
+{
+  string msg_string;
+  bool rc = false;
+  
+  while (true) {
+    rc = handshake_sck.recv(&message_2);
+  
+    if (rc == true) {
+
+      handshake_sck.send(message_2);
+
+    }
+  }
 }
