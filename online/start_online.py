@@ -136,7 +136,7 @@ def end_run():
 
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
-    data['Events'] = len(data_io.data)
+    data['Events'] = data_io.eventCount
     db.save(data)
 
     sleep(0.1)
