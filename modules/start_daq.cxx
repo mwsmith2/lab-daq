@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
   zmq::socket_t start_sck(ctx, ZMQ_PUB);
 
   start_sck.connect(conf.get<std::string>("master_port").c_str());
-  usleep(1000);
+  usleep(10000);
 
   // Create the start message
   std::string trigger("START:test:");

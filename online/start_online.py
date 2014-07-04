@@ -137,6 +137,7 @@ def end_run():
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
     data['Events'] = data_io.eventCount
+    print "%i events" % data_io.eventCount
     db.save(data)
 
     sleep(0.1)
@@ -359,7 +360,7 @@ def generate_runlog():
 
 @socketio.on('refreshed', namespace='/online')
 def on_refresh():
-    """when a client refreshes his page, this sends him a fresh batch of data"""
+    """when a client refreshes his page, this ds him a fresh batch of data"""
     if running:
         emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
                       namespace='/online')
@@ -380,7 +381,7 @@ def generate_hist():
   
     try:
         plt.hist(data_io.data, np.sqrt(data_io.eventCount))
-        plt.title('Run %i Event %i ' % (run_info['last_run'], data_io.eventCount))
+        plt.title('Run %i Event %i' % (run_info['last_run'], data_io.eventCount))
     except IndexError:
         return 'failed', 'failed'
 
@@ -396,7 +397,7 @@ def generate_trace(xmin, xmax):
     """generate the trace plot"""
     plt.clf()
     plt.plot(data_io.trace)
-    plt.title('Run %i Event %i ' % (run_info['last_run'], data_io.eventCount))
+    plt.title('Run %i Event %i' % (run_info['last_run'], data_io.eventCount))
     plt.xlim([xmin,xmax])
 
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):

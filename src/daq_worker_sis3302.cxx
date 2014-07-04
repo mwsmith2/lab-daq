@@ -7,7 +7,7 @@ DaqWorkerSis3302::DaqWorkerSis3302(string name, string conf) : DaqWorkerVme<sis_
   LoadConfig();
 
   num_ch_ = SIS_3302_CH;
-  len_tr_ = SIS_3302_LN / 2; // only for vme ReadTrace
+  read_trace_len_ = SIS_3302_LN / 2; // only for vme ReadTrace
 }
 
 void DaqWorkerSis3302::LoadConfig()
@@ -117,6 +117,10 @@ void DaqWorkerSis3302::LoadConfig()
   msg = (SIS_3302_LN - 4) & 0xfffffc;
   Write(0x01000004, msg);
 
+  // Set the pre-trigger buffer length.
+  msg = 0x100;
+  Write(0x10000060, msg);
+
   // Memory page
   msg = 0; //first 8MB chunk
   Write(0x34, msg);
@@ -207,7 +211,7 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
-  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 8];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;

@@ -25,8 +25,6 @@ eventCount = 0
 
 def clear_data():
     global data
-    global eventCount
-    eventCount=0
     data = []
     generate_data.counter = 0
 

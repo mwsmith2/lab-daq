@@ -7,7 +7,7 @@ DaqWorkerCaen1785::DaqWorkerCaen1785(string name, string conf) : DaqWorkerVme<ca
   LoadConfig();
 
   num_ch_ = CAEN_1785_CH;
-  len_tr_ = 1;
+  read_trace_len_ = 1;
 }
 
 void DaqWorkerCaen1785::LoadConfig()
@@ -31,13 +31,24 @@ void DaqWorkerCaen1785::LoadConfig()
   
   int ret;
   uint msg = 0;
+  ushort msg_16 = 0;
 
-  Read(base_address_, msg);
-  printf("caen1785 found at 0x%08x\n", base_address_);
+  Read(0x0, msg);
+  printf("CAEN 1785 found at 0x%08x\n", base_address_);
+
+  // Reset the device.
+  Write16(0x1006, 0x80); // J
+  Write16(0x1008, 0x80); // and K
+
+  Read16(0x1000, msg_16);
+  printf("Firmware Revision: %i.%i\n", (msg_16 >> 8) & 0xff, msg_16& 0xff); 
+
+  // Disable suppressors.
+  Write16(0x1032, 0x18);
 
   // Reset the data on the device.
   ClearData();
-  printf("Device data cleared.\n");
+  printf("CAEN 1785 data cleared.\n");
 
 } // LoadConfig
 
@@ -94,10 +105,10 @@ bool DaqWorkerCaen1785::EventAvailable()
   static uint msg;
   static bool is_event;
 
-  // Check if the device is busy.
+  // Check if the device has data.
   Read16(0x100E, msg_ushort);
-  is_event = !(msg_ushort & 0x4);
-
+  is_event = (msg_ushort & 0x1);
+  
   // Check to make sure the buffer isn't empty.
   Read(0x0, msg);
   is_event &= ((msg & 0x07000000) == 0x06000000);

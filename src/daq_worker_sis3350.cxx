@@ -5,7 +5,7 @@ namespace daq {
 DaqWorkerSis3350::DaqWorkerSis3350(string name, string conf) : DaqWorkerVme<sis_3350>(name, conf)
 {
   num_ch_ = SIS_3350_CH;
-  len_tr_ = SIS_3350_LN / 2 + 4;
+  read_trace_len_ = SIS_3350_LN / 2 + 4;
 
   LoadConfig();
 }

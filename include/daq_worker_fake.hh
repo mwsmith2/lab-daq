@@ -33,9 +33,11 @@ class DaqWorkerFake : public DaqWorkerBase<event_struct> {
     };
 
     void StartThread() {
-        thread_live_ = true;
-        work_thread_ = std::thread(&DaqWorkerFake::WorkLoop, this);
-        event_thread_ = std::thread(&DaqWorkerFake::GenerateEvent, this);
+      thread_live_ = true;
+      if (work_thread_.joinable()) work_thread_.join();
+      if (event_thread_.joinable()) event_thread_.join();
+      work_thread_ = std::thread(&DaqWorkerFake::WorkLoop, this);
+      event_thread_ = std::thread(&DaqWorkerFake::GenerateEvent, this);
     };
 
     void StopThread() {
