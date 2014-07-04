@@ -118,8 +118,8 @@ void DaqWorkerSis3302::LoadConfig()
   Write(0x01000004, msg);
 
   // Set the pre-trigger buffer length.
-  msg = 0x100;
-  Write(0x10000060, msg);
+  msg = std::stoi(conf.get<string>("pre_trigger_delay"), nullptr, 0);
+  Write(0x01000060, msg);
 
   // Memory page
   msg = 0; //first 8MB chunk
@@ -211,7 +211,7 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
-  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 4];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 8];
 
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;

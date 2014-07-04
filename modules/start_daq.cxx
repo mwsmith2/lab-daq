@@ -20,17 +20,32 @@ int main(int argc, char *argv[])
 
   zmq::context_t ctx(1);
   zmq::socket_t start_sck(ctx, ZMQ_PUB);
+  zmq::socket_t handshake_sck(ctx, ZMQ_REQ);
 
-  start_sck.connect(conf.get<std::string>("master_port").c_str());
-  usleep(10000);
+  start_sck.connect(conf.get<std::string>("trigger_port").c_str());
+  handshake_sck.connect(conf.get<std::string>("handshake_port").c_str());
 
-  // Create the start message
-  std::string trigger("START:test:");
-  zmq::message_t start_msg(trigger.size());
+  std::string connect("CONNECTED");
+  zmq::message_t handshake_msg(connect.size());
+  memcpy(handshake_msg.data(), connect.c_str(), connect.size());
 
-  memcpy(start_msg.data(), trigger.c_str(), trigger.size());
+  // Establish a connection.
+  handshake_sck.send(handshake_msg);
+  bool rc = handshake_sck.recv(&handshake_msg);
 
-  start_sck.send(start_msg);
+  if (rc == true) {
+    // Create the start message
+    std::string trigger("START:test:");
+    zmq::message_t start_msg(trigger.size());
+    memcpy(start_msg.data(), trigger.c_str(), trigger.size());
+    
+    start_sck.send(start_msg);
+    cout << "Connection established.  Sending start trigger." << endl;
+    return 0;
 
-  return 0;
+  } else {
+    
+    cout << "Connection not established.  No trigger sent." << endl;
+    return 0;
+  }
 }

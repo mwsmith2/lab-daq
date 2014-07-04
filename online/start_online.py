@@ -84,14 +84,25 @@ def start_run():
 
     # Send a start run signal to fe_master.
     context = zmq.Context()
+
+    handshake_sck = context.socket(zmq.REQ)
+    handshake_sck.setsockopt(zmq.LINGER, 0);
     start_sck = context.socket(zmq.PUB)
     start_sck.setsockopt(zmq.LINGER, 0)
 
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json')))
-    start_sck.connect(conf['master_port'])
+    start_sck.connect(conf['trigger_port'])
+    handshake_sck.connect(conf['handshake_port'])
 
-    sleep(5000e-6)
-    start_sck.send("START:%05i:" % (run_info['last_run'] + 1))
+    msg = "CONNECT"
+    handshake_sck.send(msg)
+    if (handshake_sck.recv() == msg):
+        # Connection established.
+        start_sck.send("START:%05i:" % (run_info['last_run'] + 1))
+
+    handshake_sck.close()
+    start_sck.close()
+    context.destroy()           
     
     #save the run info
     db = get_db(run_info['db_name'])
@@ -110,7 +121,6 @@ def start_run():
     t.start()
     
     broadcast_refresh()
-    context.destroy()           
     
     return redirect(url_for('home'))
 
@@ -120,14 +130,24 @@ def end_run():
 
     # Send a stop run signal to fe_master.
     context = zmq.Context()
+    handshake_sck = context.socket(zmq.REQ)
+    handshake_sck.setsockopt(zmq.LINGER, 0);
     stop_sck = context.socket(zmq.PUB)
     stop_sck.setsockopt(zmq.LINGER, 0)
 
     conf = json.load(open(os.path.join(cwd, '../config/.default_master.json')))
-    stop_sck.connect(conf['master_port'])
+    stop_sck.connect(conf['trigger_port'])
+    handshake_sck.connect(conf['handshake_port'])
 
-    sleep(5000e-6)
-    stop_sck.send("STOP:")
+    msg = "CONNECT"
+    handshake_sck.send(msg)
+    if (handshake_sck.recv() == msg):
+        # Connection established.
+        stop_sck.send("STOP:")
+
+    handshake_sck.close()
+    stop_sck.close()
+    context.destroy()
 
     global running
     if running:
@@ -142,8 +162,8 @@ def end_run():
 
     sleep(0.1)
     broadcast_refresh()
+
     context.destroy()
-    
     generate_runlog()
 
     return redirect(url_for('running_hist'))

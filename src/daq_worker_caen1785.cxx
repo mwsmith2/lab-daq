@@ -44,7 +44,7 @@ void DaqWorkerCaen1785::LoadConfig()
   printf("Firmware Revision: %i.%i\n", (msg_16 >> 8) & 0xff, msg_16& 0xff); 
 
   // Disable suppressors.
-  Write16(0x1032, 0x18);
+  //  Write16(0x1032, 0x18);
 
   // Reset the data on the device.
   ClearData();
@@ -110,30 +110,46 @@ bool DaqWorkerCaen1785::EventAvailable()
   is_event = (msg_ushort & 0x1);
   
   // Check to make sure the buffer isn't empty.
-  Read(0x0, msg);
-  is_event &= ((msg & 0x07000000) == 0x06000000);
+  Read16(0x1022, msg_ushort);
+  is_event &= !(msg & 0x2);
 
   return is_event;
 }
 
 void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
 {
-  int offset;
-  uint ch, data;
+  int offset = 0x0;
+  uint ch = 0;
+  uint data = 0;
 
   // Get the system time
   auto t1 = high_resolution_clock::now();
   auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();
 
-  // Get the event header for each high or low value
-  for (ch = 0; ch < CAEN_1785_CH; ++ch) {
-    
-    offset = 0x0 + 4 * ch;
-    Read(offset, data);
+  // Read the data for each high value.
+  while ((((data >> 24) & 0x7) != 0x6) || (((data >> 24) &0x7) != 0x4)) {
 
-    bundle.device_clock[ch] = 21;
-    bundle.value[ch] = (data & 0x7ff);
+    Read(offset, data);
+    offset += 4;
+
+    if (((data >> 24) & 0x7) == 0x0) {
+      
+      bundle.device_clock[ch] = 21;
+      bundle.value[ch] = (data & 0xfff);
+
+      if (ch > 3) {
+	offset += 8;
+      }
+
+      if (ch == 7) {
+	// Increment event register and exit.
+	Write16(0x1028, 0x0);
+	break;
+      }
+
+      ch = (ch > 3) * (ch - 3) + (ch < 4) * (ch + 4);
+    }
   }
 }
 
