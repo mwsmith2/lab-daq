@@ -183,17 +183,17 @@ int LoadConfig()
  
     if (string(v.first) == string("root")) {
    
-      daq_writers.push_back(new DaqWriterRoot(conf_file));
+      daq_writers.push_back(new DaqWriterRoot(tmp_conf_file));
    
     } else if (string(v.first) == string("online")) {
    
-      daq_writers.push_back(new DaqWriterOnline(conf_file));
+      daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
    
     }
   }
 
   // Set up the event builder.
-  event_builder = new EventBuilder(daq_workers, daq_writers, conf_file);
+  event_builder = new EventBuilder(daq_workers, daq_writers, tmp_conf_file);
 
   return 0;
 }

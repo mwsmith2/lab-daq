@@ -24,12 +24,12 @@ class DaqWorkerVme : public DaqWorkerBase<T> {
 public:
   
   // ctor
-  DaqWorkerVme(string name, string conf) : DaqWorkerBase<T>(name, conf), num_ch_(SIS_3302_CH), len_tr_(SIS_3302_LN) {};
+  DaqWorkerVme(string name, string conf) : DaqWorkerBase<T>(name, conf), num_ch_(SIS_3302_CH), read_trace_len_(SIS_3302_LN) {};
 
 protected:
 
   int num_ch_;
-  int len_tr_;
+  int read_trace_len_;
 
   int base_address_;
   std::mutex mutex_;
@@ -130,14 +130,14 @@ int DaqWorkerVme<T>::ReadTrace(int addr, uint *trace)
   status = (retval = vme_A32_2EVME_read(vme::device,
                                         base_address_ + addr,
                                         trace,
-                                        len_tr_,
+                                        read_trace_len_,
                                         &num_got));
 
   if (status != 0) {
     char str[100];
     sprintf(str, "Error reading trace at 0x%08x.\n", base_address_ + addr);
     perror(str);
-    cout << "asked for: " << len_tr_ << ", got: " << num_got << endl;
+    cout << "asked for: " << read_trace_len_ << ", got: " << num_got << endl;
   }
 
   return retval;

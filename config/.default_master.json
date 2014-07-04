@@ -1,17 +1,17 @@
 {
-    "master_port": "tcp://127.0.0.1:42042",
+    "master_port":"tcp://127.0.0.1:42042",
     "devices":
     {
         "fake": {
 	},
 
         "sis_3350": {
-            "sis_fast_0": "config/sis_3350_0.json",
-            "sis_fast_1": "config/sis_3350_1.json"
+            "sis_fast_0":"config/sis_3350_0.json",
+            "sis_fast_1":"config/sis_3350_1.json"
         },
 
         "sis_3302": {
-            "sis_slow_0": "config/sis_3302_0.json"
+            "sis_slow_0":"config/sis_3302_0.json"
         },
 
         "caen_1785": {
@@ -24,18 +24,18 @@
     "writers": {
 
         "root": {
-            "file": "data/run_00247.root",
-            "tree": "t"
+            "file":"data/run_00247.root",
+            "tree":"t"
         },
      
         "online": {
-            "port": "tcp://127.0.0.1:42043",
-            "message_size": "1048576"
+            "port":"tcp://127.0.0.1:42043",
+            "message_size":"1048576"
         }
     },
 
     "trigger_control": {
-        "live_time": "10",
-        "dead_time": "1"
+        "live_time":"10",
+        "dead_time":"1"
     }
 }
