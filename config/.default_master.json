@@ -17,6 +17,8 @@
         },
 
         "caen_1785": {
+	    "caen_adc_0":"config/caen_1785_0.json",
+	    "caen_adc_1":"config/caen_1785_1.json"
 	},
 
         "caen_6742": {
