@@ -368,8 +368,13 @@ def stop_continual():
 
 
 @socketio.on('generate runlog', namespace='/online')
-def generate_runlog():
+def generate_upon_request():
     """generates runlog upon request from client"""
+    generate_runlog();
+    emit('runlog ready')
+
+def generate_runlog():
+    '''generates the runlog from db'''
     #generate column headers
     start = time()
     runlog_headers = ''
@@ -418,7 +423,6 @@ def generate_runlog():
         runlog.write(runlog_headers)
         for line in runlog_lines:
             runlog.write('\n' + line)
-    emit('runlog ready')
     print '%i seconds' % (time() - start)
     
 
