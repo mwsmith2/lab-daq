@@ -13,10 +13,10 @@ import gevent
 
 import zmq, json
 
-data = []
-runOver = threading.Event()
-
+data = {}
+hists = {}
 trace = np.zeros(1024)
+runOver = threading.Event()
 
 rate = 0 
 eventCount = 0
@@ -25,7 +25,9 @@ eventCount = 0
 
 def clear_data():
     global data
-    data = []
+    global hists
+    data = {}
+    hists = {}
     generate_data.counter = 0
 
 def pulse_shape(t):
@@ -35,7 +37,7 @@ def fill_trace():
     trace = np.array(xrange(50))
     return pulse_shape(trace)
 
-def pull_event(e, data, start):
+def pull_event(e, start):
     """The function constantly tries to pull new event data which arrives
     in json format. The basic structure of the data is as follows:
     {
@@ -66,6 +68,8 @@ def pull_event(e, data, start):
     global rate
     global eventCount
     global trace
+    global hists
+    global data
 
     context = zmq.Context()
     data_sck = context.socket(zmq.PULL)
@@ -83,17 +87,22 @@ def pull_event(e, data, start):
                 print 'got EOB'
                 continue
 
-            new_data = json.loads(message.split('__EOM__')[0])
+            data = json.loads(message.split('__EOM__')[0])
             if generate_data.counter != generate_data.maxsize:
                 generate_data.counter += 1
-                
-            trace = np.array(new_data['sis_fast_0']['trace'][0])
-            #trace = np.array(new_data['sis_slow_0']['trace'][1])
-            data.append(trace.max())
-            eventCount = new_data['event_number']
-        
-            # print len(data)
-
+            
+            for device in data:
+                try:
+                    num_chans = len(data[device]['trace'])
+                    for i in xrange(num_chans):
+                        this_dev = device + ' channel ' + str(i)
+                        if this_dev not in hists:
+                            hists[this_dev] = []
+                        hists[this_dev].append(max(data[device]['trace'][i]))
+                except:
+                    continue
+                    
+            eventCount = data['event_number']
             rate = float(eventCount)/(time()-start)
 
         except:
@@ -140,7 +149,7 @@ def begin_run():
         generate_data.times.put(start)
 
     #t = threading.Thread(name='data-generator', target=generate_data, args=(runOver,data))
-    t = threading.Thread(name='data-puller', target=pull_event, args=(runOver, data, start))
+    t = threading.Thread(name='data-puller', target=pull_event, args=(runOver, start))
 
     print 'starting'
     t.start()
