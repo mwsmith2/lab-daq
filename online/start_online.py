@@ -149,22 +149,56 @@ def end_run():
 @app.route('/hist')
 def running_hist():
     """displays an online histogram"""
-    if len(data_io.data)==0:
+    if len(data_io.hists)==0:
         return render_template('no_data.html', in_progress=running)
+
+    if 'device' not in session:
+        session['device'] = 'sis_fast_0'
+    if 'channel' not in session:
+        session['channel'] = 0
 
     if 'refresh_rate' not in session:
         session['refresh_rate'] = 1.
 
+    devices = []
+    for device in data_io.data:
+        try:
+            num_chans = len(data_io.data[device]['trace'])
+            for i in xrange(num_chans):
+                devices.append(device + ' channel ' + str(i))
+        except:
+            continue
+
+    current_selection = session['device'] + ' channel ' + str(session['channel'])
+
     return render_template('hist.html', in_progress=running, 
-                           r_rate=session['refresh_rate'])
+                           r_rate=session['refresh_rate'], options=devices, 
+                           selected=current_selection)
 
 @app.route('/traces')
 def traces():
     """Displays online traces"""
-    if len(data_io.data)==0:
+    if len(data_io.hists)==0:
         return render_template('no_data.html', in_progress=running)
+    
+    if 'device' not in session:
+        session['device'] = 'sis_fast_0'
+    if 'channel' not in session:
+        session['channel'] = 0
 
-    return render_template('traces.html', in_progress=running)
+    devices = []
+    for device in data_io.data:
+        try:
+            num_chans = len(data_io.data[device]['trace'])
+            for i in xrange(num_chans):
+                devices.append(device + ' channel ' + str(i))
+        except:
+            continue
+
+    current_selection = session['device'] + ' channel ' + str(session['channel'])
+
+    return render_template('traces.html', options=devices, 
+                           selected=current_selection, in_progress=running)
 
 @app.route('/nodata')
 def no_data():
@@ -240,9 +274,14 @@ def send_events():
         
 
 @socketio.on('update histogram', namespace='/online')
-def update_hist():
+def update_hist(msg):
     """update the histogram upon request from client and then
     respond when it's ready"""
+
+    selection = msg['selected'].split(' ')
+    session['device'] = selection[0]
+    session['channel'] = int(selection[-1])
+
     name, path = generate_hist()
 
     emit('histogram ready', {"path" : path});
@@ -265,6 +304,10 @@ def update_trace(msg):
         xmin = 0
         xmax = 1024
 
+    selection = msg['selected'].split(' ')
+    session['device'] = selection[0]
+    session['channel'] = int(selection[-1])
+                           
     name, path = generate_trace(xmin, xmax)
 
     emit('trace ready', {"path" : path, "x_min" : xmin, "x_max" : xmax});
@@ -380,8 +423,11 @@ def generate_hist():
     plt.clf()
   
     try:
-        plt.hist(data_io.data, np.sqrt(data_io.eventCount))
-        plt.title('Run %i Event %i' % (run_info['last_run'], data_io.eventCount))
+        this_dev = session['device'] + ' channel ' + str(session['channel'])
+        plt.hist(data_io.hists[this_dev], np.sqrt(data_io.eventCount))
+        plt.title('Run %i Event %i, %s channel %i' % 
+                  (run_info['last_run'], data_io.eventCount,
+                   session['device'], session['channel']))
     except IndexError:
         return 'failed', 'failed'
 
@@ -396,8 +442,10 @@ def generate_hist():
 def generate_trace(xmin, xmax):
     """generate the trace plot"""
     plt.clf()
-    plt.plot(data_io.trace)
-    plt.title('Run %i Event %i' % (run_info['last_run'], data_io.eventCount))
+    plt.plot(data_io.data[session['device']]['trace'][session['channel']])
+    plt.title('Run %i Event %i, %s channel %i' % 
+              (run_info['last_run'], data_io.eventCount,
+              session['device'], session['channel']))
     plt.xlim([xmin,xmax])
 
     for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):

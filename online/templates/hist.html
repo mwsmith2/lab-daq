@@ -1,5 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
+   <select id="device"> 
+    {% for option in options %}
+      <option value="{{option}}" 
+	      {% if option == selected %} selected {% endif %}>{{ option }}
+      </option>
+    {% endfor %} 
+    </select>
   <img id="img" 
        src="" width="80%" style="display: none"></img>
     <br>
@@ -18,7 +25,7 @@
 
            socket.emit('stop continual update');
     
-           socket.emit('update histogram');
+           socket.emit('update histogram', {"selected":$('#device').val()});
 
 	   socket.on('histogram ready', function(msg) {
                $('#img').show();
@@ -38,7 +45,7 @@
       	  namespace = '/online';
 	  var socket = io.connect('http://' + document.domain + 
 				  ':' + location.port + namespace);
-	  socket.emit('update histogram');
+	  socket.emit('update histogram',{"selected":$('#device').val()});
       });
     
       $('#continual').click(function() {
