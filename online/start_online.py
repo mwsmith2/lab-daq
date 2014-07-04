@@ -361,9 +361,9 @@ def generate_runlog():
     db = connect_db(run_info['db_name'])
     n_runs = int(db['toc']['n_runs'])
     counter = 0
-    gen = (entry for entry in db)
-    for entry in gen:
-        data = db[entry]
+    map_fun = '''function(doc) { emit(null, doc) } '''
+    for doc in db.query(map_fun):
+        data = doc['value']
         if data['_id'] == 'toc':
             continue
         
