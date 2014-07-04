@@ -4,5 +4,6 @@
 	"pretrigger_samples":"0x200",
 	"invert_ext_lemo":false,
 	"user_led_on":false,
-	"enable_ext_lemo":true
+	"enable_ext_lemo":true,
+	"pre_trigger_delay":"0x100"
 }
