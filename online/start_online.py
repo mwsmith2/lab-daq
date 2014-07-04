@@ -143,6 +143,8 @@ def end_run():
     sleep(0.1)
     broadcast_refresh()
     context.destroy()
+    
+    generate_runlog()
 
     return redirect(url_for('running_hist'))
 
