@@ -11,6 +11,7 @@ from flask.ext.socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import couchdb
+from couchdb.design import ViewDefinition
 import os, glob, datetime
 import threading
 
@@ -363,10 +364,10 @@ def generate_runlog():
     db = connect_db(run_info['db_name'])
     n_runs = int(db['toc']['n_runs'])
     counter = 0
-    map_fun = '''function(doc) { emit(null, doc) } '''
-    for doc in db.query(map_fun):
+    for doc in db.view('_design/all/_view/all'):
         data = doc['value']
-        if data['_id'] == 'toc':
+        #make sure it's a run document
+        if 'run_number' not in data:
             continue
         
         runlog_lines.append('')
@@ -530,6 +531,11 @@ def connect_db(db_name):
 
         toc['_id'] = 'toc'
         db.save(toc)
+
+    #create permanent view to all if one doesn't exist
+    if '_design/all' not in db:
+        view_def = ViewDefinition('all', 'all', '''function(doc) { emit(null, doc);}''')
+        view_def.sync(db)
 
     return db
 
