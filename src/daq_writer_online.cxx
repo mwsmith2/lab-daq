@@ -18,6 +18,8 @@ void DaqWriterOnline::LoadConfig()
   ptree conf;
   read_json(conf_file_, conf);
 
+  int hwm = conf.get<int>("writers.online.high_water_mark", 10);
+  online_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
   online_sck_.connect(conf.get<string>("writers.online.port").c_str());
 
   message_size_ = conf.get<int>("writers.online.message_size");
@@ -183,6 +185,34 @@ void DaqWriterOnline::PackMessage()
     json_map.push_back(json_spirit::Pair(str, caen_map));
   }
 
+  count = 0;
+  for (auto &caen : data.caen_drs) {
+
+    json_spirit::Object caen_map;
+
+    sprintf(str, "system_clock");
+    caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
+
+    sprintf(str, "device_clock");
+    caen_map.push_back(json_spirit::Pair(str, 
+      json_spirit::Array(
+        (uint64_t *)&caen.device_clock[0], 
+        (uint64_t *)&caen.device_clock[CAEN_6742_CH])));
+
+    json_spirit::Array arr;
+    for (int ch = 0; ch < CAEN_6742_CH; ++ch) {
+      arr.push_back(json_spirit::Array(
+        &caen.trace[ch][0], &caen.trace[ch][CAEN_6742_LN]));
+
+    }
+
+    sprintf(str, "trace");
+    caen_map.push_back(json_spirit::Pair(str, arr));
+
+    sprintf(str, "caen_drs_%i", count++);
+    json_map.push_back(json_spirit::Pair(str, caen_map));
+  }
+
   string buffer = json_spirit::write(json_map);
   buffer.append("__EOM__");
 
@@ -192,13 +222,5 @@ void DaqWriterOnline::PackMessage()
   cout << "Online writer message ready." << endl;
   message_ready_ = true;
 }
-
-
-
-
-
-
-
-
 
 } // ::daq

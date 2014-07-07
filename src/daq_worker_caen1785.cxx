@@ -135,7 +135,7 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
 
     if (((data >> 24) & 0x7) == 0x0) {
       
-      bundle.device_clock[ch] = 21;
+      bundle.device_clock[ch] = 0; // No device time
       bundle.value[ch] = (data & 0xfff);
 
       if (ch > 3) {

@@ -20,6 +20,12 @@ ifeq ($(UNAME_S), Linux)
 	FLAGS = -std=c++0x
 endif
 
+ifdef DEBUG
+FLAGS += -g
+else
+FLAGS += -O2
+endif
+
 FLAGS += $(shell root-config --cflags)
 FLAGS += -Iinclude 
 

@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 	conf.put("writers.root.file", file_name);
 	write_json(tmp_conf_file, conf);
 
-        ReloadConfig();
+	ReloadConfig();
         StartRun();
 
       } else if (msg_string == string("STOP") && is_running) {

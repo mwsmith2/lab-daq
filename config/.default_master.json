@@ -22,6 +22,7 @@
 	},
 
         "caen_6742": {
+	    "caen_drs_0":"config/caen_6742_0.json"
 	}
     },
 
@@ -34,7 +35,8 @@
      
         "online": {
             "port":"tcp://127.0.0.1:42043",
-            "message_size":"1048576"
+            "message_size":"1048576",
+	    "high_water_mark":10
         }
     },
 

@@ -35,6 +35,8 @@ public:
 
 private:
 
+  const float vpp_ = 1.0;
+  
   int device_;
   uint size_, bsize_;
   char *buffer_;
@@ -43,7 +45,7 @@ private:
 
   CAEN_DGTZ_BoardInfo_t board_info_;
   CAEN_DGTZ_EventInfo_t event_info_;
-  CAEN_DGTZ_UINT16_EVENT_t *event_;
+  CAEN_DGTZ_X742_EVENT_t *event_;
   
   bool EventAvailable();
   void GetEvent(caen_6742 &bundle);
