@@ -391,10 +391,7 @@ def generate_runlog():
     counter = 0
     for doc in db.view('_design/all/_view/all'):
         data = doc['value']
-        #make sure it's a run document
-        if 'run_number' not in data:
-            continue
-        
+    
         runlog_lines.append('')
         if 'run_number' in data:
             runlog_lines[-1] += str(data['run_number'])
@@ -416,8 +413,6 @@ def generate_runlog():
 
         emit('progress', "%02i%s Generated" % 
              (progress, "%"))
-
-    runlog_lines.sort(key=lambda line: int(line.split(',')[0]))
     
     #write the file
     with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
@@ -558,7 +553,11 @@ def connect_db(db_name):
 
     #create permanent view to all if one doesn't exist
     if '_design/all' not in db:
-        view_def = ViewDefinition('all', 'all', '''function(doc) { emit(null, doc);}''')
+        view_def = ViewDefinition('all', 'all',''' 
+				  function(doc) { 
+				      if( doc.run_number )
+					  emit(parseInt(doc.run_number), doc);
+				  }''')
         view_def.sync(db)
 
     return db
