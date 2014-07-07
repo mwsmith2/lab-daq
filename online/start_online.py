@@ -165,7 +165,6 @@ def end_run():
     broadcast_refresh()
 
     context.destroy()
-    generate_runlog()
 
     return redirect(url_for('running_hist'))
 
@@ -406,7 +405,7 @@ def generate_runlog():
         progress = 100*float(counter)/n_runs
 
         emit('progress', "%02i%s Generated" % 
-             (progress, "%"), namespace='/online')
+             (progress, "%"))
     
     #write the file
     with open(app.config['UPLOAD_FOLDER']+'/'+run_info['runlog'], 'w') as runlog:
