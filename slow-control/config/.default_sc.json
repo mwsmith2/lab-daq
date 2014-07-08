@@ -1,0 +1,4 @@
+{
+	"sub_port":"tcp://localhost:41040",
+	"pub_port":"tcp://localhost:41041"
+}
