@@ -19,6 +19,17 @@ using std::vector;
 
 //--- project includes ------------------------------------------------------//
 
+struct tm_abr {
+  int sec;
+  int min;
+  int hour;
+  int mday;
+  int mon;
+  int year;
+  int wday;
+  int yday;
+};
+
 namespace sc {
 
 class AsyncRootWriter {
@@ -39,7 +50,7 @@ class AsyncRootWriter {
 
   private:
 
-    tm *time_info_; // time struct
+    tm_abr time_info_; // time struct
 
     // data structure variables
     TFile *pf_;

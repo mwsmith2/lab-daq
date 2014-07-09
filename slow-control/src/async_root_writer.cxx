@@ -5,7 +5,6 @@ namespace sc {
 AsyncRootWriter::AsyncRootWriter()
 {
   pf_ = new TFile("test.root", "recreate");
-  time_info_ = new tm;
 
   UpdateTime();
 }
@@ -13,7 +12,6 @@ AsyncRootWriter::AsyncRootWriter()
 AsyncRootWriter::AsyncRootWriter(string filename)
 {
   pf_ = new TFile(filename.c_str(), "recreate");
-  time_info_ = new tm;
 
   UpdateTime();
 }
@@ -107,8 +105,7 @@ void AsyncRootWriter::CreateTree(const string &setup)
                branch_vars.c_str());
   }
 
-  string time_str("tm_sec/I:tm_min/I:tm_hour/I:tm_mday/I:");
-  time_str.append("tm_mon/I:tm_year/I:tm_wday/I:tm_yday/I:tm_isdst/I");
+  string time_str("sec/I:min/I:hour/I:mday/I:mon/I:year/I:wday/I:yday/I");
   pt->Branch("time", &time_info_, time_str.c_str());
 
   data_map_vec_.push_back(data_map);  
@@ -158,9 +155,19 @@ void AsyncRootWriter::WriteFile()
 
 void AsyncRootWriter::UpdateTime()
 {
+  tm *tm_info;
   time_t now;
   time(&now);
-  time_info_ = localtime(&now);
+  tm_info = localtime(&now);
+
+  time_info_.sec = tm_info->tm_sec;
+  time_info_.min = tm_info->tm_min;
+  time_info_.hour = tm_info->tm_hour;
+  time_info_.mday = tm_info->tm_mday;
+  time_info_.mon  = tm_info->tm_mon;
+  time_info_.year = tm_info->tm_year;
+  time_info_.wday = tm_info->tm_wday;
+  time_info_.yday = tm_info->tm_yday;
 }
 
 } // ::sc
