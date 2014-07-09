@@ -104,7 +104,7 @@ def pull_event(e, start):
                 except:
                     pass
                 try:
-                    num_chans = len(data[device]['values'])
+                    num_chans = len(data[device]['value'])
                     wireX.append(np.random.standard_normal(1)[0])
                     wireY.append(np.random.standard_normal(1)[0])
                 except:

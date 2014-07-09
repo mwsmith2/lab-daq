@@ -362,7 +362,7 @@ def start_continual():
 def start_continual_beam():
     """begins the chain of continual beam updates"""
     session['updating_beam'] = True
-    continue_updating()  
+    continue_updating_beam()  
  
 @socketio.on('continue updating', namespace='/online')
 def continue_updating():
@@ -377,6 +377,8 @@ def continue_updating():
 def continue_updating_beam():
     """updates the beam and then informs the client"""
     sleep(1.0/session['b_refresh_rate'])
+
+    print 'continue updating beam'
 
     if session['updating_beam']:
         update_beam()
@@ -399,11 +401,13 @@ def set_refresh_beam(msg):
     """sets the beam refresh rate"""
     try:
         new_rate = float(msg)
-        if 0 < new_rate <= 5.0:
+        if 0 < new_rate <= 1.0:
             session['b_refresh_rate'] = new_rate
     except ValueError:
         pass
-        
+
+    print 'set refresh rate'
+    
     emit('current beam rate', str(session['refresh_rate']))
 
 @socketio.on('stop continual update', namespace='/online')
@@ -414,6 +418,7 @@ def stop_continual():
 @socketio.on('stop continual beam update', namespace='/online')
 def stop_continual_beam():
     """ends the chain of continual beam updates"""
+    print ' stop continual beam'
     session['updating_beam'] = False
 
 @socketio.on('generate runlog', namespace='/online')

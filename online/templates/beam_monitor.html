@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 {% block body %}
+<img id="2d" 
+       src="" width="80%" style="display: none"></img>
+     <br>
 <button id="update">Update Histogram</button>
   {% if in_progress %}
     <button id="continual">Start Continual Refresh</button>
@@ -7,9 +10,6 @@
     <input type=text id="rep_rate" size="1" value="{{r_rate}}">
       Refresh Rate (Hz)</input>
   {% endif %}
-<img id="2d" 
-       src="" width="80%" style="display: none"></img>
-     <br>
 
   <script type="text/javascript" charset="utf-8">
        $(document).ready(function(){
