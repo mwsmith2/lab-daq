@@ -28,8 +28,12 @@ eventCount = 0
 def clear_data():
     global data
     global hists
+    global wireX
+    global wireY
     data = {}
     hists = {}
+    wireX = []
+    wireY = []
     generate_data.counter = 0
 
 def pulse_shape(t):

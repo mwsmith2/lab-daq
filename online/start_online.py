@@ -541,14 +541,18 @@ def generate_beam():
     #make plot
     ax1 = plt.subplot2grid((3,3),(0,0), colspan=2)
     plt.hist(x,bins=50, range=[-5,5])
+    plt.xlim(-5,5)
     ax1.axes.get_xaxis().set_visible(False)
     ax1.axes.get_yaxis().set_visible(False)
     ax2 = plt.subplot2grid((3,3),(1,0), colspan=2, rowspan=2)
     plt.hist2d(x, y, bins=50, range=np.array([(-5,5),(-5,5)]))
+    plt.xlim(-5,5)
+    plt.ylim(-5,5)
     plt.xlabel('x position')
     plt.ylabel('y position')
     ax3 = plt.subplot2grid((3,3),(1,2), rowspan=2)
     plt.hist(y, bins=50, range=[-5,5], orientation='horizontal')
+    plt.ylim(-5,5)
     ax3.axes.get_xaxis().set_visible(False)
     ax3.axes.get_yaxis().set_visible(False)
     
