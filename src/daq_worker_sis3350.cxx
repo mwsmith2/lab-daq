@@ -170,7 +170,6 @@ void DaqWorkerSis3350::LoadConfig()
 
     float volts = val.second.get_value<float>();
     msg = (int)(33000 + 3377.77 * volts + 0.5);
-    cout << msg << endl;
     Write(offset | 4, msg);
 
     msg = 0;

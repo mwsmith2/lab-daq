@@ -30,7 +30,8 @@
 
         "root": {
             "file":"data/run_00247.root",
-            "tree":"t"
+            "tree":"t",
+	    "sync":false
         },
      
         "online": {

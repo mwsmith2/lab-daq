@@ -130,6 +130,8 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
   // Read the data for each high value.
   while ((((data >> 24) & 0x7) != 0x6) || (((data >> 24) &0x7) != 0x4)) {
 
+    if (offset >= 0x1000) break;
+
     Read(offset, data);
     offset += 4;
 
