@@ -1,3 +1,4 @@
 sc_monitor
 build/*
 data/*
+python/*.pyc
