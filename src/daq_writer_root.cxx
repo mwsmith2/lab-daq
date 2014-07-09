@@ -15,6 +15,7 @@ void DaqWriterRoot::LoadConfig()
 
   outfile_ = conf.get<string>("writers.root.file", "default.root");
   tree_name_ = conf.get<string>("writers.root.tree", "t");
+  need_sync_ = conf.get<bool>("writers.root.sync", false);
 }
 
 void DaqWriterRoot::StartWriter()
@@ -22,6 +23,9 @@ void DaqWriterRoot::StartWriter()
   // Allocate ROOT files
   pf_ = new TFile(outfile_.c_str(), "RECREATE");
   pt_ = new TTree(tree_name_.c_str(), tree_name_.c_str());
+
+  // Turn off autoflush, I will check for synchronization then flush.
+  pt_->SetAutoFlush(0);
 
   // Need to get tree names out of the config file
   ptree conf;
@@ -169,16 +173,23 @@ void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)
     }
 
     pt_->Fill();
-    if (pt_->GetEntries() == 1000) {
-      pt_->FlushBaskets();
-    }
+
+    // Manually flush the baskets.
+    //    if (pt_->GetEntries() == 1000) {
+    //      pt_->FlushBaskets();
+    //    }
   }
 
 }
 
 void DaqWriterRoot::EndOfBatch(bool bad_data)
 {
-
+  cout << "Root writer got EOB with bad_data flag = " << bad_data << endl;
+  if (need_sync_ && bad_data) {
+    pt_->DropBaskets();
+  } else {
+    pt_->FlushBaskets();
+  }
 }
 
 } // ::daq

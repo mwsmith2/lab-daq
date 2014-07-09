@@ -125,6 +125,8 @@ void DaqWorkerSis3302::LoadConfig()
   msg = 0; //first 8MB chunk
   Write(0x34, msg);
 
+  // Set
+
 } // LoadConfig
 
 void DaqWorkerSis3302::WorkLoop()

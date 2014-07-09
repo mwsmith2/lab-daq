@@ -39,6 +39,7 @@ class DaqWriterRoot : public DaqWriterBase {
 
   private:
 
+    bool need_sync_;
     string outfile_;
     string tree_name_;
 

@@ -131,21 +131,24 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
 
   // Read the data for each high value.
   while ((((data >> 24) & 0x7) != 0x6) || (((data >> 24) &0x7) != 0x4)) {
+
+    if (offset >= 0x1000) break;
+
     Read(offset, data);
     offset += 4;
 
     if (((data >> 24) & 0x7) == 0x0) {
       
       if (((data >> 17) & 0x1) && read_low_adc_) {
-	cout << "Skipping low values." << endl;
-	continue;
+      	cout << "Skipping low values." << endl;
+      	continue;
       } else if (!((data >> 17) & 0x1) && !read_low_adc_) {
-	cout << "Skipping high values." << endl;
-	continue;
+      	cout << "Skipping high values." << endl;
+      	continue;
       }
 
       cout << "Writing data for channel " << ch << endl;
-      bundle.device_clock[ch] = 21;
+      bundle.device_clock[ch] = 0; // No device time
       bundle.value[ch] = (data & 0xfff);
 
       if (ch == 7) {

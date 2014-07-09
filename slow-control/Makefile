@@ -30,15 +30,12 @@ FLAGS += $(shell root-config --cflags)
 FLAGS += -Iinclude 
 
 LIBS = $(shell root-config --libs)
-LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer
+LIBS += -lm -lzmq
 
 all: $(OBJECTS) $(OBJ_VME) $(TARGETS) build
 
-fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME)
+sc_%: modules/sc_%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
-
-%_daq: modules/%_daq.cxx 
-	$(CXX) $< -o $@  $(FLAGS) $(LIBS)
 
 build:
 	mkdir build
