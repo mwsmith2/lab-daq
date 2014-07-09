@@ -5,6 +5,15 @@ namespace sc {
 AsyncRootWriter::AsyncRootWriter()
 {
   pf_ = new TFile("test.root", "recreate");
+  time_info_ = new tm;
+
+  UpdateTime();
+}
+
+AsyncRootWriter::AsyncRootWriter(string filename)
+{
+  pf_ = new TFile(filename.c_str(), "recreate");
+  time_info_ = new tm;
 
   UpdateTime();
 }
@@ -15,13 +24,14 @@ AsyncRootWriter::~AsyncRootWriter()
   pf_->Close();
 
   // Take are of data.
-  for (auto it = data_map_vec_.begin(); it != data_map_vec_.end(); ++it) {
-    for (auto it_2 = (*it).begin(); it_2 != (*it).end(); ++it_2) {
-      delete it_2->second;
-    }
-  }
+//  for (auto it = data_map_vec_.begin(); it != data_map_vec_.end(); ++it) {
+//    for (auto it_2 = (*it).begin(); it_2 != (*it).end(); ++it_2) {
+//      delete it_2->second;
+//    }
+//  }
 
-  delete time_info_;
+//  delete time_info_;
+//  delete pf_;
 }
 
 void AsyncRootWriter::CreateTree(const string &setup)
@@ -31,7 +41,17 @@ void AsyncRootWriter::CreateTree(const string &setup)
   // Turn the setup string into an easily parseable stream.
   std::istringstream ss(setup);
 
-  // Now get the first line which is the device name.
+  // Now get the first line which is the device key.
+  std::getline(ss, str, ':');
+  string dev_key(str);
+
+  // Check if the device key is already in use, when messages backup this
+  // needs to be accounted for.
+  if (key_map_.find(str) != key_map_.end()) {
+    return;
+  }
+
+  // The next line is the device name
   std::getline(ss, str, ':');
 
   // Check if it is already in use.
@@ -57,17 +77,21 @@ void AsyncRootWriter::CreateTree(const string &setup)
   // Add the tree to the tree name map.
   string tree_name = str;
   name_map_[tree_name] = pt_vec_.size();
+  key_map_[dev_key] = pt_vec_.size();
 
   // Create the tree and grab a handy pointer to it.
   pt_vec_.push_back(new TTree(tree_name.c_str(), tree_name.c_str()));
-  TTree *pt = pt_vec_[name_map_[tree_name]];
+  TTree *pt = pt_vec_[key_map_[dev_key]];
 
   std::map<string, double *> data_map;
   // Now create the branches.
-  while (str != string("__EOM__")) {
-    
+  while (ss.good()) {
+
     // Get the next variable.
     std::getline(ss, str, ':');
+
+    // Check if we are done.
+    if (str.find("__EOM__") < str.size()) break;
 
     // Allocate as a double (low data volumes should be fine).
     double *pdata = new double;
@@ -101,16 +125,19 @@ int AsyncRootWriter::PushData(const string &data)
   std::getline(ss, str, ':');
 
   // Make sure the tree exists.
-  if (name_map_.find(str) == name_map_.end()) return 1;
+  if (key_map_.find(str) == key_map_.end()) return 1;
 
   // Else grab the tree's data map.
-  int tree_idx = name_map_[str];
+  int tree_idx = key_map_[str];
   std::map<string, double *> data_map = data_map_vec_[tree_idx];
 
-  while (str != string("__EOM__")) {
+  while (ss.good()) {
 
     // Get the variable/branch name.
     std::getline(ss, str, ':');
+
+    // Check if we are done.
+    if (str.find("__EOM__") < str.size()) break;
 
     // Get the data.
     std::getline(ss, val, ':');

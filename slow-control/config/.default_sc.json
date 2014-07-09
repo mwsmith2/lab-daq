@@ -1,4 +1,6 @@
 {
-	"sub_port":"tcp://localhost:41040",
-	"pub_port":"tcp://localhost:41041"
+	"data_port":"tcp://127.0.0.1:41040",
+	"msg_port":"tcp://127.0.0.1:41041",
+	"tree_port":"tcp://127.0.0.1:41042",
+	"run_time":1
 }

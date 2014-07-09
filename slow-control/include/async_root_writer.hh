@@ -27,6 +27,7 @@ class AsyncRootWriter {
 
     // ctor
     AsyncRootWriter();
+    AsyncRootWriter(string filename);
 
     // dtor
     ~AsyncRootWriter();
@@ -44,6 +45,7 @@ class AsyncRootWriter {
     TFile *pf_;
     vector<TTree *> pt_vec_;
     std::map<string, int> name_map_;
+    std::map<string, int> key_map_;
     vector<std::map<string, double *>> data_map_vec_;
 
     void UpdateTime();

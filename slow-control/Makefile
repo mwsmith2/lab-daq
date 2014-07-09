@@ -23,7 +23,7 @@ endif
 ifdef DEBUG
 FLAGS += -g
 else
-FLAGS += -O2
+FLAGS += -g
 endif
 
 FLAGS += $(shell root-config --cflags)
@@ -34,7 +34,7 @@ LIBS += -lm -lzmq
 
 all: $(OBJECTS) $(OBJ_VME) $(TARGETS) build
 
-sc_%: src/sc_%.cxx $(OBJECTS) $(OBJ_VME)
+sc_%: modules/sc_%.cxx $(OBJECTS) $(OBJ_VME)
 	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS)
 
 build:
