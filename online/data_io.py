@@ -16,6 +16,8 @@ import zmq, json
 data = {}
 hists = {}
 trace = np.zeros(1024)
+wireX = []
+wireY = []
 runOver = threading.Event()
 
 rate = 0 
@@ -100,7 +102,13 @@ def pull_event(e, start):
                             hists[this_dev] = []
                         hists[this_dev].append(max(data[device]['trace'][i]))
                 except:
-                    continue
+                    pass
+                try:
+                    num_chans = len(data[device]['values'])
+                    wireX.append(np.random.standard_normal(1)[0])
+                    wireY.append(np.random.standard_normal(1)[0])
+                except:
+                    pass
                     
             eventCount = data['event_number']
             rate = float(eventCount)/(time()-start)

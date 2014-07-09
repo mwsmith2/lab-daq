@@ -222,6 +222,19 @@ def traces():
     return render_template('traces.html', options=devices, 
                            selected=current_selection, in_progress=running)
 
+@app.route('/beam')
+def beam_display():
+    """displays wire chamber hists"""
+    if len(data_io.hists)==0:
+        return render_template('no_data.html', in_progress=running)
+    
+    if 'b_refresh_rate' not in session:
+        session['b_refresh_rate'] = 1.
+
+    return render_template('beam_monitor.html',
+                           r_rate=session['b_refresh_rate'],
+                           in_progress=running)
+
 @app.route('/nodata')
 def no_data():
     """Displays a message if someone tries to draw a histogram when no data
@@ -253,7 +266,6 @@ def revise(run_num):
                                in_progress=running)
     except:
          return render_template('no_run.html')
-    
 
 @app.route('/save_revision', methods=['POST'])
 def save_revision():
@@ -334,12 +346,24 @@ def update_trace(msg):
 
     emit('trace ready', {"path" : path, "x_min" : xmin, "x_max" : xmax});
 
+@socketio.on('update beam', namespace='/online')
+def update_beam():
+
+    name, path = generate_beam()
+    emit('beam ready', {'path': path});
+    
 @socketio.on('start continual update', namespace='/online')
 def start_continual():
     """begins the chain of continual histogram updates"""
     session['updating_hist'] = True
     continue_updating()
-    
+
+@socketio.on('start continual beam update', namespace='/online')
+def start_continual_beam():
+    """begins the chain of continual beam updates"""
+    session['updating_beam'] = True
+    continue_updating()  
+ 
 @socketio.on('continue updating', namespace='/online')
 def continue_updating():
     """updates the histogram and then informs the client"""
@@ -348,6 +372,15 @@ def continue_updating():
     if session['updating_hist']:
         update_hist()
         emit('updated')
+
+@socketio.on('continue updating beam', namespace='/online')
+def continue_updating_beam():
+    """updates the beam and then informs the client"""
+    sleep(1.0/session['b_refresh_rate'])
+
+    if session['updating_beam']:
+        update_beam()
+        emit('updated beam')
 
 @socketio.on('refresh rate', namespace='/online')
 def set_refresh(msg):
@@ -361,10 +394,27 @@ def set_refresh(msg):
         
     emit('current rate', str(session['refresh_rate']))
 
+@socketio.on('beam refresh rate', namespace='/online')
+def set_refresh_beam(msg):
+    """sets the beam refresh rate"""
+    try:
+        new_rate = float(msg)
+        if 0 < new_rate <= 5.0:
+            session['b_refresh_rate'] = new_rate
+    except ValueError:
+        pass
+        
+    emit('current beam rate', str(session['refresh_rate']))
+
 @socketio.on('stop continual update', namespace='/online')
 def stop_continual():
     """ends the chain of continual histogram updates"""
     session['updating_hist'] = False
+
+@socketio.on('stop continual beam update', namespace='/online')
+def stop_continual_beam():
+    """ends the chain of continual beam updates"""
+    session['updating_beam'] = False
 
 @socketio.on('generate runlog', namespace='/online')
 def generate_runlog():
@@ -469,7 +519,39 @@ def generate_trace(xmin, xmax):
     plt.savefig(filepath)
     
     return filename, filepath
+ 
+def generate_beam():
+    plt.clf()
     
+    #grab data
+    x = data_io.wireX
+    y = data_io.wireY
+    
+    #make plot
+    ax1 = plt.subplot2grid((3,3),(0,0), colspan=2)
+    plt.hist(x,bins=50)
+    plt.xlim(-5,5)
+    ax1.axes.get_xaxis().set_visible(False)
+    ax1.axes.get_yaxis().set_visible(False)
+    ax2 = plt.subplot2grid((3,3),(1,0), colspan=2, rowspan=2)
+    plt.hist2d(x, y, bins=50, range=np.array([(-5,5),(-5,5)]))
+    plt.xlabel('x position')
+    plt.ylabel('y position')
+    ax3 = plt.subplot2grid((3,3),(1,2), rowspan=2)
+    plt.hist(y, bins=50, orientation='horizontal')
+    plt.ylim(-5,5)
+    ax3.axes.get_xaxis().set_visible(False)
+    ax3.axes.get_yaxis().set_visible(False)
+    
+    for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_beam*'):
+        os.remove(temp_file)
+    filename = unique_filename('temp_beam.png')
+    filepath = upload_path(filename)
+    plt.savefig(filepath)
+
+    return filename, filepath
+    
+
    
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""

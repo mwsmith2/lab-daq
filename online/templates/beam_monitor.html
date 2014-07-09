@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block body %}
+<button id="update">Update Histogram</button>
+  {% if in_progress %}
+    <button id="continual">Start Continual Refresh</button>
+    <button id="stop" style="display: none">Stop Continual Refresh</button>
+    <input type=text id="rep_rate" size="1" value="{{r_rate}}">
+      Refresh Rate (Hz)</input>
+  {% endif %}
+<img id="2d" 
+       src="" width="80%" style="display: none"></img>
+     <br>
+
+  <script type="text/javascript" charset="utf-8">
+       $(document).ready(function(){
+	   namespace = '/online';
+	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+
+           socket.emit('stop continual beam update');
+    
+           socket.emit('update beam');
+
+	   socket.on('beam ready', function(msg) {
+               $('#2d').show();
+	       $('#2d').attr('src',msg.path);
+	   });
+
+	   socket.on('updated beam', function(){
+	       socket.emit('continue updating beam');
+	   });
+
+	   socket.on('current beam rate', function(msg){
+	       $('#rep_rate').val(msg);
+	   });
+       });
+
+      $('#update').click(function() {
+      	  namespace = '/online';
+	  var socket = io.connect('http://' + document.domain + 
+				  ':' + location.port + namespace);
+	  socket.emit('update beam');
+      });
+    
+      $('#continual').click(function() {
+	  namespace = '/online';
+	  var socket = io.connect('http://' + document.domain + 
+				  ':' + location.port + namespace);
+	  socket.emit('start continual beam update')
+	  $('#continual').hide();
+	  $('#stop').show();
+      });
+  
+      $('#stop').click(function() {
+	  namespace = '/online';
+	  var socket = io.connect('http://' + document.domain + 
+				  ':' + location.port + namespace);
+	  socket.emit('stop continual beam update');
+	  $('#continual').show();
+	  $('#stop').hide();
+      });
+
+      $('#rep_rate').keydown(function (e){
+	  if(e.keyCode == 13){
+              namespace = '/online';
+	      var socket = io.connect('http://' + document.domain + 
+				      ':' + location.port + namespace);
+	      socket.emit('beam refresh rate', $('#rep_rate').val());
+	  }
+      });
+     
+    </script>
+
+{% endblock body %}
