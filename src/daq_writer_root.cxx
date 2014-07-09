@@ -111,7 +111,7 @@ void DaqWriterRoot::StartWriter()
     root_data_.caen_adc.resize(count + 1);
 
     br_name = string(v.first);
-    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:values[%i]/s", 
+    sprintf(br_vars, "system_clock/l:device_clock[%i]/l:value[%i]/s", 
       CAEN_1785_CH, CAEN_1785_CH);
 
     pt_->Branch(br_name.c_str(), &root_data_.caen_adc[count++], br_vars);
