@@ -165,7 +165,6 @@ def end_run():
     broadcast_refresh()
 
     context.destroy()
-    generate_runlog()
 
     return redirect(url_for('running_hist'))
 
@@ -367,13 +366,7 @@ def stop_continual():
     """ends the chain of continual histogram updates"""
     session['updating_hist'] = False
 
-
 @socketio.on('generate runlog', namespace='/online')
-def generate_upon_request():
-    """generates runlog upon request from client"""
-    generate_runlog();
-    emit('runlog ready')
-
 def generate_runlog():
     '''generates the runlog from db'''
     #generate column headers
@@ -427,8 +420,7 @@ def generate_runlog():
 def on_refresh():
     """when a client refreshes his page, this ds him a fresh batch of data"""
     if running:
-        emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
-                      namespace='/online')
+        emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate})
 
 @socketio.on('connect', namespace='/online')
 def test_connect():

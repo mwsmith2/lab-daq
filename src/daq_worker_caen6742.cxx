@@ -12,6 +12,11 @@ DaqWorkerCaen6742::DaqWorkerCaen6742(string name, string conf) : DaqWorkerBase<c
 
 DaqWorkerCaen6742::~DaqWorkerCaen6742()
 {
+  thread_live_ = false;
+  if (work_thread_.joinable()) {
+    work_thread_.join();
+  }
+
   CAEN_DGTZ_FreeReadoutBuffer(&buffer_);
   CAEN_DGTZ_CloseDigitizer(device_);
 }
@@ -29,15 +34,15 @@ void DaqWorkerCaen6742::LoadConfig()
   ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, 0, 0, 0, &device_);
   cout << "device: " << device_ << endl;
 
-  // Get the board info.
-  ret = CAEN_DGTZ_GetInfo(device_, &board_info_);
-  printf("\nFound caen %s.\n",board_info_.ModelName);
-  printf("\tROC FPGA Release is %s\n", board_info_.ROC_FirmwareRel);
-  printf("\tAMC FPGA Release is %s\n", board_info_.AMC_FirmwareRel);
-
   // Reset the device.
   ret = CAEN_DGTZ_Reset(device_);
 
+  // Get the board info.
+  ret = CAEN_DGTZ_GetInfo(device_, &board_info_);
+  printf("\nFound caen %s.\n", board_info_.ModelName);
+  printf("\tROC FPGA Release is %s\n", board_info_.ROC_FirmwareRel);
+  printf("\tAMC FPGA Release is %s\n", board_info_.AMC_FirmwareRel);
+  
   // Set the trace length.
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
 

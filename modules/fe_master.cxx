@@ -57,8 +57,9 @@ namespace {
 }
 
 // Function declarations
-int LoadConfig();
-int ReloadConfig();
+int LoadConfig(); // just the file
+int SetupConfig(); // all the workers and writers
+int FreeConfig(); // free all the workers and writers
 int StartRun();
 int StopRun();
 void HandshakeLoop();
@@ -79,7 +80,16 @@ int main(int argc, char *argv[])
 
   // Load the configuration
   LoadConfig();
+  
+  ptree conf;
+  read_json(tmp_conf_file, conf);
 
+  // Connect the sockets since they shouldn't ever change.
+  trigger_sck.bind(conf.get<string>("trigger_port").c_str());
+  trigger_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+  handshake_sck.bind(conf.get<string>("handshake_port").c_str());
+
+  // Launch the thread that confirms a running frontend.
   std::thread handshake_thread(HandshakeLoop);
 
   while (true) {
@@ -95,22 +105,29 @@ int main(int argc, char *argv[])
 
       if (msg_string == string("START") && !is_running) {
 	
+	// Reload the external config.
+	LoadConfig();
+
+	// Change the run number.
 	string file_name("data/run_");
 	std::getline(ss, msg_string, ':');
 	file_name.append(msg_string);
 	file_name.append(".root");
 
+	// Save the internal config.
 	ptree conf;
 	read_json(tmp_conf_file, conf);
 	conf.put("writers.root.file", file_name);
 	write_json(tmp_conf_file, conf);
 
-	ReloadConfig();
+	// Setup the config and run.
+	SetupConfig();
         StartRun();
 
       } else if (msg_string == string("STOP") && is_running) {
 
         StopRun();
+	FreeConfig();
 
       }
     }
@@ -123,16 +140,21 @@ int main(int argc, char *argv[])
 
 int LoadConfig() 
 {
-  // Load up the configuration file
+  // Load up the configuration file to refresh the internal one.
   cout << "Opening config file: " << conf_file << endl;
   ptree conf;
   read_json(conf_file, conf);
   write_json(tmp_conf_file, conf);
 
-  // Connect the sockets.
-  trigger_sck.bind(conf.get<string>("trigger_port").c_str());
-  trigger_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-  handshake_sck.bind(conf.get<string>("handshake_port").c_str());
+  return 0;
+}
+
+
+int SetupConfig()
+{
+  // Load the internal config file.
+  ptree conf;
+  read_json(tmp_conf_file, conf);
 
   // Get the fake data writers (for testing).
   BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
@@ -204,11 +226,8 @@ int LoadConfig()
   return 0;
 }
 
-int ReloadConfig() {
-  // load up the configuration.
-  ptree conf;
-  read_json(tmp_conf_file, conf);
-
+int FreeConfig() 
+{
   // Delete the allocated workers.
   daq_workers.FreeList();
 
@@ -219,73 +238,6 @@ int ReloadConfig() {
   daq_writers.resize(0);
 
   delete event_builder;
-
-  // Get the fake data writers (for testing).
-  BOOST_FOREACH(const ptree::value_type &v, conf.get_child("devices.fake")) {
-    
-    string name(v.first);
-    string dev_conf_file(v.second.data());
-
-    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
-  } 
-
-  // Set up the sis3350 devices.
-  BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.sis_3350")) {
-
-    string name(v.first);
-    string dev_conf_file(v.second.data());
-
-    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
-  }  
-
-  // Set up the sis3302 devices.
-  BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.sis_3302")) {
-
-    string name(v.first);
-    string dev_conf_file(v.second.data());
-
-    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
-  }
-
-  // Set up the caen1785 devices.
-  BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.caen_1785")) {
-
-    string name(v.first);
-    string dev_conf_file(v.second.data());
-
-    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
-  }
-
-  // Set up the caen6742 devices.
-  BOOST_FOREACH(const ptree::value_type &v, 
-                conf.get_child("devices.caen_6742")) {
-
-    string name(v.first);
-    string dev_conf_file(v.second.data());
-
-    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
-  }
-
-  // Set up the writers.
-  BOOST_FOREACH(const ptree::value_type &v,
-                conf.get_child("writers")) {
- 
-    if (string(v.first) == string("root")) {
-   
-      daq_writers.push_back(new DaqWriterRoot(tmp_conf_file));
-   
-    } else if (string(v.first) == string("online")) {
-   
-      daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
-   
-    }
-  }
-
-  // Set up the event builder.
-  event_builder = new EventBuilder(daq_workers, daq_writers, tmp_conf_file);
 
   return 0;
 }
