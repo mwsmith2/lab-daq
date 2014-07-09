@@ -312,10 +312,13 @@ def update_hist(msg):
     """update the histogram upon request from client and then
     respond when it's ready"""
 
-    selection = msg['selected'].split(' ')
-    session['device'] = selection[0]
-    session['channel'] = int(selection[-1])
-
+    try:
+        selection = msg['selected'].split(' ')
+        session['device'] = selection[0]
+        session['channel'] = int(selection[-1])
+    except: 
+        pass
+    
     name, path = generate_hist()
 
     emit('histogram ready', {"path" : path});
@@ -338,10 +341,13 @@ def update_trace(msg):
         xmin = 0
         xmax = 1024
 
-    selection = msg['selected'].split(' ')
-    session['device'] = selection[0]
-    session['channel'] = int(selection[-1])
-                           
+    
+        selection = msg['selected'].split(' ')
+        session['device'] = selection[0]
+        session['channel'] = int(selection[-1])
+
+
+
     name, path = generate_trace(xmin, xmax)
 
     emit('trace ready', {"path" : path, "x_min" : xmin, "x_max" : xmax});
@@ -370,7 +376,7 @@ def continue_updating():
     sleep(1.0/session['refresh_rate'])
 
     if session['updating_hist']:
-        update_hist()
+        update_hist('')
         emit('updated')
 
 @socketio.on('continue updating beam', namespace='/online')
