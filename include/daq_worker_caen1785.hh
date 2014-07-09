@@ -33,6 +33,7 @@ public:
 private:
   
   high_resolution_clock::time_point t0_;
+  bool read_low_adc_;
   
   bool EventAvailable();
   void ClearData() { 

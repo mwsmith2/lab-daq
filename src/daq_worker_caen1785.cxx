@@ -16,6 +16,8 @@ void DaqWorkerCaen1785::LoadConfig()
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
+  read_low_adc_ = conf.get<bool>("read_low_adc", false);
+
   // Get the device filestream
   if (vme::device == -1) {
 
@@ -129,18 +131,22 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
 
   // Read the data for each high value.
   while ((((data >> 24) & 0x7) != 0x6) || (((data >> 24) &0x7) != 0x4)) {
-
     Read(offset, data);
     offset += 4;
 
     if (((data >> 24) & 0x7) == 0x0) {
       
+      if (((data >> 17) & 0x1) && read_low_adc_) {
+	cout << "Skipping low values." << endl;
+	continue;
+      } else if (!((data >> 17) & 0x1) && !read_low_adc_) {
+	cout << "Skipping high values." << endl;
+	continue;
+      }
+
+      cout << "Writing data for channel " << ch << endl;
       bundle.device_clock[ch] = 21;
       bundle.value[ch] = (data & 0xfff);
-
-      if (ch > 3) {
-	offset += 8;
-      }
 
       if (ch == 7) {
 	// Increment event register and exit.

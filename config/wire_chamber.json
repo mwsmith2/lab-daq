@@ -1,0 +1,42 @@
+{
+    "trigger_port":"tcp://127.0.0.1:42040",
+    "handshake_port":"tcp://127.0.0.1:42041",
+
+    "devices":
+    {
+        "fake": {
+	},
+
+        "sis_3350": {
+        },
+
+        "sis_3302": {
+        },
+
+        "caen_1785": {
+	    "caen_adc_0":"config/caen_1785_0.json",
+	    "caen_adc_1":"config/caen_1785_1.json"
+	},
+
+        "caen_6742": {
+	}
+    },
+
+    "writers": {
+
+        "root": {
+            "file":"data/run_00247.root",
+            "tree":"t"
+        },
+     
+        "online": {
+            "port":"tcp://127.0.0.1:42043",
+            "message_size":"1048576"
+        }
+    },
+
+    "trigger_control": {
+        "live_time":"10",
+        "dead_time":"1"
+    }
+}

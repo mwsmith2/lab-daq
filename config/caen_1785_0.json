@@ -1,4 +1,5 @@
 {
 	"device":"/dev/sis1100_00remote",
-	"base_address":"0x07000000"
+	"base_address":"0x07000000",
+	"read_low_adc":true
 }
