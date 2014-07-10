@@ -18,9 +18,13 @@ import threading
 import data_io
 import zmq, json
 from time import sleep, time
+from setproctitle import setproctitle
 
 import numpy as np
 from matplotlib import pyplot as plt
+
+# Set process name
+setproctitle("daqometer")
 
 # global parameters
 # flag denoting whether or not a run is in progress
