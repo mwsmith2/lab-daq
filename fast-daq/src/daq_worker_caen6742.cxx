@@ -30,8 +30,10 @@ void DaqWorkerCaen6742::LoadConfig()
   int ret;
   uint msg = 0;
 
+  int device_id = conf.get<int>("device_id");
+
   // Open the device.
-  ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, 0, 0, 0, &device_);
+  ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, device_id, 0, 0, &device_);
   cout << "device: " << device_ << endl;
 
   // Reset the device.
@@ -48,6 +50,12 @@ void DaqWorkerCaen6742::LoadConfig()
 
   // Set the sampling rate.
   ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);
+
+  if (conf.get<bool>("use_drs4_corrections")) {
+    // Load and enable DRS4 corrections.
+    ret = CAEN_DGTZ_LoadDRS4Corrections(device_, CAEN_DGTZ_DRS4_1GHz);
+    ret = CAEN_DGTZ_EnableDRS4Corrections(device_);
+  }
 
   // Set the channel enable mask.
   ret = CAEN_DGTZ_SetGroupEnableMask(device_, 0x3); // all on
