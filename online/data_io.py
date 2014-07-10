@@ -47,7 +47,9 @@ def pull_event(e, start):
     """The function constantly tries to pull new event data which arrives
     in json format. The basic structure of the data is as follows:
     {
-        "event_number":event_number
+        "run_number":run_number, # @bug Hardcoded for now
+        
+        "event_number":event_number # @bug Hardcoded for now
         
         "sis_fast_<id>:{
             "system_clock":value,
@@ -65,12 +67,7 @@ def pull_event(e, start):
             "system_clock":value,
             "device_clock":array[8],
             "value":array[8]
-        },
-
-        "caen_drs_<id>:{
-            "system_clock":value,
-            "device_clock":array[16],
-            "trace":array[16][1024]
+        }
     }
 
     """
@@ -124,7 +121,6 @@ def pull_event(e, start):
             pass
 
         sleep(1000e-6)
-        context.destroy()
 
 pull_event.event_data = Queue.Queue()
 
