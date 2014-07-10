@@ -108,7 +108,12 @@ def pull_event(e, start):
                 except:
                     pass
                 try:
-                    num_chans = len(data[device]['value'])
+                    num_adc_chans = len(data[device]['value'])
+                    for j in xrange(num_adc_chans):
+                        this_adc = device + ' channel ' + str(j)
+                        if this_adc not in hists:
+                            hists[this_adc] = []
+                        hists[this_adc].append(data[device]['value'][j])
                     wireX.append(np.random.standard_normal(1)[0])
                     wireY.append(np.random.standard_normal(1)[0])
                 except:

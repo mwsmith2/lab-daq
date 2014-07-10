@@ -193,7 +193,13 @@ def running_hist():
             for i in xrange(num_chans):
                 devices.append(device + ' channel ' + str(i))
         except:
-            continue
+            pass
+        try:
+            num_chans = len(data_io.data[device]['value'])
+            for j in xrange(num_chans):
+                devices.append(device + ' channel ' + str(j))
+        except:
+            pass
 
     current_selection = session['device'] + ' channel ' + str(session['channel'])
 
@@ -345,10 +351,9 @@ def update_trace(msg):
         xmin = 0
         xmax = 1024
 
-    
-        selection = msg['selected'].split(' ')
-        session['device'] = selection[0]
-        session['channel'] = int(selection[-1])
+    selection = msg['selected'].split(' ')
+    session['device'] = selection[0]
+    session['channel'] = int(selection[-1])
 
 
 
@@ -481,6 +486,7 @@ def generate_runlog():
             runlog.write('\n' + line)
     print '%i seconds' % (time() - start)
     
+    emit('runlog ready')
 
 
 @socketio.on('refreshed', namespace='/online')
@@ -505,7 +511,7 @@ def generate_hist():
   
     try:
         this_dev = session['device'] + ' channel ' + str(session['channel'])
-        plt.hist(data_io.hists[this_dev], np.sqrt(data_io.eventCount))
+        plt.hist(data_io.hists[this_dev], 100)
         plt.title('Run %i Event %i, %s channel %i' % 
                   (run_info['last_run'], data_io.eventCount,
                    session['device'], session['channel']))
