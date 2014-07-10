@@ -20,6 +20,8 @@ void DaqWriterOnline::LoadConfig()
 
   int hwm = conf.get<int>("writers.online.high_water_mark", 10);
   online_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+  int linger = 0;
+  online_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
   online_sck_.connect(conf.get<string>("writers.online.port").c_str());
 
   message_size_ = conf.get<int>("writers.online.message_size");
@@ -30,12 +32,14 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
   number_of_events_ += data_buffer.size();
 
   auto it = data_buffer.begin();
+  writer_mutex_.lock();
   while (data_queue_.size() < kMaxQueueSize && it != data_buffer.end()) {
 
     data_queue_.push(*it);
     ++it;
 
   }
+  writer_mutex_.unlock();
 
   cout << "Online writer was pushed some data." << endl;
   queue_has_data_ = true;
@@ -43,14 +47,38 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 
 void DaqWriterOnline::EndOfBatch(bool bad_data)
 {
+  writer_mutex_.lock();
   data_queue_.empty();
+  writer_mutex_.unlock();
+
   zmq::message_t msg(10);
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
-  online_sck_.send(msg);
+
+  int count = 0;
+  while (count < 10) {
+
+    online_sck_.send(msg, ZMQ_DONTWAIT);
+    usleep(100);
+
+    count++;
+  }
 }
 
 void DaqWriterOnline::SendMessageLoop()
 {
+  ptree conf;
+  read_json(conf_file_, conf);
+
+  zmq::context_t send_ctx_(1);
+  zmq::socket_t send_sck_(send_ctx_, ZMQ_PUSH);
+
+  int hwm = conf.get<int>("writers.online.high_water_mark", 10);
+  send_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+  int linger = 0;
+  send_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
+  send_sck_.connect(conf.get<string>("writers.online.port").c_str());
+  message_size_ = conf.get<int>("writers.online.message_size");
+
   while (thread_live_) {
 
     while (go_time_ && queue_has_data_) {
@@ -59,16 +87,23 @@ void DaqWriterOnline::SendMessageLoop()
         PackMessage();
       }
 
-      while (message_ready_) {
+      while (message_ready_ && go_time_) {
 
         writer_mutex_.lock();
-        cout << "Online writer is sending message." << endl;
-        bool rc = online_sck_.send(message_);
+	int count = 0;
+	bool rc = false;
+	while (count < 10) {
+	  
+	  rc = send_sck_.send(message_, ZMQ_DONTWAIT);
+	  usleep(100);
+
+	  count++;
+	}
         writer_mutex_.unlock();
 
         if (rc == true) {
 
-          cout << "Message sent successfully." << endl;
+          cout << "Online writer sent message successfully." << endl;
           message_ready_ = false;
 
         }

@@ -26,6 +26,8 @@ void EventBuilder::LoadConfig()
   flush_time_ = false;
   push_new_data_ = false; 
   got_last_event_ = false;
+  quitting_time_ = false;
+  finished_run_ = false;
 
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");
@@ -60,6 +62,12 @@ void EventBuilder::BuilderLoop()
         }
 
         if (flush_time_) {
+	  
+	  queue_mutex_.lock();
+	  while (daq_workers_.AllWorkersHaveEvent()) {
+	    pull_data_que_.push(bundle);
+	  }
+	  queue_mutex_.unlock();
 
           got_last_event_ = true;
           StopWorkers();
@@ -146,24 +154,68 @@ void EventBuilder::PushDataLoop()
         flush_time_ = false;
         got_last_event_ = false;
 
+	  if (quitting_time_ == true) {
+	    go_time_ = false;
+	  }
+
         sleep(dead_time_);
 
-        // Start thw workers and make sure they start in sync.
+        // Start the workers and make sure they start in sync.
         StartWorkers();
         while (!daq_workers_ .AnyWorkersHaveEvent()) {
           daq_workers_.FlushEventData();
         }
-
+	
 	batch_start_ = clock();
       }
 
-      std::this_thread::yield();
+      if (quitting_time_) {
+	
+	// First flush all the remaining events.
+	flush_time_ = true;
 
+	// Wait for the last event
+	while (!got_last_event_);
+	
+        push_data_mutex_.lock();
+        push_data_vec_.resize(0);
+
+        queue_mutex_.lock();
+        while (pull_data_que_.size() != 0) {
+
+          cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
+
+          push_data_vec_.push_back(pull_data_que_.front());
+          pull_data_que_.pop();
+
+        }
+        queue_mutex_.unlock();
+
+        push_new_data_ = false;
+
+        // Check to make sure there are no straggling events.
+        bool bad_data = daq_workers_.AnyWorkersHaveEvent();
+        daq_workers_.FlushEventData();
+
+	cout << "Sending end of batch/run to the writers." << endl;
+        for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
+
+          (*it)->PushData(push_data_vec_);
+          (*it)->EndOfBatch(bad_data);
+
+        }
+        push_data_mutex_.unlock();
+	
+	go_time_ = false;
+	thread_live_ = false;
+	finished_run_ = true;
+      }
+
+      std::this_thread::yield();
       usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 }

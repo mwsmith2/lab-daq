@@ -46,8 +46,11 @@ class EventBuilder {
 
     // member functions
     void StartBuilder() { go_time_ = true; };
-    void StopBuilder() { go_time_ = false; };
+    void StopBuilder() { 
+      quitting_time_ = true;
+    };
     void LoadConfig();
+    bool FinishedRun() { return finished_run_; };
 
   private:
 
@@ -64,6 +67,8 @@ class EventBuilder {
     std::atomic<bool> push_new_data_;
     std::atomic<bool> flush_time_;
     std::atomic<bool> got_last_event_;
+    std::atomic<bool> quitting_time_;
+    std::atomic<bool> finished_run_;
 
     // Data accumulation variables
     DaqWorkerList daq_workers_;

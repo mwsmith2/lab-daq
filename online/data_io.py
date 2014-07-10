@@ -121,6 +121,7 @@ def pull_event(e, start):
             pass
 
         sleep(1000e-6)
+        context.destroy()
 
 pull_event.event_data = Queue.Queue()
 

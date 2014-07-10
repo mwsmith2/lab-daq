@@ -209,11 +209,12 @@ int SetupConfig()
   BOOST_FOREACH(const ptree::value_type &v,
                 conf.get_child("writers")) {
  
-    if (string(v.first) == string("root")) {
+    if (string(v.first) == string("root") && v.second.get<bool>("in_use")) {
    
       daq_writers.push_back(new DaqWriterRoot(tmp_conf_file));
    
-    } else if (string(v.first) == string("online")) {
+    } else if (string(v.first) == string("online") 
+	       && v.second.get<bool>("in_use")) {
    
       daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
    
@@ -268,6 +269,8 @@ int StopRun() {
 
   // Stop the event builder
   event_builder->StopBuilder();
+
+  while (!event_builder->FinishedRun());
 
   // Stop the writers
   for (auto it = daq_writers.begin(); it != daq_writers.end(); ++it) {

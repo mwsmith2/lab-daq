@@ -2,6 +2,7 @@
 
 import zmq, json, time, uuid
 import slow_control as sc
+from setproctitle import *
 
 # Get the config file
 conf = json.load(open('config/.default_sc.json'))
@@ -20,6 +21,9 @@ data_sck.connect(conf['data_port'])
 tree_sck.connect(conf['tree_port'])
 msg_sck.connect(conf['msg_port'])
 msg_sck.setsockopt(zmq.SUBSCRIBE, key)
+
+# Set the process name
+setproctitle(conf['worker_name'])
 
 time.sleep(0.005)
 
