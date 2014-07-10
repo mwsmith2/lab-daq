@@ -72,7 +72,7 @@ void DaqWriterOnline::SendMessageLoop()
   zmq::context_t send_ctx_(1);
   zmq::socket_t send_sck_(send_ctx_, ZMQ_PUSH);
 
-  int hwm = conf.get<int>("writers.online.high_water_mark", 10);
+  int hwm = conf.get<int>("writers.online.high_water_mark", 100);
   send_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
   int linger = 0;
   send_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
@@ -88,18 +88,15 @@ void DaqWriterOnline::SendMessageLoop()
       }
 
       while (message_ready_ && go_time_) {
-
-        writer_mutex_.lock();
+	
 	int count = 0;
 	bool rc = false;
-	while (count < 10) {
+	while (rc == false && count < 10) {
 	  
-	  rc = send_sck_.send(message_, ZMQ_DONTWAIT);
-	  usleep(100);
+	  rc = send_sck_.send(message_, ZMQ_NOBLOCK);
 
 	  count++;
 	}
-        writer_mutex_.unlock();
 
         if (rc == true) {
 
