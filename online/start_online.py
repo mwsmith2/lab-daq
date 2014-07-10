@@ -345,10 +345,9 @@ def update_trace(msg):
         xmin = 0
         xmax = 1024
 
-    
-        selection = msg['selected'].split(' ')
-        session['device'] = selection[0]
-        session['channel'] = int(selection[-1])
+    selection = msg['selected'].split(' ')
+    session['device'] = selection[0]
+    session['channel'] = int(selection[-1])
 
 
 
@@ -481,6 +480,7 @@ def generate_runlog():
             runlog.write('\n' + line)
     print '%i seconds' % (time() - start)
     
+    emit('runlog ready')
 
 
 @socketio.on('refreshed', namespace='/online')
