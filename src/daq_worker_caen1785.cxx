@@ -140,14 +140,16 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
     if (((data >> 24) & 0x7) == 0x0) {
       
       if (((data >> 17) & 0x1) && read_low_adc_) {
-      	cout << "Skipping low values." << endl;
+
+	// Skip high values.
       	continue;
+
       } else if (!((data >> 17) & 0x1) && !read_low_adc_) {
-      	cout << "Skipping high values." << endl;
+
+	// Skip low values.
       	continue;
       }
 
-      cout << "Writing data for channel " << ch << endl;
       bundle.device_clock[ch] = 0; // No device time
       bundle.value[ch] = (data & 0xfff);
 
@@ -157,6 +159,7 @@ void DaqWorkerCaen1785::GetEvent(caen_1785 &bundle)
 	break;
       }
 
+      // Device in order 0, 4, 1, 5, 2, 6, 3, 7.
       ch = (ch > 3) * (ch - 3) + (ch < 4) * (ch + 4);
     }
   }

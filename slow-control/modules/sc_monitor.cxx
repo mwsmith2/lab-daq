@@ -67,7 +67,7 @@ void MessageLoop()
   read_json("data/.sc_runs.json", conf);
   str = conf.get<string>("prefix");
   char tmp[10];
-  sprintf(tmp, "%0i", conf.get<int>("run_number"));
+  sprintf(tmp, "%04i", conf.get<int>("run_number"));
   str.append(tmp);
   str.append(conf.get<string>("suffix"));
 

@@ -2,11 +2,11 @@
 import serial
 import u3
 
-class BKPower:
+class BKPrecision:
 
     def __init__(self, dev_path, baud=4800, timeout=1):
         self.s = serial.Serial(dev_path, baud, timeout=timeout)
-   	self.id = int(self.get_version().split(',')[2][-4:])
+   	self.id = int(self.get_version().split(',')[-2][-4:])
  
     def get_version(self):
         self.s.write('*IDN?\n')
@@ -16,7 +16,7 @@ class BKPower:
         self.s.write('MEAS:VOLT?\n')
         return self.s.read(64).strip()
 
-    def get_set_volt(self):
+    def get_volt(self):
 	self.s.write('LIST:VOLT?\n')
 
     def set_volt(self, new_volt):
