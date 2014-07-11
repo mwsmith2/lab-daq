@@ -48,13 +48,16 @@ void DaqWorkerCaen6742::LoadConfig()
   // Set the trace length.
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
 
+  // Set "pretrigger".
+  ret = CAEN_DGTZ_SetPostTriggerSize(device_, 50);
+
   // Set the sampling rate.
   ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);
 
   if (conf.get<bool>("use_drs4_corrections")) {
     // Load and enable DRS4 corrections.
-    ret = CAEN_DGTZ_LoadDRS4Corrections(device_, CAEN_DGTZ_DRS4_1GHz);
-    ret = CAEN_DGTZ_EnableDRS4Corrections(device_);
+    ret = CAEN_DGTZ_LoadDRS4CorrectionData(device_, CAEN_DGTZ_DRS4_1GHz);
+    ret = CAEN_DGTZ_EnableDRS4Correction(device_);
   }
 
   // Set the channel enable mask.

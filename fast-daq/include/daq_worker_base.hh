@@ -59,7 +59,6 @@ class DaqWorkerBase {
     virtual void LoadConfig() = 0;
     virtual T PopEvent() = 0;
 
-
   protected:
 
     string name_;

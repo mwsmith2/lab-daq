@@ -41,13 +41,13 @@ void EventBuilder::BuilderLoop()
 
     batch_start_ = clock();
 
-    while (go_time_) {
+    while (go_time_ && !got_last_event_) {
 
       flush_time_ = (clock() - batch_start_) > live_ticks_;
 
       if (daq_workers_.AllWorkersHaveEvent()){
 
-        event_data bundle;
+	event_data bundle;
         daq_workers_.GetEventData(bundle);
 
         queue_mutex_.lock();
@@ -62,25 +62,34 @@ void EventBuilder::BuilderLoop()
         }
 
         if (flush_time_) {
-	  
-	  queue_mutex_.lock();
+
+	  StopWorkers();
+
 	  while (daq_workers_.AllWorkersHaveEvent()) {
+
+	    event_data bundle;
+	    daq_workers_.GetEventData(bundle);
+
+	    queue_mutex_.lock();
 	    pull_data_que_.push(bundle);
+	    queue_mutex_.unlock();
+
+	    if (pull_data_que_.size() >= kMaxQueueLength) {
+	      push_new_data_ = true;
+	    }
+
+	    std::this_thread::yield();
 	  }
-	  queue_mutex_.unlock();
 
           got_last_event_ = true;
-          StopWorkers();
         }
       } 
 
       std::this_thread::yield();
-
       usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 }
@@ -141,7 +150,9 @@ void EventBuilder::PushDataLoop()
 
         // Check to make sure there are no straggling events.
         bool bad_data = daq_workers_.AnyWorkersHaveEvent();
-        daq_workers_.FlushEventData();
+
+	// Start them back up so that we don't get a backlog of events.
+        daq_workers_.StartWorkers();
 
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
@@ -159,9 +170,9 @@ void EventBuilder::PushDataLoop()
 	  }
 
         sleep(dead_time_);
-
+	
+	daq_workers_.FlushEventData();
         // Start the workers and make sure they start in sync.
-        StartWorkers();
         while (!daq_workers_ .AnyWorkersHaveEvent()) {
           daq_workers_.FlushEventData();
         }

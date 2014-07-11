@@ -46,9 +46,7 @@ class EventBuilder {
 
     // member functions
     void StartBuilder() { go_time_ = true; };
-    void StopBuilder() { 
-      quitting_time_ = true;
-    };
+    void StopBuilder() { quitting_time_ = true; };
     void LoadConfig();
     bool FinishedRun() { return finished_run_; };
 

@@ -23,8 +23,6 @@ void DaqWriterOnline::LoadConfig()
   int linger = 0;
   online_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
   online_sck_.connect(conf.get<string>("writers.online.port").c_str());
-
-  message_size_ = conf.get<int>("writers.online.message_size");
 }
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
@@ -77,7 +75,6 @@ void DaqWriterOnline::SendMessageLoop()
   int linger = 0;
   send_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
   send_sck_.connect(conf.get<string>("writers.online.port").c_str());
-  message_size_ = conf.get<int>("writers.online.message_size");
 
   while (thread_live_) {
 
@@ -248,7 +245,7 @@ void DaqWriterOnline::PackMessage()
   string buffer = json_spirit::write(json_map);
   buffer.append("__EOM__");
 
-  message_ = zmq::message_t(message_size_);
+  message_ = zmq::message_t(buffer.size());
   memcpy(message_.data(), buffer.c_str(), buffer.size());
 
   cout << "Online writer message ready." << endl;

@@ -1,49 +1,61 @@
 {
-
-	"master_port":"tcp://127.0.0.1:42042",
-
-	"devices":{
-
-		"fake":{
-			"fake_0":"config/fake_conf.json",
-			"fake_1":"config/fake_conf.json",
-			"fake_2":"config/fake_conf.json",
-			"fake_3":"config/fake_conf.json",
-			"fake_4":"config/fake_conf.json"
-		},
-
-		"sis_3350":{
-		},
-
-		"sis_3302":{
-		},
-
-		"caen_1785":{
-		},
-
-		"caen_6742":{
-		}
-
+    "trigger_port":"tcp://127.0.0.1:42040",
+    "handshake_port":"tcp://127.0.0.1:42041",
+    
+    "devices":{
+	
+	"fake":{
+	    "fake_0":"config/fake_conf.json",
+	    "fake_1":"config/fake_conf.json",
+	    "fake_2":"config/fake_conf.json",
+	    "fake_3":"config/fake_conf.json",
+	    "fake_4":"config/fake_conf.json",
+	    "fake_5":"config/fake_conf.json",
+	    "fake_6":"config/fake_conf.json",
+	    "fake_7":"config/fake_conf.json",
+	    "fake_8":"config/fake_conf.json",
+	    "fake_9":"config/fake_conf.json",
+	    "fake_10":"config/fake_conf.json",
+	    "fake_11":"config/fake_conf.json",
+	    "fake_12":"config/fake_conf.json",
+	    "fake_13":"config/fake_conf.json"
 	},
-
-	"writers":{
-
-		"root":{
-			"file":"test.root",
-			"tree":"t"
-
-		},
-
-		"online":{
-			"port":"tcp://127.0.0.1:42043",
-			"message_size":1048576
-		}
-
+	
+	"sis_3350":{
 	},
-
-	"trigger_control":{
-		"live_time":10,
-		"dead_time":1
+	
+	"sis_3302":{
+	},
+	
+	"caen_1785":{
+	},
+	
+	"caen_6742":{
 	}
-
+	
+    },
+    
+    "writers":{
+	
+	"root":{
+	    "in_use":true,
+	    "file":"test.root",
+	    "tree":"t",
+	    "sync":false
+	    
+	},
+	
+	"online":{
+	    "in_use":true,
+	    "port":"tcp://127.0.0.1:42043",
+	    "high_water_mark":10
+	}
+	
+    },
+    
+    "trigger_control":{
+	"live_time":10,
+	"dead_time":1
+    }
+    
 }

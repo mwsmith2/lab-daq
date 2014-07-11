@@ -23,7 +23,7 @@ endif
 ifdef DEBUG
 FLAGS += -g
 else
-FLAGS += -O2
+FLAGS += -g
 endif
 
 FLAGS += $(shell root-config --cflags)
