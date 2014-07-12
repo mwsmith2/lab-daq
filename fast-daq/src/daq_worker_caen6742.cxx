@@ -79,6 +79,17 @@ void DaqWorkerCaen6742::LoadConfig()
   // Enable external trigger.
   ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
 
+  // Disable self trigger.
+  ret = CAEN_DGTZ_SetChannelSelfTrigger(device_, 
+					CAEN_DGTZ_TRGMODE_DISABLED, 
+					0xffff);
+  
+  // Channel pulse polarity
+  for (int ch; ch < CAEN_6742_CH; ++ch) {
+    ret = CAEN_DGTZ_SetChannelPulsePolarity(device_, ch, 
+					    CAEN_DGTZ_PulsePolarityPositive);
+  }
+
   // Set the acquisition mode.
   ret = CAEN_DGTZ_SetAcquisitionMode(device_, CAEN_DGTZ_SW_CONTROLLED);
 
@@ -94,10 +105,9 @@ void DaqWorkerCaen6742::WorkLoop()
 {
   int ret = CAEN_DGTZ_AllocateEvent(device_, (void **)&event_);
   ret = CAEN_DGTZ_SWStartAcquisition(device_);
+  t0_ = high_resolution_clock::now();
 
   while (thread_live_) {
-
-    t0_ = high_resolution_clock::now();
 
     while (go_time_) {
 
@@ -110,15 +120,15 @@ void DaqWorkerCaen6742::WorkLoop()
         data_queue_.push(bundle);
         has_event_ = true;
         queue_mutex_.unlock();
+	
+      } else {
+	
+	std::this_thread::yield();
+	usleep(daq::short_sleep);
       }
-
-      std::this_thread::yield();
-
-      usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 
@@ -128,10 +138,11 @@ void DaqWorkerCaen6742::WorkLoop()
 
 caen_6742 DaqWorkerCaen6742::PopEvent()
 {
+  static caen_6742 data;
   queue_mutex_.lock();
 
   // Copy the data.
-  caen_6742 data = data_queue_.front();
+  data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.
@@ -175,14 +186,16 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
 
   ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
 
+
   int gr, idx, ch_idx;
   for (gr = 0; gr < CAEN_6742_GR; ++gr) {
     for (ch = 0; ch < CAEN_6742_CH / CAEN_6742_GR; ++ch) {
-      for (idx = 0; idx < event_->DataGroup[gr].ChSize[ch]; ++idx) {
-	ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
-	bundle.trace[ch_idx][idx] = 
-	  event_->DataGroup[gr].DataChannel[ch][idx];
-      }
+      ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
+      int len = event_->DataGroup[gr].ChSize[ch];
+      std::copy(event_->DataGroup[gr].DataChannel[ch],
+		event_->DataGroup[gr].DataChannel[ch] + len,
+		bundle.trace[ch_idx]);
+      bundle.device_clock[ch] = event_->DataGroup[gr].TriggerTimeTag;
     }
   }
 }

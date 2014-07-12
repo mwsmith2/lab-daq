@@ -106,7 +106,7 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Set ext trigger threshold.
   //first load data, then clock in, then ramp
-  msg = 37500; // +1.45V TTL
+  msg = 35000; // +1.45V TTL
   Write(0x54, msg);
 
   msg = 0;
@@ -234,9 +234,9 @@ void DaqWorkerSis3350::LoadConfig()
 
 void DaqWorkerSis3350::WorkLoop()
 {
-  while (thread_live_) {
+  t0_ = high_resolution_clock::now();
 
-    t0_ = high_resolution_clock::now();
+  while (thread_live_) {
 
     while (go_time_) {
 
@@ -249,25 +249,28 @@ void DaqWorkerSis3350::WorkLoop()
         data_queue_.push(bundle);
         has_event_ = true;
         queue_mutex_.unlock();
+
+      } else {
+	
+	std::this_thread::yield();
+	usleep(daq::short_sleep);
+
       }
-
-      std::this_thread::yield();
-
-      usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 }
 
 sis_3350 DaqWorkerSis3350::PopEvent()
 {
+  static sis_3350 data;
+
   queue_mutex_.lock();
 
   // Copy the data.
-  sis_3350 data = data_queue_.front();
+  data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.
@@ -286,6 +289,12 @@ bool DaqWorkerSis3350::EventAvailable()
 
   Read(0x10, msg);
   is_event = !(msg & 0x10000);
+  
+  if (is_event) {
+    // Rearm the logic.
+    uint armit = 1;
+    Write(0x410, armit);
+  }
 
   return is_event;
 }
@@ -294,14 +303,15 @@ bool DaqWorkerSis3350::EventAvailable()
 void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
 {
   int ch, offset, ret = 0;
+  bool is_event = true;
 
   // Check how long the event is.
   //expected SIS_3350_LN + 8
   
   uint next_sample_address[4] = {0, 0, 0, 0};
-
+  
   for (ch = 0; ch < SIS_3350_CH; ch++) {
-
+    
     offset = 0x02000010;
     offset |= (ch >> 1) << 24;
     offset |= (ch & 0x1) << 2;
@@ -321,10 +331,6 @@ void DaqWorkerSis3350::GetEvent(sis_3350 &bundle)
     offset = (0x4 + ch) << 24;
     ReadTrace(offset, trace[ch]);
   }
-
-  //arm the logic
-  uint armit = 1;
-  Write(0x410, armit);
 
   //decode the event (little endian arch)
   for (ch = 0; ch < SIS_3350_CH; ch++) {

@@ -61,7 +61,6 @@ void MessageLoop()
 {
   zmq::message_t message_in(1024);
   std::string str;
-  int start_time = clock();
   bool time_to_write = false;
 
   read_json("data/.sc_runs.json", conf);
@@ -76,6 +75,8 @@ void MessageLoop()
 
   sc::AsyncRootWriter sc_root_writer(str); // run name
 
+  long long start_time = clock();
+  cout << "Starting a new run at time " << start_time << endl;
   while (!time_to_write) {
 
     // Check for new tree creation messages.
@@ -85,7 +86,7 @@ void MessageLoop()
       std::getline(ss, str, ':');
 
       if (str == "TREE") {
-
+	
         std::getline(ss, str);
         sc_root_writer.CreateTree(str);
 

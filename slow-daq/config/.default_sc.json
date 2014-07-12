@@ -1,7 +1,8 @@
 {
-	"data_port":"tcp://127.0.0.1:41040",
-	"msg_port":"tcp://127.0.0.1:41041",
-	"tree_port":"tcp://127.0.0.1:41042",
-	"run_time":1,
-        "worker_name":"sc_worker"
+    "data_port":"tcp://127.0.0.1:41040",
+    "msg_port":"tcp://127.0.0.1:41041",
+    "tree_port":"tcp://127.0.0.1:41042",
+    "run_time":10,
+    "push_interval":10,
+    "worker_name":"sc_worker"
 }

@@ -131,9 +131,9 @@ void DaqWorkerSis3302::LoadConfig()
 
 void DaqWorkerSis3302::WorkLoop()
 {
-  while (thread_live_) {
+  t0_ = high_resolution_clock::now();
 
-    t0_ = high_resolution_clock::now();
+  while (thread_live_) {
 
     while (go_time_) {
 
@@ -146,25 +146,26 @@ void DaqWorkerSis3302::WorkLoop()
         data_queue_.push(bundle);
         has_event_ = true;
         queue_mutex_.unlock();
+      } else {
+
+	std::this_thread::yield();
+	usleep(daq::short_sleep);
       }
-
-      std::this_thread::yield();
-
-      usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 }
 
 sis_3302 DaqWorkerSis3302::PopEvent()
 {
+  static sis_3302 data;
+
   queue_mutex_.lock();
 
   // Copy the data.
-  sis_3302 data = data_queue_.front();
+  data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.
@@ -183,6 +184,12 @@ bool DaqWorkerSis3302::EventAvailable()
 
   Read(0x10, msg);
   is_event = !(msg & 0x10000);
+
+  if (is_event) {
+    // rearm the logic
+    uint armit = 1;
+    Write(0x410, armit);
+  }
 
   return is_event;
 }
@@ -213,33 +220,28 @@ void DaqWorkerSis3302::GetEvent(sis_3302 &bundle)
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
   //todo: check it has the expected length
-  uint trace[SIS_3302_CH][SIS_3302_LN / 2 + 8];
+  uint trace[SIS_3302_CH][SIS_3302_LN / 2];
+  uint timestamp[2];
 
+  Read(0x10000, timestamp[0]);
+  Read(0x10001, timestamp[1]);
   for (ch = 0; ch < SIS_3302_CH; ch++) {
     offset = (0x8 + ch) << 23;
-    Read(0x10000, trace[ch][0]);
-    Read(0x10001, trace[ch][1]);
-    ReadTrace(offset, &trace[ch][4]);
+    ReadTrace(offset, trace[ch]);
   }
-
-  //arm the logic
-  uint armit = 1;
-  Write(0x410, armit);
 
   //decode the event (little endian arch)
   for (ch = 0; ch < SIS_3302_CH; ch++) {
 
     bundle.device_clock[ch] = 0;
-    bundle.device_clock[ch] = trace[ch][1] & 0xfff;
-    bundle.device_clock[ch] |= (trace[ch][1] & 0xfff0000) >> 4;
-    bundle.device_clock[ch] |= (trace[ch][0] & 0xfffULL) << 24;
-    bundle.device_clock[ch] |= (trace[ch][0] & 0xfff0000ULL) << 20;
+    bundle.device_clock[ch] = timestamp[1] & 0xfff;
+    bundle.device_clock[ch] |= (timestamp[1] & 0xfff0000) >> 4;
+    bundle.device_clock[ch] |= (timestamp[0] & 0xfffULL) << 24;
+    bundle.device_clock[ch] |= (timestamp[0] & 0xfff0000ULL) << 20;
 
-    uint idx;
-    for (idx = 0; idx < SIS_3302_LN / 2; idx++) {
-      bundle.trace[ch][2 * idx] = trace[ch][idx + 4] & 0xffff;
-      bundle.trace[ch][2 * idx + 1] = (trace[ch][idx + 4] >> 16) & 0xffff;
-    }
+    std::copy((ushort *)trace[ch],
+	      (ushort *)trace[ch] + SIS_3302_LN,
+	      bundle.trace[ch]);
   }
 }
 

@@ -56,9 +56,9 @@ void DaqWorkerCaen1785::LoadConfig()
 
 void DaqWorkerCaen1785::WorkLoop()
 {
-  while (thread_live_) {
+  t0_ = high_resolution_clock::now();
 
-    t0_ = high_resolution_clock::now();
+  while (thread_live_) {
 
     while (go_time_) {
 
@@ -71,31 +71,34 @@ void DaqWorkerCaen1785::WorkLoop()
         data_queue_.push(bundle);
         has_event_ = true;
         queue_mutex_.unlock();
+
+      } else {
+
+	std::this_thread::yield();
+	usleep(daq::short_sleep);
       }
-
-      std::this_thread::yield();
-
-      usleep(daq::short_sleep);
     }
 
     std::this_thread::yield();
-
     usleep(daq::long_sleep);
   }
 }
 
 caen_1785 DaqWorkerCaen1785::PopEvent()
 {
+  static caen_1785 data;
+
   queue_mutex_.lock();
 
-  // Copy the data.
-  caen_1785 data = data_queue_.front();
+  // Copy and pop the data.
+  data = data_queue_.front();
   data_queue_.pop();
 
   // Check if this is that last event.
   if (data_queue_.size() == 0) has_event_ = false;
 
   queue_mutex_.unlock();
+
   return data;
 }
 

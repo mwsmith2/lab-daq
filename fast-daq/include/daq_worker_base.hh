@@ -52,8 +52,17 @@ class DaqWorkerBase {
 
     void StartWorker() { go_time_ = true; };
     void StopWorker() { go_time_ = false; };
+    string name() { return name_; };
+  int num_events() { return data_queue_.size(); };
     bool HasEvent() { return has_event_; };
-    void FlushEvents() { data_queue_.empty(); };
+    void FlushEvents() {
+      queue_mutex_.lock();
+      while (!data_queue_.empty()) {
+	data_queue_.pop(); 
+      }
+      queue_mutex_.unlock();
+      has_event_ = false;
+    };
 
     // Need to be implented by descendants.
     virtual void LoadConfig() = 0;
@@ -66,6 +75,7 @@ class DaqWorkerBase {
     std::atomic<bool> thread_live_;
     std::atomic<bool> go_time_;
     std::atomic<bool> has_event_;
+    std::atomic<int> num_events_;
 
     std::queue<T> data_queue_;
     std::mutex queue_mutex_;

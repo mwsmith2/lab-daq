@@ -25,13 +25,16 @@
     "writers": {
 
         "root": {
+	    "in_use":true,
             "file":"data/run_00247.root",
-            "tree":"t"
+            "tree":"t",
+	    "sync":false
         },
      
         "online": {
+	    "in_use":true,
             "port":"tcp://127.0.0.1:42043",
-            "message_size":"1048576"
+	    "high_water_mark":10
         }
     },
 

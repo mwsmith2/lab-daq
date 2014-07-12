@@ -69,16 +69,13 @@ void EventBuilder::BuilderLoop()
 
 	    event_data bundle;
 	    daq_workers_.GetEventData(bundle);
-
+	    
 	    queue_mutex_.lock();
 	    pull_data_que_.push(bundle);
 	    queue_mutex_.unlock();
 
-	    if (pull_data_que_.size() >= kMaxQueueLength) {
-	      push_new_data_ = true;
-	    }
-
 	    std::this_thread::yield();
+	    usleep(10);
 	  }
 
           got_last_event_ = true;
@@ -152,6 +149,7 @@ void EventBuilder::PushDataLoop()
         bool bad_data = daq_workers_.AnyWorkersHaveEvent();
 
 	// Start them back up so that we don't get a backlog of events.
+	daq_workers_.FlushEventData();
         daq_workers_.StartWorkers();
 
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {

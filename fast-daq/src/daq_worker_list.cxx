@@ -133,18 +133,34 @@ bool DaqWorkerList::AllWorkersHaveEvent()
     if ((*it).which() == 0) {
 
       has_event &= boost::get<DaqWorkerBase<sis_3350> *>(*it)->HasEvent();
+      if (boost::get<DaqWorkerBase<sis_3350> *>(*it)->HasEvent()) {
+	cout << boost::get<DaqWorkerBase<sis_3350> *>(*it)->name();
+	cout << " has " << boost::get<DaqWorkerBase<sis_3350> *>(*it)->num_events() << " event." << endl;
+      }
 
     } else if ((*it).which() == 1) {
 
       has_event &= boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent();
+      if (boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent()) {
+	cout << boost::get<DaqWorkerBase<sis_3302> *>(*it)->name();
+	cout << " has " << boost::get<DaqWorkerBase<sis_3302> *>(*it)->num_events() << " event." << endl;
+      }
 
     } else if ((*it).which() == 2) {
 
       has_event &= boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent();
+      if (boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent()) {
+	cout << boost::get<DaqWorkerBase<caen_1785> *>(*it)->name();
+	cout << " has " << boost::get<DaqWorkerBase<caen_1785> *>(*it)->num_events() << " event." << endl;
+      }
 
     } else if ((*it).which() == 3) {
 
       has_event &= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
+      if (boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent()) {
+	cout << boost::get<DaqWorkerBase<caen_6742> *>(*it)->name();
+	cout << " has " << boost::get<DaqWorkerBase<caen_6742> *>(*it)->num_events() << " event." << endl;
+      }
 
     }
   }
