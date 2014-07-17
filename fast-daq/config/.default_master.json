@@ -39,7 +39,13 @@
 	    "in_use":true,
             "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
-        }
+        },
+	
+	"midas": {
+	    "in_use":true,
+	    "port":"tcp://127.0.0.1:42044",
+	    "high_water_mark":10
+	}
     },
 
     "trigger_control": {
