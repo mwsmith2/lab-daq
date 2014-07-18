@@ -109,7 +109,7 @@ void DaqWriterMidas::SendDataMessage()
   count = 0;
   for (auto &sis : data.sis_fast) {
     
-    sprintf(str, "sis_fast_%i", count++);
+    sprintf(str, "sis_fast_%i:", count++);
     data_str.append(string(str));
     data_str.append("sis_3350:");
     
