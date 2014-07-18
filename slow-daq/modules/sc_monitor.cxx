@@ -22,12 +22,12 @@ namespace {
   ptree conf;
 
   // Set up the sockets.
-  zmq::context_t sc_ctx(2);
+  zmq::context_t sc_ctx(1);
   zmq::socket_t data_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
-  int ticks_to_write; // Effectively the timeout before writing the root file.
+  long long ticks_to_write; // The timeout before writing the root file.
 }
 
 // Helper Functions
