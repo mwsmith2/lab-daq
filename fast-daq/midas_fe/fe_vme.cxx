@@ -169,8 +169,24 @@ INT begin_of_run(INT run_number, char *error)
   memcpy(handshake_msg.data(), connect.c_str(), connect.size());
 
   // Establish a connection.
-  handshake_sck.send(handshake_msg);
-  bool rc = handshake_sck.recv(&handshake_msg);
+  bool rc = false;
+  int count = 0;
+
+  while (!rc && (count < 10)) {
+    rc = handshake_sck.send(handshake_msg, ZMQ_DONWAIT);
+    count++;
+  }
+
+  if (rc == false) return CM_FAILURE;
+  rc = false;
+  count = 0;
+
+  while (!rc && (count < 10)) {
+    bool rc = handshake_sck.recv(&handshake_msg);
+    count++;
+  }
+
+  if (rc == false) return CM_FAILURE;
 
   if (rc == true) {
     // Create the start message
@@ -236,9 +252,26 @@ INT end_of_run(INT run_number, char *error)
   memcpy(handshake_msg.data(), connect.c_str(), connect.size());
 
   // Establish a connection.
-  handshake_sck.send(handshake_msg);
-  bool rc = handshake_sck.recv(&handshake_msg);
+  // Establish a connection.
+  bool rc = false;
+  int count = 0;
 
+  while (!rc && (count < 10)) {
+    rc = handshake_sck.send(handshake_msg, ZMQ_DONWAIT);
+    count++;
+  }
+
+  if (rc == false) return CM_FAILURE;
+  rc = false;
+  count = 0;
+
+  while (!rc && (count < 10)) {
+    bool rc = handshake_sck.recv(&handshake_msg);
+    count++;
+  }
+
+  if (rc == false) return CM_FAILURE;
+  
   if (rc == true) {
     // Create the stop message
     std::string trigger("STOP:");
