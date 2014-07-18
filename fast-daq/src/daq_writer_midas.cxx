@@ -115,8 +115,8 @@ void DaqWriterMidas::SendDataMessage()
     
     zmq::message_t data_msg(sizeof(data) + sizeof(sis));
     
-    memcpy(data_msg.data(), data_str.c_str(), sizeof(data));
-    memcpy(data_msg.data() + sizeof(data), &sis, sizeof(sis));
+    memcpy((char *)data_msg.data(), data_str.c_str(), sizeof(data));
+    memcpy((char *)data_msg.data() + sizeof(data), &sis, sizeof(sis));
 
     midas_sck_.send(data_msg, ZMQ_SNDMORE);
   }
@@ -124,16 +124,46 @@ void DaqWriterMidas::SendDataMessage()
   count = 0;
   for (auto &sis : data.sis_slow) {
 
+    sprintf(str, "sis_slow_%i:", count++);
+    data_str.append(string(str));
+    data_str.append("sis_3302:");
+    
+    zmq::message_t data_msg(sizeof(data) + sizeof(sis));
+    
+    memcpy((char *)data_msg.data(), data_str.c_str(), sizeof(data));
+    memcpy((char *)data_msg.data() + sizeof(data), &sis, sizeof(sis));
+
+    midas_sck_.send(data_msg, ZMQ_SNDMORE);
   }
 
   count = 0;
   for (auto &caen : data.caen_adc) {
 
+    sprintf(str, "caen_adc_%i:", count++);
+    data_str.append(string(str));
+    data_str.append("caen_1785:");
+    
+    zmq::message_t data_msg(sizeof(data) + sizeof(caen));
+    
+    memcpy((char *)data_msg.data(), data_str.c_str(), sizeof(data));
+    memcpy((char *)data_msg.data() + sizeof(data), &caen, sizeof(caen));
+
+    midas_sck_.send(data_msg, ZMQ_SNDMORE);
   }
 
   count = 0;
   for (auto &caen : data.caen_drs) {
 
+    sprintf(str, "caen_drs_%i:", count++);
+    data_str.append(string(str));
+    data_str.append("caen_6742:");
+    
+    zmq::message_t data_msg(sizeof(data) + sizeof(caen));
+    
+    memcpy((char *)data_msg.data(), data_str.c_str(), sizeof(data));
+    memcpy((char *)data_msg.data() + sizeof(data), &caen, sizeof(caen));
+
+    midas_sck_.send(data_msg, ZMQ_SNDMORE);
   }
 
   zmq::message_t eom_msg(10);

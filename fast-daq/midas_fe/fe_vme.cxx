@@ -378,30 +378,69 @@ INT read_trigger_event(char *pevent, INT off)
       std::getline(ss, bank_name, ':');
       std::getline(ss, bank_type, ':');
 
-      char bk_name[5];
-      sprintf(bk_name, "SF%02i", count++);
 
       // Use a switch to copy the data structure.
       if (bank_type == "sis_3350") {
 	
-	sis_3350 sis;
-	int offset = bank_name.size() + bank_type.size();
-	memcpy(&sis, data_msg.data() + offset, sizeof(sis));
-	
-	DWORD *traces;
-	bk_create(pevent, bank_name.c_str(), TID_DWORD, traces);
+        sprintf(bk_name, "SF%02i", count++);
+      	sis_3350 sis;
+      	int offset = bank_name.size() + bank_type.size();
+      	memcpy(&sis, data_msg.data() + offset, sizeof(sis));
+      	
+      	DWORD *traces;
+      	bk_create(pevent, bank_name.c_str(), TID_DWORD, traces);
 
-	memcpy(traces, sis.trace, sizeof(sis.trace));
-	traces += sizeof(sis.trace) / sizeof(TID_DWORD);
+      	memcpy(traces, sis.trace, sizeof(sis.trace));
+      	traces += sizeof(sis.trace) / sizeof(TID_DWORD);
 
-	for (int i = 0; i < 1024; ++i) {
-	  cout << "trace_" << i << ": " << sis.trace[0][i] << endl;
-	}
+      	bk_close(pevent, traces);
 
-	bk_close(pevent, traces);
+      } else if (bank_type == "sis_3302") {
+  
+        sprintf(bk_name, "SS%02i", count++);
+        sis_3302 sis;
+        int offset = bank_name.size() + bank_type.size();
+        memcpy(&sis, data_msg.data() + offset, sizeof(sis));
+        
+        DWORD *traces;
+        bk_create(pevent, bank_name.c_str(), TID_DWORD, traces);
+
+        memcpy(traces, sis.trace, sizeof(sis.trace));
+        traces += sizeof(sis.trace) / sizeof(TID_DWORD);
+
+        bk_close(pevent, traces);
+
+      } else if (bank_type == "caen_1785") {
+  
+        sprintf(bk_name, "CA%02i", count++);
+        caen_1785 caen;
+        int offset = bank_name.size() + bank_type.size();
+        memcpy(&caen, data_msg.data() + offset, sizeof(caen));
+        
+        DWORD *traces;
+        bk_create(pevent, bank_name.c_str(), TID_DWORD, traces);
+
+        memcpy(traces, caen.value, sizeof(caen.value));
+        traces += sizeof(caen.value) / sizeof(TID_DWORD);
+
+        bk_close(pevent, traces);
+      } else if (bank_type == "caen_6742") {
+
+        sprintf(bk_name, "CD%02i", count++);  
+        caen_6742 sis;
+        int offset = bank_name.size() + bank_type.size();
+        memcpy(&caen, data_msg.data() + offset, sizeof(caen));
+        
+        DWORD *traces;
+        bk_create(pevent, bank_name.c_str(), TID_DWORD, traces);
+
+        memcpy(traces, caen.trace, sizeof(caen.trace));
+        traces += sizeof(caen.trace) / sizeof(TID_DWORD);
+
+        bk_close(pevent, traces);
       }
     }
-    
+
     midas_sck.getsockopt(ZMQ_RCVMORE, &more, &more_size);
   }
   
@@ -411,19 +450,18 @@ INT read_trigger_event(char *pevent, INT off)
   sprintf(bk_name,"SR%02i",frontend_index);
   bk_create(pevent, bk_name, TID_DWORD, &tr_data);
   
+  // status = gettimeofday( &t, NULL);
+  // if ( status != 0)
+  //   {
+  //     printf("ERROR! gettimeofday() failed\n");
+  //     t.tv_sec = 0;
+  //     t.tv_usec = 0;
+  //   }
   
-  status = gettimeofday( &t, NULL);
-  if ( status != 0)
-    {
-      printf("ERROR! gettimeofday() failed\n");
-      t.tv_sec = 0;
-      t.tv_usec = 0;
-    }
+  // *tr_data++ = t.tv_sec;
+  // *tr_data++ = t.tv_usec;
   
-  *tr_data++ = t.tv_sec;
-  *tr_data++ = t.tv_usec;
-  
-  bk_close(pevent, tr_data);
+  // bk_close(pevent, tr_data);
   
   rpc_g2_ready(1);
   data_avail = false;
