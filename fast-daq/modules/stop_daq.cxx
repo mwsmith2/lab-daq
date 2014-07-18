@@ -14,9 +14,14 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
+  // Check for a different config file
+  std::string conf_file("config/.default_master.json");
+
+  if (argc > 1) conf_file = std::string(argv[1]);
+
   // Get the system configuration
   boost::property_tree::ptree conf;
-  boost::property_tree::read_json("config/.default_master.json", conf);
+  boost::property_tree::read_json(conf_file, conf);
 
   zmq::context_t ctx(1);
   zmq::socket_t stop_sck(ctx, ZMQ_PUB);

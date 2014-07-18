@@ -22,7 +22,7 @@ void DaqWriterMidas::LoadConfig()
   midas_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
   int linger = 0;
   midas_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
-  midas_sck_.connect(conf.get<string>("writers.midas.port").c_str());
+  midas_sck_.bind(conf.get<string>("writers.midas.port").c_str());
 }
 
 void DaqWriterMidas::PushData(const vector<event_data> &data_buffer)
@@ -45,9 +45,9 @@ void DaqWriterMidas::PushData(const vector<event_data> &data_buffer)
 
 void DaqWriterMidas::EndOfBatch(bool bad_data)
 {
-  writer_mutex_.lock();
-  data_queue_.empty();
-  writer_mutex_.unlock();
+  while (!data_queue_.empty()) {
+    SendDataMessage();
+  }
 
   zmq::message_t msg(10);
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
@@ -67,27 +67,11 @@ void DaqWriterMidas::SendMessageLoop()
   ptree conf;
   read_json(conf_file_, conf);
 
-  zmq::context_t send_ctx_(1);
-  zmq::socket_t send_sck_(send_ctx_, ZMQ_PUSH);
-
-  int hwm = conf.get<int>("writers.midas.high_water_mark", 100);
-  send_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
-  int linger = 0;
-  send_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
-  send_sck_.connect(conf.get<string>("writers.midas.port").c_str());
-
   while (thread_live_) {
 
     while (go_time_ && queue_has_data_) {
       
-      bool rc = SendDataMessage();
-      
-      if (rc == true) {
-	
-	cout << "Midas writer sent message successfully." << endl;
-	message_ready_ = false;
-	
-      }
+      SendDataMessage();
       
       usleep(daq::short_sleep);
       std::this_thread::yield();
@@ -98,7 +82,7 @@ void DaqWriterMidas::SendMessageLoop()
   }
 }
 
-bool DaqWriterMidas::SendDataMessage()
+void DaqWriterMidas::SendDataMessage()
 {
   using boost::uint64_t;
 
@@ -106,7 +90,7 @@ bool DaqWriterMidas::SendDataMessage()
 
   int count = 0;
   char str[50];
-  string data;
+  string data_str;
 
   // Copy the first event
   writer_mutex_.lock();
@@ -115,21 +99,26 @@ bool DaqWriterMidas::SendDataMessage()
   if (data_queue_.size() == 0) queue_has_data_ = false;
   writer_mutex_.unlock();
 
+  zmq::message_t som_msg(10);
+  string msg("__SOM__");
+  memcpy(som_msg.data(), msg.c_str(), msg.size()); 
+  midas_sck_.send(som_msg, ZMQ_SNDMORE);
+
   // For each device send "<dev_name>:<dev_type>:<binary_data>".
   
-  int count = 0;
+  count = 0;
   for (auto &sis : data.sis_fast) {
     
     sprintf(str, "sis_fast_%i", count++);
-    data.append(string(str));
-    data.append("sis_3350:");
+    data_str.append(string(str));
+    data_str.append("sis_3350:");
     
     zmq::message_t data_msg(sizeof(data) + sizeof(sis));
     
-    memcpy(data_msg.data(), data.c_str(), sizeof(data));
+    memcpy(data_msg.data(), data_str.c_str(), sizeof(data));
     memcpy(data_msg.data() + sizeof(data), &sis, sizeof(sis));
 
-    midas_sck_.send(data_msg, ZMQ_SENDMORE);
+    midas_sck_.send(data_msg, ZMQ_SNDMORE);
   }
 
   count = 0;
@@ -148,7 +137,7 @@ bool DaqWriterMidas::SendDataMessage()
   }
 
   zmq::message_t eom_msg(10);
-  string msg("__EOM__:");
+  msg = string("__EOM__:");
   memcpy(eom_msg.data(), msg.c_str(), msg.size()); 
   midas_sck_.send(eom_msg);
   cout << "Midas writer finished sending data." << endl;

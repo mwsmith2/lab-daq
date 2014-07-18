@@ -89,8 +89,6 @@ def pull_event(e, start):
             last_message = message
             message = data_sck.recv(zmq.NOBLOCK)
 
-            print 'got message'
-            
             if (message[0:7] == '__EOB__'):
                 print 'got EOB'
                 continue

@@ -46,7 +46,9 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 void DaqWriterOnline::EndOfBatch(bool bad_data)
 {
   writer_mutex_.lock();
-  data_queue_.empty();
+  while (!data_queue_.empty()) {
+    data_queue_.pop();
+  }
   writer_mutex_.unlock();
 
   zmq::message_t msg(10);
@@ -90,7 +92,7 @@ void DaqWriterOnline::SendMessageLoop()
 	bool rc = false;
 	while (rc == false && count < 10) {
 	  
-	  rc = send_sck_.send(message_, ZMQ_NOBLOCK);
+	  rc = send_sck_.send(message_, ZMQ_DONTWAIT);
 
 	  count++;
 	}

@@ -29,6 +29,7 @@ void EventBuilder::LoadConfig()
   quitting_time_ = false;
   finished_run_ = false;
 
+  batch_size_ = conf.get<int>("batch_size", 10);
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");
 
@@ -57,7 +58,7 @@ void EventBuilder::BuilderLoop()
         cout << "Data queue is now size: ";
         cout << pull_data_que_.size() << endl;
 
-        if (pull_data_que_.size() >= kMaxQueueLength) {
+        if (pull_data_que_.size() >= batch_size_) {
           push_new_data_ = true;
         }
 
@@ -104,7 +105,7 @@ void EventBuilder::PushDataLoop()
         push_data_mutex_.lock();
         push_data_vec_.resize(0);
 
-        for (int i = 0; i < kMaxQueueLength; ++i) {
+        for (int i = 0; i < batch_size_; ++i) {
 
           cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
 

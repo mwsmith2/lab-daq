@@ -53,7 +53,7 @@ class EventBuilder {
   private:
 
     // Simple variable declarations
-    const int kMaxQueueLength = 10;
+    int batch_size_;
     string conf_file_;
     int live_time_;
     int dead_time_;
