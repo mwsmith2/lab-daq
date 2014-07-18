@@ -6,6 +6,7 @@ class BKPrecision:
 
     def __init__(self, dev_path, baud=4800, timeout=1):
         self.s = serial.Serial(dev_path, baud, timeout=timeout)
+        print self.get_version()
    	self.id = int(self.get_version().split(',')[-2][-4:])
  
     def get_version(self):
@@ -20,7 +21,7 @@ class BKPrecision:
 	self.s.write('LIST:VOLT?\n')
 
     def set_volt(self, new_volt):
-	self.s.write('SOUR:VOLT:' + str(new_volt) + '/n')
+	self.s.write('SOUR:VOLT ' + str(new_volt) + '\n')
 
     def input_cmd(self, cmd):
 	self.s.write(cmd + '\n')
@@ -41,12 +42,12 @@ class BKPrecision:
 	return self.s.read(64).strip()
 
     def set_curr(self, new_curr):
-	self.s.write('SOUR:CURR:' + str(new_curr) + '\n')
+	self.s.write('SOUR:CURR ' + str(new_curr) + '\n')
 
 class Mover:
 
     def __init__(self, dev_path, baud_rate=9600, timeout=1):
-	self.s = serial.Serial(dev_path, baud_rate=baud_rate, timeout=timeout)
+	self.s = serial.Serial(dev_path)
 	self.xnet = 0.0
 	self.ynet = 0.0
 	self.xmax = 20.0

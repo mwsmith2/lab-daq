@@ -1,0 +1,12 @@
+fe_master
+start_daq
+stop_daq
+usbreset
+build
+build/*
+data
+data/*
+*/#*
+*/.#*
+*/*~
+*~

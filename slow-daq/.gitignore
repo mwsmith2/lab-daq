@@ -1,4 +1,3 @@
-sc_monitor
-build/*
-data/*
-python/*.pyc
+data
+build
+python/COM*

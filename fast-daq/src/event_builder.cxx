@@ -43,8 +43,6 @@ void EventBuilder::BuilderLoop()
 
     while (go_time_ && !got_last_event_) {
 
-      flush_time_ = (clock() - batch_start_) > live_ticks_;
-
       if (daq_workers_.AllWorkersHaveEvent()){
 
 	event_data bundle;
@@ -81,6 +79,8 @@ void EventBuilder::BuilderLoop()
           got_last_event_ = true;
         }
       } 
+
+      flush_time_ = (clock() - batch_start_) > live_ticks_;
 
       std::this_thread::yield();
       usleep(daq::short_sleep);
@@ -140,7 +140,18 @@ void EventBuilder::PushDataLoop()
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
 
+	  if (pull_data_que_.size() > 5 * kMaxQueueLength) {
+
+	    for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
+
+	      (*it)->PushData(push_data_vec_);
+
+	    }
+
+	    push_data_vec_.resize(0);
+	  }
         }
+
         queue_mutex_.unlock();
 
         push_new_data_ = false;
@@ -197,7 +208,16 @@ void EventBuilder::PushDataLoop()
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
 
+	  if (pull_data_que_.size() > 5 * kMaxQueueLength) {
+
+	    for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
+	      (*it)->PushData(push_data_vec_);
+
+	    }
+	    push_data_vec_.resize(0);
+	  }
         }
+
         queue_mutex_.unlock();
 
         push_new_data_ = false;
@@ -210,7 +230,7 @@ void EventBuilder::PushDataLoop()
         for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
           (*it)->PushData(push_data_vec_);
-          (*it)->EndOfBatch(bad_data);
+	  (*it)->EndOfBatch(bad_data);
 
         }
         push_data_mutex_.unlock();
