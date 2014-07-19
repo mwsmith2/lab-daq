@@ -106,7 +106,8 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Set ext trigger threshold.
   //first load data, then clock in, then ramp
-  msg = 35000; // +1.45V TTL
+  //msg = 35000; // +1.45V TTL
+  msg = 31500; // NIM
   Write(0x54, msg);
 
   msg = 0;

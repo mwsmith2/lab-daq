@@ -42,69 +42,74 @@ void EventBuilder::BuilderLoop()
   while (thread_live_) {
 
     batch_start_ = clock();
+    daq_workers_.FlushEventData();
 
     while (go_time_ && !got_last_event_) {
 
-       // if (daq_workers_.AnyWorkersHaveEvent()) {
+      if (daq_workers_.AnyWorkersHaveEvent()) {
+
+       	usleep(max_event_time_);
+
+       	if (flush_time_) {
+	  StopWorkers();
+       	  got_last_event_ = true;
+       	}
+
+	event_data bundle;
+	daq_workers_.GetEventData(bundle);
+	daq_workers_.FlushEventData();
+
+	cout << "Data queue is now size: ";
+	cout << pull_data_que_.size() << endl;
+
+	queue_mutex_.lock();
+	pull_data_que_.push(bundle);
+	queue_mutex_.unlock();
+
+       	if (pull_data_que_.size() >= batch_size_) {
+       	  push_new_data_ = true;
+       	}
+      }
+      
+      if (daq_workers_.AllWorkersHaveEvent()){
+
+	event_data bundle;
+	daq_workers_.GetEventData(bundle);
 	
-       // 	usleep(max_event_time_);
-
-       // 	event_data bundle;
-       // 	daq_workers_.GetEventData(bundle);
-       // 	daq_workers_.FlushEventData();
-
-       // 	queue_mutex_.lock();
-       // 	pull_data_que_.push(bundle);
-       // 	queue_mutex_.unlock();
-
-       // 	if (pull_data_que_.size() >= batch_size_) {
-       // 	  push_new_data_ = true;
-       // 	}
-
-       // 	if (flush_time_) {
-       // 	  got_last_event_ = true;
-       // 	  StopWorkers();
-       // 	}
-       // }
-        if (daq_workers_.AllWorkersHaveEvent()){
-
-        	event_data bundle;
-          daq_workers_.GetEventData(bundle);
-
-          queue_mutex_.lock();
-          pull_data_que_.push(bundle);
-          queue_mutex_.unlock();
-
-          cout << "Data queue is now size: ";
-          cout << pull_data_que_.size() << endl;
-
-          if (pull_data_que_.size() >= batch_size_) {
-            push_new_data_ = true;
-          }
-
-          if (flush_time_) {
-
-        	  StopWorkers();
-
-        	  while (daq_workers_.AllWorkersHaveEvent()) {
-
-        	    event_data bundle;
-        	    daq_workers_.GetEventData(bundle);
+	queue_mutex_.lock();
+	pull_data_que_.push(bundle);
+	queue_mutex_.unlock();
+	
+	cout << "Data queue is now size: ";
+	cout << pull_data_que_.size() << endl;
+	
+	if (pull_data_que_.size() >= batch_size_) {
+	  push_new_data_ = true;
+	}
+	
+	if (flush_time_) {
+	  
+	  StopWorkers();
+	  
+	  while (daq_workers_.AllWorkersHaveEvent()) {
 	    
-        	    queue_mutex_.lock();
-        	    pull_data_que_.push(bundle);
-        	    queue_mutex_.unlock();
-
-        	    std::this_thread::yield();
-        	    usleep(10);
-        	  }
-
-            got_last_event_ = true;
-          }
-        } 
-
-	flush_time_ = (clock() - batch_start_) > live_ticks_;
-
+	    event_data bundle;
+	    daq_workers_.GetEventData(bundle);
+	    
+	    queue_mutex_.lock();
+	    pull_data_que_.push(bundle);
+	    queue_mutex_.unlock();
+	    
+	    std::this_thread::yield();
+	    usleep(10);
+	  }
+	  
+	  got_last_event_ = true;
+	}
+      } 
+      
+      flush_time_ = (clock() - batch_start_) > live_ticks_;
+      
       std::this_thread::yield();
       usleep(daq::short_sleep);
     }
