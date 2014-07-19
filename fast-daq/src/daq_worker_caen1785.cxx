@@ -88,6 +88,11 @@ caen_1785 DaqWorkerCaen1785::PopEvent()
 {
   static caen_1785 data;
 
+  if (data_queue_.empty()) {
+    caen_1785 str;
+    return str;
+  }
+
   queue_mutex_.lock();
 
   // Copy and pop the data.

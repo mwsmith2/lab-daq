@@ -229,15 +229,18 @@ int SetupConfig()
 
 int FreeConfig() 
 {
+  cout << "Freeing the workers." << endl;
   // Delete the allocated workers.
   daq_workers.FreeList();
 
+  cout << "Freeing the writers." << endl;
   // Delete the allocated writers.
   for (auto &writer : daq_writers) {
     delete writer;
   }
   daq_writers.resize(0);
 
+  cout << "Free the event builder." << endl;
   delete event_builder;
 
   return 0;

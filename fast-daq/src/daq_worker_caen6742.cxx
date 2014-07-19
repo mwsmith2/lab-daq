@@ -141,6 +141,11 @@ caen_6742 DaqWorkerCaen6742::PopEvent()
   static caen_6742 data;
   queue_mutex_.lock();
 
+  if (data_queue_.empty()) {
+    caen_6742 str;
+    return str;
+  }
+
   // Copy the data.
   data = data_queue_.front();
   data_queue_.pop();

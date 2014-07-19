@@ -111,6 +111,12 @@ void DaqWorkerFake::WorkLoop()
 
 event_struct DaqWorkerFake::PopEvent()
 {
+  // If no event return empty struct
+  if (data_queue_.empty()) {
+      event_struct data;
+      return data;
+  }
+
   // Copy the data.
   queue_mutex_.lock();
   event_struct data = data_queue_.front();
