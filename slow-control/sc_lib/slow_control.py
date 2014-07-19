@@ -6,7 +6,6 @@ class BKPrecision:
 
     def __init__(self, dev_path, baud=4800, timeout=1):
         self.s = serial.Serial(dev_path, baud, timeout=timeout)
-        print self.get_version()
    	self.id = int(self.get_version().split(',')[-2][-4:])
  
     def get_version(self):

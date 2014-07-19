@@ -135,6 +135,7 @@ void MessageLoop()
       }
     }
     time_to_write = (clock() - start_time) > ticks_to_write;
+    usleep(10000);
   }
 
   sc_root_writer.WriteFile();

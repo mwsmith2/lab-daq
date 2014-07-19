@@ -13,5 +13,4 @@ start_script += 'daq/slow-daq/launch_slow_daq.sh'
 
 if ('sc_monitor' or 'sc_worker') not in ps:
     
-    print "none."
-    #call(['bash', start_script])
+    call(['bash', start_script])

@@ -29,9 +29,11 @@ void EventBuilder::LoadConfig()
   quitting_time_ = false;
   finished_run_ = false;
 
+  batch_size_ = conf.get<int>("batch_size", 10);
+  max_event_time_ = conf.get<int>("max_event_time_", 2000);
+
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");
-
   live_ticks_ = live_time_ * CLOCKS_PER_SEC;
 }
 
@@ -43,44 +45,65 @@ void EventBuilder::BuilderLoop()
 
     while (go_time_ && !got_last_event_) {
 
-      if (daq_workers_.AllWorkersHaveEvent()){
+      if (daq_workers_.AnyWorkersHaveEvent()) {
+	
+	usleep(max_event_time_);
 
 	event_data bundle;
-        daq_workers_.GetEventData(bundle);
+	daq_workers_.GetEventData(bundle);
+	daq_workers_.FlushEventData();
 
-        queue_mutex_.lock();
-        pull_data_que_.push(bundle);
-        queue_mutex_.unlock();
+	queue_mutex_.lock();
+	pull_data_que_.push(bundle);
+	queue_mutex_.unlock();
 
-        cout << "Data queue is now size: ";
-        cout << pull_data_que_.size() << endl;
+	if (pull_data_que_.size() >= batch_size_) {
+	  push_new_data_ = true;
+	}
 
-        if (pull_data_que_.size() >= kMaxQueueLength) {
-          push_new_data_ = true;
-        }
-
-        if (flush_time_) {
-
+	if (flush_time_) {
+	  got_last_event_ = true;
 	  StopWorkers();
+	}
+      }
+    //   if (daq_workers_.AllWorkersHaveEvent()){
 
-	  while (daq_workers_.AllWorkersHaveEvent()) {
+    // 	event_data bundle;
+    //     daq_workers_.GetEventData(bundle);
 
-	    event_data bundle;
-	    daq_workers_.GetEventData(bundle);
+    //     queue_mutex_.lock();
+    //     pull_data_que_.push(bundle);
+    //     queue_mutex_.unlock();
+
+    //     cout << "Data queue is now size: ";
+    //     cout << pull_data_que_.size() << endl;
+
+    //     if (pull_data_que_.size() >= batch_size_) {
+    //       push_new_data_ = true;
+    //     }
+
+    //     if (flush_time_) {
+
+    // 	  StopWorkers();
+
+    // 	  while (daq_workers_.AllWorkersHaveEvent()) {
+
+    // 	    event_data bundle;
+    // 	    daq_workers_.GetEventData(bundle);
 	    
-	    queue_mutex_.lock();
-	    pull_data_que_.push(bundle);
-	    queue_mutex_.unlock();
+    // 	    queue_mutex_.lock();
+    // 	    pull_data_que_.push(bundle);
+    // 	    queue_mutex_.unlock();
 
-	    std::this_thread::yield();
-	    usleep(10);
-	  }
+    // 	    std::this_thread::yield();
+    // 	    usleep(10);
+    // 	  }
 
-          got_last_event_ = true;
-        }
-      } 
+    //       got_last_event_ = true;
+    //     }
+    //   } 
 
-      flush_time_ = (clock() - batch_start_) > live_ticks_;
+	flush_time_ = (clock() - batch_start_) > live_ticks_;
 
       std::this_thread::yield();
       usleep(daq::short_sleep);
@@ -104,7 +127,7 @@ void EventBuilder::PushDataLoop()
         push_data_mutex_.lock();
         push_data_vec_.resize(0);
 
-        for (int i = 0; i < kMaxQueueLength; ++i) {
+        for (int i = 0; i < batch_size_; ++i) {
 
           cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
 
@@ -140,7 +163,7 @@ void EventBuilder::PushDataLoop()
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
 
-	  if (pull_data_que_.size() > 5 * kMaxQueueLength) {
+	  if (pull_data_que_.size() > 5 * batch_size_) {
 
 	    for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 
@@ -208,7 +231,7 @@ void EventBuilder::PushDataLoop()
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
 
-	  if (pull_data_que_.size() > 5 * kMaxQueueLength) {
+	  if (pull_data_que_.size() > 5 * batch_size_) {
 
 	    for (auto it = daq_writers_.begin(); it != daq_writers_.end(); ++it) {
 	      (*it)->PushData(push_data_vec_);

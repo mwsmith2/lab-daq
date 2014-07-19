@@ -267,6 +267,11 @@ sis_3350 DaqWorkerSis3350::PopEvent()
 {
   static sis_3350 data;
 
+  if (data_queue_.empty()) {
+    sis_3350 str;
+    return str;
+  }
+
   queue_mutex_.lock();
 
   // Copy the data.
