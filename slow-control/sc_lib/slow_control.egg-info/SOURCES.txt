@@ -1,0 +1,7 @@
+setup.py
+slow_control/__init__.py
+slow_control/slow_control.py
+slow_control.egg-info/PKG-INFO
+slow_control.egg-info/SOURCES.txt
+slow_control.egg-info/dependency_links.txt
+slow_control.egg-info/top_level.txt
