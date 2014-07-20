@@ -45,12 +45,12 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 
 void DaqWriterOnline::EndOfBatch(bool bad_data)
 {
+  writer_mutex_.lock();
   while (!data_queue_.empty()) {
-    writer_mutex_.lock();
     data_queue_.pop();
-    writer_mutex_.unlock();
   }
   queue_has_data_ = false;
+  writer_mutex_.unlock();
 
   zmq::message_t msg(10);
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
@@ -131,6 +131,9 @@ void DaqWriterOnline::PackMessage()
   json_spirit::Object json_map;
 
   writer_mutex_.lock();
+
+  if (data_queue_.empty()) return;
+
   event_data data = data_queue_.front();
   data_queue_.pop();
   if (data_queue_.size() == 0) queue_has_data_ = false;

@@ -32,6 +32,11 @@ class DaqWorkerBase {
                                                    has_event_(false) {};
 
     virtual ~DaqWorkerBase() {
+      // Clear the data.
+      go_time_ = false;
+      FlushEvents();
+
+      // Stop the thread.
       thread_live_ = false;
       if (work_thread_.joinable()) {
         work_thread_.join();
@@ -52,7 +57,7 @@ class DaqWorkerBase {
 
     void StartWorker() { go_time_ = true; };
     void StopWorker() { go_time_ = false; };
-    string name() { return name_; };
+  string name() { return name_; };
   int num_events() { return data_queue_.size(); };
     bool HasEvent() { return has_event_; };
     void FlushEvents() {

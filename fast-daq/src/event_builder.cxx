@@ -55,6 +55,8 @@ void EventBuilder::BuilderLoop()
        	  got_last_event_ = true;
        	}
 
+	if (daq_workers_.
+
 	event_data bundle;
 	daq_workers_.GetEventData(bundle);
 
@@ -139,8 +141,10 @@ void EventBuilder::PushDataLoop()
           cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
 
           queue_mutex_.lock();
-          push_data_vec_.push_back(pull_data_que_.front());
-          pull_data_que_.pop();
+	  while (!pull_data_que_.empty()) {
+	    push_data_vec_.push_back(pull_data_que_.front());
+	    pull_data_que_.pop();
+	  }
           queue_mutex_.unlock();
 
         }
@@ -163,10 +167,10 @@ void EventBuilder::PushDataLoop()
         push_data_vec_.resize(0);
 
         queue_mutex_.lock();
-        while (pull_data_que_.size() != 0) {
+        while (!pull_data_que_.empty()) {
 
           cout << "Size of pull queue is: " << pull_data_que_.size() << endl;
-
+	  
           push_data_vec_.push_back(pull_data_que_.front());
           pull_data_que_.pop();
 

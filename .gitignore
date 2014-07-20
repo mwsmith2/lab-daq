@@ -6,6 +6,7 @@ build
 build/*
 data
 data/*
+bak
 config/.temp_master.json
 */#*
 */.#*
