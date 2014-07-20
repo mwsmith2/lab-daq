@@ -37,6 +37,7 @@ class DaqWorkerList {
     void StopWorkers();
     bool AllWorkersHaveEvent();
     bool AnyWorkersHaveEvent();
+    bool AnyWorkersHaveMultiEvent();
     void GetEventData(event_data &bundle);
     void FlushEventData();
 
