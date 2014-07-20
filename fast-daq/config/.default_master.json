@@ -2,7 +2,7 @@
     "trigger_port":"tcp://172.27.104.28:42040",
     "handshake_port":"tcp://172.27.104.28:42041",
     "batch_size":1,
-    "max_event_time":2000,
+    "max_event_time":1200,
 
     "devices":
     {

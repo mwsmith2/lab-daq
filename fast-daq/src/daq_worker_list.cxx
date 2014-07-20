@@ -198,6 +198,37 @@ bool DaqWorkerList::AnyWorkersHaveEvent()
   return bad_data;
 }
 
+bool DaqWorkerList::AnyWorkersHaveMultiEvent()
+{
+  // Check each worker for more than one event.
+  int num_events = 0;
+
+  for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {
+
+    if ((*it).which() == 0) {
+
+      num_events = boost::get<DaqWorkerBase<sis_3350> *>(*it)->num_events();
+
+    } else if ((*it).which() == 1) {
+
+      num_events = boost::get<DaqWorkerBase<sis_3302> *>(*it)->num_events();
+
+    } else if ((*it).which() == 2) {
+
+      num_events = boost::get<DaqWorkerBase<caen_1785> *>(*it)->num_events();
+
+    } else if ((*it).which() == 3) {
+
+      num_events = boost::get<DaqWorkerBase<caen_6742> *>(*it)->num_events();
+
+    }
+
+    if (num_events > 1) return true;
+  }
+
+  return false;
+}
+
 void DaqWorkerList::GetEventData(event_data &bundle)
 {
   for (auto it = daq_workers_.begin(); it != daq_workers_.end(); ++it) {

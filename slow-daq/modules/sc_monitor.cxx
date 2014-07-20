@@ -27,7 +27,7 @@ namespace {
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
-  int ticks_to_write; // Effectively the timeout before writing the root file.
+  long long ticks_to_write; // Effectively the timeout before writing the root file.
 }
 
 // Helper Functions
@@ -135,6 +135,7 @@ void MessageLoop()
       }
     }
     time_to_write = (clock() - start_time) > ticks_to_write;
+    usleep(100);
   }
 
   sc_root_writer.WriteFile();

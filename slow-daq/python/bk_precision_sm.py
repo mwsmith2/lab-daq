@@ -48,10 +48,14 @@ while (True):
 
     if (time.time() - time_last >= push_interval):
 
-        volt = bk_dev.meas_volt()
-        # Send data
-        data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
-        time_last = time.time()
+        try:
+            # Send data
+            volt = bk_dev.meas_volt()
+            data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
 
-	time.sleep(0.5)
+        except:
+            "Could not access device."
+
+        time_last = time.time()
+	time.sleep(1.0)
 
