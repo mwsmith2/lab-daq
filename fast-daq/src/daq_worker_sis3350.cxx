@@ -267,23 +267,26 @@ void DaqWorkerSis3350::WorkLoop()
 sis_3350 DaqWorkerSis3350::PopEvent()
 {
   static sis_3350 data;
-
-  if (data_queue_.empty()) {
-    sis_3350 str;
-    return str;
-  }
-
   queue_mutex_.lock();
 
-  // Copy the data.
-  data = data_queue_.front();
-  data_queue_.pop();
+  if (data_queue_.empty()) {
 
-  // Check if this is that last event.
-  if (data_queue_.size() == 0) has_event_ = false;
+    sis_3350 str;
+    queue_mutex_.unlock();
+    return str;
 
-  queue_mutex_.unlock();
-  return data;
+  } else if (!data_queue_.empty()) {
+
+    // Copy the data.
+    data = data_queue_.front();
+    data_queue_.pop();
+    
+    // Check if this is that last event.
+    if (data_queue_.size() == 0) has_event_ = false;
+    
+    queue_mutex_.unlock();
+    return data;
+  }
 }
 
 

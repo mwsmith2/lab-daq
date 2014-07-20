@@ -30,7 +30,7 @@ void EventBuilder::LoadConfig()
   finished_run_ = false;
 
   batch_size_ = conf.get<int>("batch_size", 10);
-  max_event_time_ = conf.get<int>("max_event_time_", 2000);
+  max_event_time_ = conf.get<int>("max_event_time", 1000);
 
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");
@@ -57,7 +57,6 @@ void EventBuilder::BuilderLoop()
 
 	event_data bundle;
 	daq_workers_.GetEventData(bundle);
-	daq_workers_.FlushEventData();
 
 	cout << "Data queue is now size: ";
 	cout << pull_data_que_.size() << endl;
@@ -69,9 +68,12 @@ void EventBuilder::BuilderLoop()
        	if (pull_data_que_.size() >= batch_size_) {
        	  push_new_data_ = true;
        	}
+
+	daq_workers_.FlushEventData();
       }
       
-      if (daq_workers_.AllWorkersHaveEvent()){
+      //      if (daq_workers_.AllWorkersHaveEvent()){
+      if (0) {
 
 	event_data bundle;
 	daq_workers_.GetEventData(bundle);

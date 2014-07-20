@@ -191,6 +191,8 @@ bool DaqWorkerList::AnyWorkersHaveEvent()
       bad_data |= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
 
     }
+
+    if (bad_data == true) return bad_data;
   }
 
   return bad_data;

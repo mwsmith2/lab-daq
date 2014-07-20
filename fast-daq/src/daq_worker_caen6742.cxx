@@ -142,19 +142,23 @@ caen_6742 DaqWorkerCaen6742::PopEvent()
   queue_mutex_.lock();
 
   if (data_queue_.empty()) {
+
     caen_6742 str;
+    queue_mutex_.unlock();
     return str;
+
+  } else if (!data_queue_.empty()) {
+
+    // Copy the data.
+    data = data_queue_.front();
+    data_queue_.pop();
+    
+    // Check if this is that last event.
+    if (data_queue_.size() == 0) has_event_ = false;
+    
+    queue_mutex_.unlock();
+    return data;
   }
-
-  // Copy the data.
-  data = data_queue_.front();
-  data_queue_.pop();
-
-  // Check if this is that last event.
-  if (data_queue_.size() == 0) has_event_ = false;
-
-  queue_mutex_.unlock();
-  return data;
 }
 
 
