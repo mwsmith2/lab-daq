@@ -161,18 +161,29 @@ void DaqWorkerSis3302::WorkLoop()
 sis_3302 DaqWorkerSis3302::PopEvent()
 {
   static sis_3302 data;
-
   queue_mutex_.lock();
 
-  // Copy the data.
-  data = data_queue_.front();
-  data_queue_.pop();
+<<<<<<< Updated upstream
+  queue_mutex_.lock();
+=======
+  if (data_queue_.empty()) {
+    sis_3302 str;
+    queue_mutex_.unlock();
+    return str;
+>>>>>>> Stashed changes
 
-  // Check if this is that last event.
-  if (data_queue_.size() == 0) has_event_ = false;
+  } else if (!data_queue_.empty()) {
 
-  queue_mutex_.unlock();
-  return data;
+    // Copy the data.
+    data = data_queue_.front();
+    data_queue_.pop();
+    
+    // Check if this is that last event.
+    if (data_queue_.size() == 0) has_event_ = false;
+    
+    queue_mutex_.unlock();
+    return data;
+  }
 }
 
 

@@ -48,8 +48,14 @@ void DaqWriterOnline::EndOfBatch(bool bad_data)
   writer_mutex_.lock();
   while (!data_queue_.empty()) {
     data_queue_.pop();
+<<<<<<< Updated upstream
   }
   writer_mutex_.unlock();
+=======
+    queue_has_data_ = false;
+    writer_mutex_.unlock();
+  }
+>>>>>>> Stashed changes
 
   zmq::message_t msg(10);
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
@@ -128,6 +134,8 @@ void DaqWriterOnline::PackMessage()
   char str[50];
 
   json_spirit::Object json_map;
+
+  if (data_queue_.empty()) return;
 
   writer_mutex_.lock();
   event_data data = data_queue_.front();

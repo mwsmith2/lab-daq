@@ -1,7 +1,6 @@
 {
     "trigger_port":"tcp://127.0.0.1:42040",
     "handshake_port":"tcp://127.0.0.1:42041",
-    "batch_size":1,
     
     "devices":{
 	
@@ -11,7 +10,15 @@
 	    "fake_2":"config/fake_conf.json",
 	    "fake_3":"config/fake_conf.json",
 	    "fake_4":"config/fake_conf.json",
-	    "fake_5":"config/fake_conf.json"
+	    "fake_5":"config/fake_conf.json",
+	    "fake_6":"config/fake_conf.json",
+	    "fake_7":"config/fake_conf.json",
+	    "fake_8":"config/fake_conf.json",
+	    "fake_9":"config/fake_conf.json",
+	    "fake_10":"config/fake_conf.json",
+	    "fake_11":"config/fake_conf.json",
+	    "fake_12":"config/fake_conf.json",
+	    "fake_13":"config/fake_conf.json"
 	},
 	
 	"sis_3350":{
@@ -42,12 +49,8 @@
 	    "in_use":true,
 	    "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
-	},
-	
-	"midas":{
-	    "in_use":true,
-	    "port":"tcp://127.0.0.1:42044"
 	}
+	
     },
     
     "trigger_control":{

@@ -2,6 +2,7 @@
     "trigger_port":"tcp://172.27.104.28:42040",
     "handshake_port":"tcp://172.27.104.28:42041",
     "batch_size":1,
+    "max_event_time":1200,
 
     "devices":
     {
@@ -40,13 +41,7 @@
 	    "in_use":true,
             "port":"tcp://172.27.104.28:42043",
 	    "high_water_mark":10
-        },
-	
-	"midas": {
-	    "in_use":true,
-	    "port":"tcp://127.0.0.1:42044",
-	    "high_water_mark":10
-	}
+        }
     },
 
     "trigger_control": {

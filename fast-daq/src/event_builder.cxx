@@ -30,6 +30,11 @@ void EventBuilder::LoadConfig()
   finished_run_ = false;
 
   batch_size_ = conf.get<int>("batch_size", 10);
+<<<<<<< Updated upstream
+=======
+  max_event_time_ = conf.get<int>("max_event_time", 1000);
+
+>>>>>>> Stashed changes
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");
 
@@ -41,13 +46,43 @@ void EventBuilder::BuilderLoop()
   while (thread_live_) {
 
     batch_start_ = clock();
+    daq_workers_.FlushEventData();
 
     while (go_time_ && !got_last_event_) {
 
+<<<<<<< Updated upstream
       flush_time_ = (clock() - batch_start_) > live_ticks_;
+=======
+      if (daq_workers_.AnyWorkersHaveEvent()) {
+
+       	usleep(max_event_time_);
+
+	if (!daq_workers_.AllWorkersHaveEvent()) {
+ 
+	  daq_workers_.FlushEventData();
+	  continue;
+
+	} else if (daq_workers_.AnyWorkersHaveMultiEvent()) {
+
+	  daq_workers_.FlushEventData();
+	  continue;
+	}
+
+       	if (flush_time_) {
+	  StopWorkers();
+       	  got_last_event_ = true;
+       	}
+
+	event_data bundle;
+	daq_workers_.GetEventData(bundle);
+
+	cout << "Data queue is now size: ";
+	cout << pull_data_que_.size() << endl;
+>>>>>>> Stashed changes
 
       if (daq_workers_.AllWorkersHaveEvent()){
 
+<<<<<<< Updated upstream
 	event_data bundle;
         daq_workers_.GetEventData(bundle);
 
@@ -83,6 +118,55 @@ void EventBuilder::BuilderLoop()
         }
       } 
 
+=======
+       	if (pull_data_que_.size() >= batch_size_) {
+       	  push_new_data_ = true;
+       	}
+
+	daq_workers_.FlushEventData();
+      }
+      
+      //      if (daq_workers_.AllWorkersHaveEvent()){
+      if (0) {
+
+	event_data bundle;
+	daq_workers_.GetEventData(bundle);
+	
+	queue_mutex_.lock();
+	pull_data_que_.push(bundle);
+	queue_mutex_.unlock();
+	
+	cout << "Data queue is now size: ";
+	cout << pull_data_que_.size() << endl;
+	
+	if (pull_data_que_.size() >= batch_size_) {
+	  push_new_data_ = true;
+	}
+	
+	if (flush_time_) {
+	  
+	  StopWorkers();
+	  
+	  while (daq_workers_.AllWorkersHaveEvent()) {
+	    
+	    event_data bundle;
+	    daq_workers_.GetEventData(bundle);
+	    
+	    queue_mutex_.lock();
+	    pull_data_que_.push(bundle);
+	    queue_mutex_.unlock();
+	    
+	    std::this_thread::yield();
+	    usleep(10);
+	  }
+	  
+	  got_last_event_ = true;
+	}
+      } 
+      
+      flush_time_ = (clock() - batch_start_) > live_ticks_;
+      
+>>>>>>> Stashed changes
       std::this_thread::yield();
       usleep(daq::short_sleep);
     }

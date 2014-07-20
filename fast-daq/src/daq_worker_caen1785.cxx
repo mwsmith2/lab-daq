@@ -87,19 +87,30 @@ void DaqWorkerCaen1785::WorkLoop()
 caen_1785 DaqWorkerCaen1785::PopEvent()
 {
   static caen_1785 data;
-
   queue_mutex_.lock();
 
-  // Copy and pop the data.
-  data = data_queue_.front();
-  data_queue_.pop();
+<<<<<<< Updated upstream
+  queue_mutex_.lock();
+=======
+  if (data_queue_.empty()) {
 
-  // Check if this is that last event.
-  if (data_queue_.size() == 0) has_event_ = false;
+    caen_1785 str;
+    queue_mutex_.unlock();
+    return str;
+>>>>>>> Stashed changes
 
-  queue_mutex_.unlock();
+  } else if (!data_queue_.empty()) {
 
-  return data;
+    // Copy and pop the data.
+    data = data_queue_.front();
+    data_queue_.pop();
+    
+    // Check if this is that last event.
+    if (data_queue_.size() == 0) has_event_ = false;
+    
+    queue_mutex_.unlock();
+    return data;
+  }
 }
 
 
