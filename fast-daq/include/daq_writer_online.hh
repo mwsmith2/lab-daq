@@ -31,6 +31,19 @@ class DaqWriterOnline : public DaqWriterBase {
 
     //ctor
     DaqWriterOnline(string conf_file);
+  
+    //dtor
+    ~DaqWriterOnline() {
+      // Dump data.
+      go_time_ = false;
+      FlushData();
+
+      // Kill thread.
+      thread_live_ = false;
+      if (writer_thread_.joinable()) {
+        writer_thread_.join();
+      }
+    };
 
     // Member Functions
     void LoadConfig();
@@ -58,7 +71,14 @@ class DaqWriterOnline : public DaqWriterBase {
 
     void PackMessage();
     void SendMessageLoop();
-
+    void FlushData() {
+      writer_mutex_.lock();
+      while (!data_queue_.empty()) {
+	data_queue_.pop();
+      }
+      queue_has_data_ = false;
+      writer_mutex_.unlock();
+    };
 };
 
 } // ::daq

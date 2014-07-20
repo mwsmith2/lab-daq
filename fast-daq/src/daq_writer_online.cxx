@@ -27,30 +27,25 @@ void DaqWriterOnline::LoadConfig()
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 {
+  writer_mutex_.lock();
   number_of_events_ += data_buffer.size();
 
   auto it = data_buffer.begin();
-  writer_mutex_.lock();
   while (data_queue_.size() < kMaxQueueSize && it != data_buffer.end()) {
 
     data_queue_.push(*it);
     ++it;
 
   }
-  writer_mutex_.unlock();
+  queue_has_data_ = true;
 
   cout << "Online writer was pushed some data." << endl;
-  queue_has_data_ = true;
+  writer_mutex_.unlock();
 }
 
 void DaqWriterOnline::EndOfBatch(bool bad_data)
 {
-  writer_mutex_.lock();
-  while (!data_queue_.empty()) {
-    data_queue_.pop();
-  }
-  queue_has_data_ = false;
-  writer_mutex_.unlock();
+  FlushData();
 
   zmq::message_t msg(10);
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
