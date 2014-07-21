@@ -13,10 +13,16 @@ branch_vars = "volt"
 push_interval = conf['push_interval']
 
 if (len(sys.argv) > 1):
-    bk_dev = sc.BKPrecision(sys.argv[1])
+    dev_path = sys.argv[1]
 
 else:
-    bk_dev = sc.BKPrecision('/dev/ttyUSB0')
+    dev_path = '/dev/ttyUSB0'
+
+# Change the name to reflect device
+bk = sc.BKPrecision(dev_path)
+name = "%s_%04i" % (name,  bk.id)
+bk.s.close()
+del bk
 
 context = zmq.Context()
 data_sck = context.socket(zmq.PUB)
@@ -40,7 +46,9 @@ time_last = time.time()
 while (True):
     
     if (msg_sck.poll(timeout=100) != 0):
-       
+
+        print "Asking to create tree."
+
         # This happens if the device pushes data before creating a tree.
         msg = msg_sck.recv()
         tree_sck.send(':'.join(['TREE', key, name, branch_vars, '__EOM__\0']))
@@ -48,7 +56,10 @@ while (True):
 
     if (time.time() - time_last >= push_interval):
 
+        bk_dev = sc.BKPrecision(dev_path)
         volt = bk_dev.meas_volt()
+        del bk_dev
+
         # Send data
         data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
         time_last = time.time()

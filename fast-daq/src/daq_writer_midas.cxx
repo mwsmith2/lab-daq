@@ -94,6 +94,8 @@ void DaqWriterMidas::SendDataMessage()
 
   // Copy the first event
   writer_mutex_.lock();
+  if (data_queue_.empty()) return;
+
   event_data data = data_queue_.front();
   data_queue_.pop();
   if (data_queue_.size() == 0) queue_has_data_ = false;

@@ -50,6 +50,11 @@ void EventBuilder::BuilderLoop()
 
        	usleep(max_event_time_);
 
+       	if (flush_time_) {
+	  StopWorkers();
+       	  got_last_event_ = true;
+       	}
+
 	if (!daq_workers_.AllWorkersHaveEvent()) {
  
 	  daq_workers_.FlushEventData();
@@ -60,12 +65,6 @@ void EventBuilder::BuilderLoop()
 	  daq_workers_.FlushEventData();
 	  continue;
 	}
-
-       	if (flush_time_) {
-	  StopWorkers();
-       	  got_last_event_ = true;
-       	}
-
 
 	event_data bundle;
 	daq_workers_.GetEventData(bundle);

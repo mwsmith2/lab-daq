@@ -1,5 +1,6 @@
 //--- std includes ----------------------------------------------------------//
 #include <thread>
+#include <chrono>
 #include <ctime>
 #include <iostream>
 #include <atomic>
@@ -27,7 +28,7 @@ namespace {
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
-  int ticks_to_write; // Effectively the timeout before writing the root file.
+  int secs_to_write; // Effectively the timeout before writing the root file.
 }
 
 // Helper Functions
@@ -46,9 +47,8 @@ int main(int argc, char *argv[])
   tree_sck.bind(conf.get<string>("tree_port").c_str());
   tree_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
-  ticks_to_write = conf.get<int>("run_time", 60); // in minutes
-  ticks_to_write *= 60; // to seconds
-  ticks_to_write *= CLOCKS_PER_SEC; // to system ticks.
+  secs_to_write = conf.get<int>("run_time", 60); // in minutes
+  secs_to_write *= 60; // to seconds
 
   while (true) {
     MessageLoop();
@@ -75,8 +75,9 @@ void MessageLoop()
 
   sc::AsyncRootWriter sc_root_writer(str); // run name
 
-  long long start_time = clock();
-  cout << "Starting a new run at time " << start_time << endl;
+  auto t0 = std::chrono::system_clock::now();
+
+  cout << "Starting a new run on " << endl;
   while (!time_to_write) {
 
     // Check for new tree creation messages.
@@ -134,10 +135,15 @@ void MessageLoop()
 
       }
     }
-    time_to_write = (clock() - start_time) > ticks_to_write;
-  }
 
-  sc_root_writer.WriteFile();
+    auto t_now = std::chrono::system_clock::now();
+    std::chrono::duration<double> t_diff = t_now - t0;
+    time_to_write = (t_diff.count() > secs_to_write);
+    if ((int(t_diff.count()) * 10) % secs_to_write == 0) {
+      sc_root_writer.WriteFile();
+    }
+    usleep(10000);
+  }
 }
 
 

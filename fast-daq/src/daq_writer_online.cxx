@@ -27,7 +27,8 @@ void DaqWriterOnline::LoadConfig()
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
 {
-  writer_mutex_.lock();
+  std::unique_lock<std::mutex> pack_message_lock(writer_mutex_);
+
   number_of_events_ += data_buffer.size();
 
   auto it = data_buffer.begin();
@@ -40,7 +41,6 @@ void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
   queue_has_data_ = true;
 
   cout << "Online writer was pushed some data." << endl;
-  writer_mutex_.unlock();
 }
 
 void DaqWriterOnline::EndOfBatch(bool bad_data)
@@ -125,14 +125,15 @@ void DaqWriterOnline::PackMessage()
 
   json_spirit::Object json_map;
 
-  writer_mutex_.lock();
+  std::unique_lock<std::mutex> pack_message_lock(writer_mutex_);
 
-  if (data_queue_.empty()) return;
+  if (data_queue_.empty()) {
+    return;
+  }
 
   event_data data = data_queue_.front();
   data_queue_.pop();
   if (data_queue_.size() == 0) queue_has_data_ = false;
-  writer_mutex_.unlock();
 
   json_map.push_back(json_spirit::Pair("event_number", number_of_events_));
 
