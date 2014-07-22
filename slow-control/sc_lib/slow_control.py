@@ -5,45 +5,56 @@ import urllib2 as url
 from urllib import quote
 
 class BKPrecision:
-
+    """A wrapper class for serial calls to BK Precision 9124 Voltage Supplies."""
     def __init__(self, dev_path, baud=4800, timeout=1):
         self.s = serial.Serial(dev_path, baud, timeout=timeout)
-        print self.get_version()
+        # Grab a handle to differentiate between different units.
    	self.id = int(self.get_version().split(',')[-2][-4:])
  
     def get_version(self):
+        """A simple call, mostly just to check if we are really connected."""
         self.s.write('*IDN?\n')
         return self.s.read(64).strip()
     
     def meas_volt(self):
+        """Return the real voltage measured by the device."""
         self.s.write('MEAS:VOLT?\n')
         return self.s.read(64).strip()
 
     def get_volt(self):
+        """Return the ideal voltage that has been set by the user."""
 	self.s.write('LIST:VOLT?\n')
 
     def set_volt(self, new_volt):
+        """Set the desired ideal voltage."""
 	self.s.write('SOUR:VOLT ' + str(new_volt) + '\n')
 
     def input_cmd(self, cmd):
+        """A function for calling non-wrapped functions of the device. Strings are 
+        terminated properly"""
 	self.s.write(cmd + '\n')
 	return self.s.read(64).strip()
 
     def power_on(self):
+        """Turn on the voltage."""
 	self.s.write('OUTP:ON\n')
 
     def power_off(self):
+        """Power down the voltage."""
 	self.s.write('OUTP:OFF\n')
 
     def meas_curr(self):
+        """Return the real current measured by the device."""
 	self.s.write('MEAS:CURR?\n')
 	return self.s.read(64).strip()
 
     def get_curr(self):
+        """Return the ideal current set by the user."""
 	self.s.write('LIST:CURR?\n')
 	return self.s.read(64).strip()
 
     def set_curr(self, new_curr):
+        """Set the ideal current desired by the user."""
 	self.s.write('SOUR:CURR ' + str(new_curr) + '\n')
 
 class Mover:
