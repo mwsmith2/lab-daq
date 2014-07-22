@@ -80,6 +80,7 @@ void AsyncRootWriter::CreateTree(const string &setup)
   // Create the tree and grab a handy pointer to it.
   pt_vec_.push_back(new TTree(tree_name.c_str(), tree_name.c_str()));
   TTree *pt = pt_vec_[key_map_[dev_key]];
+  pt->SetAutoFlush(30);
 
   std::map<string, double *> data_map;
   // Now create the branches.
