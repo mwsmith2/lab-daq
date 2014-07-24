@@ -139,9 +139,6 @@ void MessageLoop()
     auto t_now = std::chrono::system_clock::now();
     std::chrono::duration<double> t_diff = t_now - t0;
     time_to_write = (t_diff.count() > secs_to_write);
-    if ((int(t_diff.count()) * 10) % secs_to_write == 0) {
-      sc_root_writer.WriteFile();
-    }
     usleep(10000);
   }
 }

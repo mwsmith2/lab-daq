@@ -42,6 +42,7 @@ void DaqWorkerCaen6742::LoadConfig()
   // Get the board info.
   ret = CAEN_DGTZ_GetInfo(device_, &board_info_);
   printf("\nFound caen %s.\n", board_info_.ModelName);
+  printf("\nSerial Number: %i.\n", board_info_.SerialNumber);
   printf("\tROC FPGA Release is %s\n", board_info_.ROC_FirmwareRel);
   printf("\tAMC FPGA Release is %s\n", board_info_.AMC_FirmwareRel);
   
@@ -190,21 +191,22 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   auto dtn = t1.time_since_epoch() - t0_.time_since_epoch();
   bundle.system_clock = duration_cast<milliseconds>(dtn).count();  
 
-  // 
+  // Get the event data
   ret = CAEN_DGTZ_GetEventInfo(device_, buffer_, bsize_, 0, &event_info_, &evtptr);
-
   ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
-
 
   int gr, idx, ch_idx;
   for (gr = 0; gr < CAEN_6742_GR; ++gr) {
     for (ch = 0; ch < CAEN_6742_CH / CAEN_6742_GR; ++ch) {
       ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
       int len = event_->DataGroup[gr].ChSize[ch];
+      bundle.device_clock[ch_idx] = event_->DataGroup[gr].TriggerTimeTag;
       std::copy(event_->DataGroup[gr].DataChannel[ch],
 		event_->DataGroup[gr].DataChannel[ch] + len,
 		bundle.trace[ch_idx]);
-      bundle.device_clock[ch] = event_->DataGroup[gr].TriggerTimeTag;
+      //      for (int i = 0; i < len; ++i) {
+      //	bundle.trace[ch_idx][i] = event_->DataGroup[gr].DataChannel[ch][i];
+      //      }
     }
   }
 }

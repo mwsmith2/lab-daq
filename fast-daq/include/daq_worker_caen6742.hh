@@ -28,7 +28,8 @@ public:
 
   // dtor
   ~DaqWorkerCaen6742();
-  
+
+  int dev_sn() { return board_info_.SerialNumber; };
   void LoadConfig();
   void WorkLoop();
   caen_6742 PopEvent();

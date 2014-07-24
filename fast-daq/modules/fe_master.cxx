@@ -196,13 +196,27 @@ int SetupConfig()
   }
 
   // Set up the caen6742 devices.
+  std::vector<DaqWorkerCaen6742 *> caen_vec;
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_6742")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerCaen6742(name, dev_conf_file));
+    caen_vec.push_back(new DaqWorkerCaen6742(name, dev_conf_file));
+  }
+
+  // Now push back the old caen6742 devices based on sn == 406
+  for (auto &caen : caen_vec) {
+    if (caen->dev_sn() == 406) {
+      daq_workers.PushBack(caen);
+    }
+  }
+  // Now push back the new device
+  for (auto &caen : caen_vec) {
+    if (caen->dev_sn() != 406) {
+      daq_workers.PushBack(caen);
+    }
   }
 
   // Set up the writers.
