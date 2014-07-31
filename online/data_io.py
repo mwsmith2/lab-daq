@@ -79,7 +79,7 @@ def pull_event(e, start):
 
     context = zmq.Context()
     data_sck = context.socket(zmq.PULL)
-    data_sck.bind("tcp://127.0.0.1:42043")
+    data_sck.bind("tcp://172.27.104.26:42043")
     last_message = ''
     message = ''
 
@@ -89,6 +89,8 @@ def pull_event(e, start):
             last_message = message
             message = data_sck.recv(zmq.NOBLOCK)
 
+            print 'got message'
+            
             if (message[0:7] == '__EOB__'):
                 print 'got EOB'
                 continue
