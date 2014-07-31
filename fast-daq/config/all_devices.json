@@ -1,7 +1,6 @@
 {
-    "trigger_port":"tcp://172.27.104.28:42040",
-    "handshake_port":"tcp://172.27.104.28:42041",
-    "batch_size":1,
+    "trigger_port":"tcp://127.0.0.1:42040",
+    "handshake_port":"tcp://127.0.0.1:42041",
 
     "devices":
     {
@@ -38,7 +37,7 @@
      
         "online": {
 	    "in_use":true,
-            "port":"tcp://172.27.104.28:42043",
+            "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
         },
 	

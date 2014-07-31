@@ -67,6 +67,9 @@ void EventBuilder::BuilderLoop()
 	}
       }
     //   if (daq_workers_.AllWorkersHaveEvent()){
+        if (pull_data_que_.size() >= batch_size_) {
+          push_new_data_ = true;
+        }
 
     // 	event_data bundle;
     //     daq_workers_.GetEventData(bundle);

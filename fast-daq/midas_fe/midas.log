@@ -1,0 +1,100 @@
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=168) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=88) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [midas.c:10266:rpc_call,ERROR] send_tcp() failed
+Wed Jul 16 20:30:52 2014 [VMEcrate,ERROR] [system.c:4166:send_tcp,ERROR] send(socket=6,size=128) returned -1, errno: 32 (Broken pipe)

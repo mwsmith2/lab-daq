@@ -1,0 +1,156 @@
+Frontend name          :     VMEcrate
+Event buffer size      :     1048575
+User max event size    :     65535
+# of events per buffer :     16
+
+
+ Successfully connected to [MasterSLAC]
+Connection established.  Sending start trigger.
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Got rpc_g2_end_of_fill call.
+rpc_g2_ready from frontend_index 1
+Connection established.  Sending stop trigger.
+Received break. Aborting...

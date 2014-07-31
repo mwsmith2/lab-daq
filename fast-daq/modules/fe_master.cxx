@@ -24,6 +24,7 @@ using namespace boost::property_tree;
 #include "daq_worker_list.hh"
 #include "daq_writer_online.hh"
 #include "daq_writer_root.hh"
+#include "daq_writer_midas.hh"
 #include "event_builder.hh"
 #include "daq_structs.hh"
 
@@ -218,6 +219,10 @@ int SetupConfig()
    
       daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
    
+    } else if (string(v.first) == string("midas")
+	       && v.second.get<bool>("in_use")) {
+      
+      daq_writers.push_back(new DaqWriterMidas(tmp_conf_file));
     }
   }
 
