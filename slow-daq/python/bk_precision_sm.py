@@ -57,6 +57,7 @@ while (True):
     if (time.time() - time_last >= push_interval):
 
         try:
+<<<<<<< HEAD
             bk_dev = sc.BKPrecision(dev_path)
             volt = bk_dev.meas_volt()
             del bk_dev
@@ -69,4 +70,15 @@ while (True):
 
         time_last = time.time()
 	time.sleep(0.5)
+=======
+            # Send data
+            volt = bk_dev.meas_volt()
+            data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
+
+        except:
+            "Could not access device."
+
+        time_last = time.time()
+	time.sleep(1.0)
+>>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
 

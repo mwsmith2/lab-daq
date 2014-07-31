@@ -145,6 +145,7 @@ int AsyncRootWriter::PushData(const string &data)
 
   UpdateTime();
   pt_vec_[tree_idx]->Fill();
+  pf_->Flush();
 
   return 0;
 }

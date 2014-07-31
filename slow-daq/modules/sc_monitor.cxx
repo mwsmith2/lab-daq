@@ -28,7 +28,11 @@ namespace {
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
+<<<<<<< HEAD
   int secs_to_write; // Effectively the timeout before writing the root file.
+=======
+  long long ticks_to_write; // Effectively the timeout before writing the root file.
+>>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
 }
 
 // Helper Functions
@@ -137,6 +141,12 @@ void MessageLoop()
 
       }
     }
+<<<<<<< HEAD
+=======
+    time_to_write = (clock() - start_time) > ticks_to_write;
+    usleep(100);
+  }
+>>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
 
     auto t_now = std::chrono::system_clock::now();
     std::chrono::duration<double> t_diff = t_now - t0;

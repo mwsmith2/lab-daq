@@ -232,6 +232,10 @@ int SetupConfig()
    
       daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
    
+    } else if (string(v.first) == string("midas")
+	       && v.second.get<bool>("in_use")) {
+      
+      //      daq_writers.push_back(new DaqWriterMidas(tmp_conf_file));
     }
   }
 

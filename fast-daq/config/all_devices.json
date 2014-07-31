@@ -1,8 +1,6 @@
 {
-    "trigger_port":"tcp://172.27.104.28:42040",
-    "handshake_port":"tcp://172.27.104.28:42041",
-    "batch_size":1,
-    "max_event_time":1200,
+    "trigger_port":"tcp://127.0.0.1:42040",
+    "handshake_port":"tcp://127.0.0.1:42041",
 
     "devices":
     {
@@ -20,7 +18,7 @@
 
         "caen_1785": {
 	    "caen_adc_0":"config/caen_1785_0.json",
-	    "caen_adc_1":"config/caen_1785_2.json"
+	    "caen_adc_1":"config/caen_1785_1.json"
 	},
 
         "caen_6742": {
@@ -39,7 +37,7 @@
      
         "online": {
 	    "in_use":true,
-            "port":"tcp://172.27.104.26:42043",
+            "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
         },
 	
