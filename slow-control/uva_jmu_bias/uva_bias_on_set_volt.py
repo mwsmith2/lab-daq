@@ -8,7 +8,7 @@ if (len(sys.argv) > 1):
     config_file = sys.argv[1]
 
 else:
-    config_file = 'bias_voltages.json'
+    config_file = 'uva_bias_voltages.json'
     
 # Open the json file.
 conf = json.load(open(config_file))

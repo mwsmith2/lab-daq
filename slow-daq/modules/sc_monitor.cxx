@@ -74,7 +74,7 @@ void MessageLoop()
   write_json("data/.sc_runs.json", conf);
 
   sc::AsyncRootWriter sc_root_writer(str); // run name
-
+  int data_count = 0;
   auto t0 = std::chrono::system_clock::now();
 
   cout << "Starting a new run on " << endl;
@@ -105,6 +105,8 @@ void MessageLoop()
       std::getline(ss, str, ':');
 
       if (str == "DATA") {
+
+	data_count++;
 
         std::getline(ss, str);
         int rc = sc_root_writer.PushData(str);
@@ -139,6 +141,12 @@ void MessageLoop()
     auto t_now = std::chrono::system_clock::now();
     std::chrono::duration<double> t_diff = t_now - t0;
     time_to_write = (t_diff.count() > secs_to_write);
+    
+    if (data_count == 20) {
+      sc_root_writer.WriteFile();
+      data_count = 0;
+    }
+
     usleep(10000);
   }
 }

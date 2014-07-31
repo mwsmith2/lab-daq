@@ -50,7 +50,7 @@ void DaqWorkerCaen6742::LoadConfig()
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
 
   // Set "pretrigger".
-  ret = CAEN_DGTZ_SetPostTriggerSize(device_, 50);
+  ret = CAEN_DGTZ_SetPostTriggerSize(device_, 35);
 
   // Set the sampling rate.
   ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);

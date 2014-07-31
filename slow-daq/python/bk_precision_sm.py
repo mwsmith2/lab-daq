@@ -56,13 +56,17 @@ while (True):
 
     if (time.time() - time_last >= push_interval):
 
-        bk_dev = sc.BKPrecision(dev_path)
-        volt = bk_dev.meas_volt()
-        del bk_dev
+        try:
+            bk_dev = sc.BKPrecision(dev_path)
+            volt = bk_dev.meas_volt()
+            del bk_dev
 
-        # Send data
-        data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
+            # Send data
+            data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
+
+        except:
+            pass
+
         time_last = time.time()
-
 	time.sleep(0.5)
 
