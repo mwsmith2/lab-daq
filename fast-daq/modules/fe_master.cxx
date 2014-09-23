@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 	LoadConfig();
 
 	// Change the run number.
-	string file_name("data/run_");
+	string file_name("data/labrun_");
 	std::getline(ss, msg_string, ':');
 	file_name.append(msg_string);
 	file_name.append(".root");

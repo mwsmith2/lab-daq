@@ -11,7 +11,10 @@ import Queue
 from flask.ext.socketio import emit
 import gevent
 
-import zmq, json
+import zmq, json, os
+
+cwd = os.path.dirname(os.path.realpath(__file__))
+conf = json.load(open(os.path.join(cwd, '../fast-daq/config/.default_master.json')))
 
 data = {}
 hists = {}
@@ -79,7 +82,7 @@ def pull_event(e, start):
 
     context = zmq.Context()
     data_sck = context.socket(zmq.PULL)
-    data_sck.bind("tcp://172.27.104.26:42043")
+    data_sck.bind(conf['writers']['online']['port'])
     last_message = ''
     message = ''
 

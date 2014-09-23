@@ -1,6 +1,6 @@
 {
-    "trigger_port":"tcp://172.27.104.28:42040",
-    "handshake_port":"tcp://172.27.104.28:42041",
+    "trigger_port":"tcp://127.0.0.1:42040",
+    "handshake_port":"tcp://127.0.0.1:42041",
     "batch_size":1,
     "max_event_time":1200,
 
@@ -10,17 +10,12 @@
 	},
 
         "sis_3350": {
-            "sis_fast_0":"config/sis_3350_0.json",
-            "sis_fast_1":"config/sis_3350_1.json"
         },
 
         "sis_3302": {
-            "sis_slow_0":"config/sis_3302_0.json"
         },
 
         "caen_1785": {
-	    "caen_adc_0":"config/caen_1785_0.json",
-	    "caen_adc_1":"config/caen_1785_2.json"
 	},
 
         "caen_6742": {
@@ -39,7 +34,7 @@
      
         "online": {
 	    "in_use":true,
-            "port":"tcp://172.27.104.26:42043",
+            "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
         },
 	
@@ -51,7 +46,7 @@
     },
 
     "trigger_control": {
-        "live_time":"10",
+        "live_time":"10000000",
         "dead_time":"1"
     }
 }
