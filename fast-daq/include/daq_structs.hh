@@ -10,7 +10,7 @@
 #define CAEN_1785_CH 8
 
 #define CAEN_6742_GR 2
-#define CAEN_6742_CH 16
+#define CAEN_6742_CH 18
 #define CAEN_6742_LN 1024
 
 //--- std includes ----------------------------------------------------------//

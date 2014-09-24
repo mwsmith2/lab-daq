@@ -78,7 +78,14 @@ void DaqWorkerCaen6742::LoadConfig()
   }    
 
   // Enable external trigger.
-  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
+  //  ret = CAEN_DGTZ_SetExtTriggerInputMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
+  // Enable fast trigger - NIM
+  ret = CAEN_DGTZ_SetFastTriggerMode(device_, CAEN_DGTZ_TRGMODE_ACQ_ONLY);
+  ret = CAEN_DGTZ_SetGroupFastTriggerDCOffset(device_, 0x10DC, 0x8000);
+  ret = CAEN_DGTZ_SetGroupFastTriggerThreshold(device_, 0x10D4, 0x51C6);
+
+  // Digitize the fast trigger.
+  ret = CAEN_DGTZ_SetFastTriggerDigitizing(device_, CAEN_DGTZ_ENABLE);
 
   // Disable self trigger.
   ret = CAEN_DGTZ_SetChannelSelfTrigger(device_, 
@@ -195,18 +202,22 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   ret = CAEN_DGTZ_GetEventInfo(device_, buffer_, bsize_, 0, &event_info_, &evtptr);
   ret = CAEN_DGTZ_DecodeEvent(device_, evtptr, (void **)&event_);
 
-  int gr, idx, ch_idx;
+  int gr, idx, ch_idx, len;
   for (gr = 0; gr < CAEN_6742_GR; ++gr) {
     for (ch = 0; ch < CAEN_6742_CH / CAEN_6742_GR; ++ch) {
-      ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
+      // Set the channels to fill as group0..group1..tr0..tr1.
+      if (ch == CAEN_6742_CH / CAEN_6742_GR - 1) {
+	ch_idx = CAEN_6742_CH - gr - 1;
+      } else {
+	ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
+      }
+
       int len = event_->DataGroup[gr].ChSize[ch];
       bundle.device_clock[ch_idx] = event_->DataGroup[gr].TriggerTimeTag;
+      cout << "Copying event." << endl;
       std::copy(event_->DataGroup[gr].DataChannel[ch],
 		event_->DataGroup[gr].DataChannel[ch] + len,
 		bundle.trace[ch_idx]);
-      //      for (int i = 0; i < len; ++i) {
-      //	bundle.trace[ch_idx][i] = event_->DataGroup[gr].DataChannel[ch][i];
-      //      }
     }
   }
 }

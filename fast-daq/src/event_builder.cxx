@@ -25,7 +25,6 @@ void EventBuilder::LoadConfig()
   go_time_ = false;
   flush_time_ = false;
   push_new_data_ = false; 
-  got_last_event_ = false;
   quitting_time_ = false;
   finished_run_ = false;
 
@@ -39,41 +38,33 @@ void EventBuilder::LoadConfig()
 
 void EventBuilder::BuilderLoop()
 {
+  // Thread can only be killed by ending the run.
   while (thread_live_) {
 
+    // Update the reference and drop any events outside of run time.
     batch_start_ = clock();
     daq_workers_.FlushEventData();
 
-    while (go_time_ && !got_last_event_) {
-
+    // Collect data while the run isn't paused, in a deadtime or finished.
+    while (go_time_) {
+      
       if (daq_workers_.AnyWorkersHaveEvent()) {
 
+	cout << "Detected a trigger." << endl;
        	usleep(max_event_time_);
 
 	if (!daq_workers_.AllWorkersHaveEvent()) {
  
+	  // Drop the event if not all devices got a trigger.
 	  daq_workers_.FlushEventData();
+	  cout << "Was not synched." << endl;
 	  continue;
-
+       
 	} else if (daq_workers_.AnyWorkersHaveMultiEvent()) {
 
+	  // Drop the event if any devices got two triggers.
 	  daq_workers_.FlushEventData();
-	  continue;
-	}
-
-       	if (flush_time_) {
-	  StopWorkers();
-       	  got_last_event_ = true;
-       	}
-
-	if (!daq_workers_.AllWorkersHaveEvent()) {
- 
-	  daq_workers_.FlushEventData();
-	  continue;
-
-	} else if (daq_workers_.AnyWorkersHaveMultiEvent()) {
-
-	  daq_workers_.FlushEventData();
+	  cout << "Was actually double." << endl;
 	  continue;
 	}
 
@@ -94,53 +85,17 @@ void EventBuilder::BuilderLoop()
 	daq_workers_.FlushEventData();
       }
       
-      //      if (daq_workers_.AllWorkersHaveEvent()){
-      if (0) {
-
-	event_data bundle;
-	daq_workers_.GetEventData(bundle);
-	
-	queue_mutex_.lock();
-	pull_data_que_.push(bundle);
-	queue_mutex_.unlock();
-	
-	cout << "Data queue is now size: ";
-	cout << pull_data_que_.size() << endl;
-	
-	if (pull_data_que_.size() >= batch_size_) {
-	  push_new_data_ = true;
-	}
-	
-	if (flush_time_) {
-	  
-	  StopWorkers();
-	  
-	  while (daq_workers_.AllWorkersHaveEvent()) {
-	    
-	    event_data bundle;
-	    daq_workers_.GetEventData(bundle);
-	    
-	    queue_mutex_.lock();
-	    pull_data_que_.push(bundle);
-	    queue_mutex_.unlock();
-	    
-	    std::this_thread::yield();
-	    usleep(10);
-	  }
-	  
-	  got_last_event_ = true;
-	}
-      } 
-      
       flush_time_ = (clock() - batch_start_) > live_ticks_;
       
       std::this_thread::yield();
       usleep(daq::short_sleep);
-    }
+
+    } // go_time_
 
     std::this_thread::yield();
     usleep(daq::long_sleep);
-  }
+
+  } // thread_live_
 }
 
 void EventBuilder::PushDataLoop()
@@ -179,9 +134,11 @@ void EventBuilder::PushDataLoop()
         push_data_mutex_.unlock();
       }
 
-      if (flush_time_ && got_last_event_) {
+      if (flush_time_) {
 
         cout << "Pushing end of batch." << endl;
+
+	StopWorkers();
 
         push_data_mutex_.lock();
         push_data_vec_.resize(0);
@@ -226,7 +183,6 @@ void EventBuilder::PushDataLoop()
         push_data_mutex_.unlock();
 
         flush_time_ = false;
-        got_last_event_ = false;
 
 	  if (quitting_time_ == true) {
 	    go_time_ = false;
@@ -236,7 +192,7 @@ void EventBuilder::PushDataLoop()
 	
 	daq_workers_.FlushEventData();
         // Start the workers and make sure they start in sync.
-        while (!daq_workers_ .AnyWorkersHaveEvent()) {
+        while (!daq_workers_.AnyWorkersHaveEvent()) {
           daq_workers_.FlushEventData();
         }
 	
@@ -247,10 +203,8 @@ void EventBuilder::PushDataLoop()
 	
 	// First flush all the remaining events.
 	flush_time_ = true;
+	StopWorkers();
 
-	// Wait for the last event
-	while (!got_last_event_);
-	
         push_data_mutex_.lock();
         push_data_vec_.resize(0);
 
