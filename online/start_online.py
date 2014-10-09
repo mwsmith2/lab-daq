@@ -45,8 +45,8 @@ socketio = SocketIO(app)
 #Define attributes of a run
 run_info = {}
 run_info['db_name'] = 'lab_db'
-run_info['attr'] = ['Description']
-run_info['log_info'] = ['Events', 'Date', 'Time']
+run_info['attr'] = ['Description', 'Bias Voltage']
+run_info['log_info'] = ['Events', 'Rate', 'Start Date', 'Start Time', 'End Date', 'End Time']
 run_info['runlog'] = 'runlog.csv'
 
 @app.errorhandler(404)
@@ -114,8 +114,8 @@ def start_run():
     run_info['last_run'] += 1
     data['run_number'] = run_info['last_run']
     now = datetime.datetime.now()
-    data['Date'] = "%02i/%02i" % (now.month, now.day)
-    data['Time'] = "%02i:%02i" % (now.hour, now.minute)
+    data['Start Date'] = "%02i/%02i" % (now.month, now.day)
+    data['Start Time'] = "%02i:%02i" % (now.hour, now.minute)
     save_db_data(db, data)
 
     #start the run and launch the data emitter
@@ -162,6 +162,10 @@ def end_run():
     db = connect_db(run_info['db_name'])
     data = db[db['toc'][str(run_info['last_run'])]]
     data['Events'] = data_io.eventCount
+    data['Rate'] = "%.1f" % data_io.rate
+    now = datetime.datetime.now()
+    data['End Date'] = "%02i/%02i" % (now.month, now.day)
+    data['End Time'] = "%02i:%02i" % (now.hour, now.minute)
     print "%i events" % data_io.eventCount
     db.save(data)
 
