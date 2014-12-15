@@ -4,8 +4,6 @@ namespace daq {
 
 DaqWorkerDrs4::DaqWorkerDrs4(string name, string conf) : DaqWorkerBase<drs4>(name, conf)
 {
-  board_ = new DRS();
-
   LoadConfig();
 
   board_->StartClearCycle();
@@ -20,7 +18,11 @@ void DaqWorkerDrs4::LoadConfig()
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-   // Reset the usb device in case it was shutdown improperly.
+  // Load the drs board.
+  drs_ = new DRS();
+  board_ = drs_->GetBoard(conf.get<int>("board_number", 0));
+
+  // Reset the usb device in case it was shutdown improperly.
   libusb_reset_device(board_->GetUSBInterface()->dev);
 
   // Initialize the board.
@@ -56,7 +58,8 @@ void DaqWorkerDrs4::LoadConfig()
 
     }
 
-    board_->SetTriggerLevel(thresh, !positive_trg_); // -0.05 V, neg edge
+    board_->SetTriggerLevel(thresh);         // -0.05 V
+    board_->SetTriggerLevel(!positive_trg_); // neg edge
   }
 
   int trg_delay = conf.get<int>("trigger_delay");

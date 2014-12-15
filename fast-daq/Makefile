@@ -12,14 +12,14 @@ UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Darwin)
 	CXX = clang++
 	CC  = clang
-	FLAGS = -std=c++11
+	FLAGS = -std=c++11 -DOS_DARWIN
 endif
 
 # Gnu compiler
 ifeq ($(UNAME_S), Linux)
 	CXX = g++
 	CC  = gcc
-	FLAGS = -std=c++0x
+	FLAGS = -std=c++0x -DOS_LINUX
 endif
 
 ifdef DEBUG
@@ -28,6 +28,8 @@ else
 	FLAGS += -g
 endif
 
+# DRS flags
+FLAGS += -DHAVE_USB -DHAVE_LIBUSB10 -DUSE_DRS_MUTEX
 
 # ROOT libs and flags
 FLAGS += $(shell root-config --cflags)
@@ -38,12 +40,13 @@ WXLIBS        = $(shell wx-config --libs)
 WXFLAGS       = $(shell wx-config --cxxflags)
 
 FLAGS += -Iinclude -Iinclude/drs
-LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer
+LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
 
 all: $(OBJECTS) $(OBJ_VME) $(OBJ_DRS) $(TARGETS) build
 
 fe_%: modules/fe_%.cxx $(OBJECTS) $(OBJ_VME) $(OBJ_DRS)
-	$(CXX) $< -o $@  $(FLAGS) $(OBJECTS) $(OBJ_VME) $(LIBS) $(WXLIBS)
+	$(CXX) $< -o $@  $(FLAGS) $(WXFLAGS) \
+	$(OBJECTS) $(OBJ_VME) $(OBJ_DRS) $(LIBS) $(WXLIBS)
 
 %_daq: modules/%_daq.cxx 
 	$(CXX) $< -o $@  $(FLAGS) $(LIBS)
@@ -57,10 +60,10 @@ build/%.o: src/%.cxx
 build/%.o: include/vme/%.c
 	$(CC) -c $< -o $@
 
-build/%.o: src/drs/*.cpp
+build/%.o: src/drs/%.cpp
 	$(CXX) -c $< -o $@ $(FLAGS) $(WXFLAGS)
 
-build/%.o: src/drs/*.c
+build/%.o: src/drs/%.c
 	$(CC) -c $< -o $@ $(FLAGS) $(WXFLAGS)
 
 clean:

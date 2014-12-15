@@ -283,7 +283,7 @@ void DaqWorkerList::GetEventData(event_data &bundle)
     } else if ((*it).which() == 3) {
 
       auto ptr = boost::get<DaqWorkerBase<drs4> *>(*it);
-      bundle.caen_drs.push_back(ptr->PopEvent());
+      bundle.drs.push_back(ptr->PopEvent());
 
     }
   }

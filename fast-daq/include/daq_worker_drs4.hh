@@ -23,7 +23,7 @@ using std::endl;
 // This class pulls data from a drs4 evaluation board.
 namespace daq {
 
-class DaqWorkerDrs4 : public DaqWorkerVme<drs4> {
+class DaqWorkerDrs4 : public DaqWorkerBase<drs4> {
 
 public:
   
@@ -39,7 +39,8 @@ private:
   high_resolution_clock::time_point t0_;
   bool positive_trg_;
 
-  DRS *board_;
+  DRS *drs_;
+  DRSBoard *board_;
   
   bool EventAvailable();
   void GetEvent(drs4 &bundle);

@@ -575,6 +575,8 @@ public:
    // Public Methods
 #ifdef HAVE_USB
    DRSBoard(MUSB_INTERFACE * musb_interface, int usb_slot);
+
+   MUSB_INTERFACE *GetUSBInterface() const { return fUsbInterface; };
 #endif
 #ifdef HAVE_VME
    DRSBoard(MVME_INTERFACE * mvme_interface, mvme_addr_t base_address, int slot_number);
