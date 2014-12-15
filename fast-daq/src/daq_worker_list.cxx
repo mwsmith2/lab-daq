@@ -45,6 +45,10 @@ void DaqWorkerList::StartWorkers()
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->StartWorker();
 
+    } else if ((*it).which() == 4) {
+
+      boost::get<DaqWorkerBase<drs4> *>(*it)->StartWorker();
+
     }
   }
 }
@@ -69,6 +73,10 @@ void DaqWorkerList::StartThreads()
     } else if ((*it).which() == 3) {
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->StartThread();
+
+    } else if ((*it).which() == 4) {
+
+      boost::get<DaqWorkerBase<drs4> *>(*it)->StartThread();
 
     }
   }
@@ -95,6 +103,10 @@ void DaqWorkerList::StopWorkers()
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->StopWorker();
 
+    } else if ((*it).which() == 4) {
+
+      boost::get<DaqWorkerBase<drs4> *>(*it)->StopWorker();
+
     }
   }
 }
@@ -120,6 +132,10 @@ void DaqWorkerList::StopThreads()
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->StopThread();
 
+    } else if ((*it).which() == 4) {
+
+      boost::get<DaqWorkerBase<drs4> *>(*it)->StopThread();
+
     }
   }
 }
@@ -142,26 +158,33 @@ bool DaqWorkerList::AllWorkersHaveEvent()
 
       has_event &= boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent();
       if (0 & boost::get<DaqWorkerBase<sis_3302> *>(*it)->HasEvent()) {
-	cout << boost::get<DaqWorkerBase<sis_3302> *>(*it)->name();
-	cout << " has " << boost::get<DaqWorkerBase<sis_3302> *>(*it)->num_events() << " event." << endl;
+    	  cout << boost::get<DaqWorkerBase<sis_3302> *>(*it)->name();
+      	cout << " has " << boost::get<DaqWorkerBase<sis_3302> *>(*it)->num_events() << " event." << endl;
       }
 
     } else if ((*it).which() == 2) {
 
       has_event &= boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent();
       if (0 & boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent()) {
-	cout << boost::get<DaqWorkerBase<caen_1785> *>(*it)->name();
-	cout << " has " << boost::get<DaqWorkerBase<caen_1785> *>(*it)->num_events() << " event." << endl;
+      	cout << boost::get<DaqWorkerBase<caen_1785> *>(*it)->name();
+      	cout << " has " << boost::get<DaqWorkerBase<caen_1785> *>(*it)->num_events() << " event." << endl;
       }
 
     } else if ((*it).which() == 3) {
 
       has_event &= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
       if (0 & boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent()) {
-	cout << boost::get<DaqWorkerBase<caen_6742> *>(*it)->name();
-	cout << " has " << boost::get<DaqWorkerBase<caen_6742> *>(*it)->num_events() << " event." << endl;
+      	cout << boost::get<DaqWorkerBase<caen_6742> *>(*it)->name();
+      	cout << " has " << boost::get<DaqWorkerBase<caen_6742> *>(*it)->num_events() << " event." << endl;
       }
 
+    } else if ((*it).which() == 4) {
+
+      has_event &= boost::get<DaqWorkerBase<drs4> *>(*it)->HasEvent();
+      if (0 & boost::get<DaqWorkerBase<drs4> *>(*it)->HasEvent()) {
+        cout << boost::get<DaqWorkerBase<drs4> *>(*it)->name();
+        cout << " has " << boost::get<DaqWorkerBase<drs4> *>(*it)->num_events() << " event." << endl;
+      }
     }
   }
 
@@ -187,6 +210,10 @@ bool DaqWorkerList::AnyWorkersHaveEvent()
       bad_data |= boost::get<DaqWorkerBase<caen_1785> *>(*it)->HasEvent();
 
     } else if ((*it).which() == 3) {
+
+      bad_data |= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
+
+    } else if ((*it).which() == 4) {
 
       bad_data |= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
 
@@ -220,6 +247,11 @@ void DaqWorkerList::GetEventData(event_data &bundle)
       auto ptr = boost::get<DaqWorkerBase<caen_6742> *>(*it);
       bundle.caen_drs.push_back(ptr->PopEvent());
 
+    } else if ((*it).which() == 3) {
+
+      auto ptr = boost::get<DaqWorkerBase<drs4> *>(*it);
+      bundle.caen_drs.push_back(ptr->PopEvent());
+
     }
   }
 }
@@ -244,14 +276,12 @@ void DaqWorkerList::FlushEventData()
 
       boost::get<DaqWorkerBase<caen_6742> *>(*it)->FlushEvents();
 
+    } else if ((*it).which() == 4) {
+
+      boost::get<DaqWorkerBase<drs4> *>(*it)->FlushEvents();
+
     }
   } 
-}
-
-void DaqWorkerList::ClearList()
-{
-  // Remove the pointer references
-  daq_workers_.resize(0);
 }
 
 void DaqWorkerList::FreeList()
@@ -271,12 +301,17 @@ void DaqWorkerList::FreeList()
 
       delete boost::get<DaqWorkerBase<caen_1785> *>(*it);
 
-    } else if ((*it).which() == 2) {
+    } else if ((*it).which() == 3) {
 
       delete boost::get<DaqWorkerBase<caen_6742> *>(*it);
 
+    } else if ((*it).which() == 4) {
+
+      delete boost::get<DaqWorkerBase<drs4> *>(*it);
+
     }
   }
+
   daq_workers_.resize(0);
 }
 
