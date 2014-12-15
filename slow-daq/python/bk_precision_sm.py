@@ -13,6 +13,7 @@ branch_vars = "volt"
 push_interval = conf['push_interval']
 
 if (len(sys.argv) > 1):
+<<<<<<< HEAD
     dev_path = sys.argv[1]
 
 else:
@@ -23,6 +24,12 @@ bk = sc.BKPrecision(dev_path)
 name = "%s_%04i" % (name,  bk.id)
 bk.s.close()
 del bk
+=======
+    port = sys.argv[1]
+
+else:
+    port = '/dev/ttyUSB0'
+>>>>>>> mws-dev
 
 context = zmq.Context()
 data_sck = context.socket(zmq.PUB)
@@ -56,6 +63,7 @@ while (True):
 
     if (time.time() - time_last >= push_interval):
 
+<<<<<<< HEAD
         try:
 <<<<<<< HEAD
             bk_dev = sc.BKPrecision(dev_path)
@@ -69,6 +77,16 @@ while (True):
             pass
 
         time_last = time.time()
+=======
+        bk_dev = sc.BKPrecision(port)
+        volt = bk_dev.meas_volt()
+
+        # Send data
+        data_sck.send(':'.join(['DATA', key, branch_vars, volt, '__EOM__\0']))
+        time_last = time.time()
+
+        del bk_dev
+>>>>>>> mws-dev
 	time.sleep(0.5)
 =======
             # Send data

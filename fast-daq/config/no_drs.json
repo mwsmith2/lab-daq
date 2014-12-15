@@ -1,14 +1,6 @@
 {
-<<<<<<< HEAD
-    "trigger_port":"tcp://127.0.0.1:42040",
-    "handshake_port":"tcp://127.0.0.1:42041",
-    "batch_size":1,
-    "max_event_time":1200,
-=======
     "trigger_port":"tcp://172.27.104.28:42040",
     "handshake_port":"tcp://172.27.104.28:42041",
-    "batch_size":1,
->>>>>>> mws-dev
 
     "devices":
     {
@@ -21,13 +13,15 @@
         },
 
         "sis_3302": {
+            "sis_slow_0":"config/sis_3302_0.json"
         },
 
         "caen_1785": {
+	    "caen_adc_0":"config/caen_1785_0.json",
+	    "caen_adc_1":"config/caen_1785_1.json"
 	},
 
         "caen_6742": {
-	    "caen_drs_0":"config/caen_6742_0.json"
 	}
     },
 
@@ -44,17 +38,11 @@
 	    "in_use":true,
             "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
-        },
-	
-	"midas": {
-	    "in_use":true,
-	    "port":"tcp://127.0.0.1:42044",
-	    "high_water_mark":10
-	}
+        }
     },
 
     "trigger_control": {
-        "live_time":"10000000",
+        "live_time":"10",
         "dead_time":"1"
     }
 }

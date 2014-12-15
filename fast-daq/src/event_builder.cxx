@@ -29,7 +29,7 @@ void EventBuilder::LoadConfig()
   finished_run_ = false;
 
   batch_size_ = conf.get<int>("batch_size", 10);
-  max_event_time_ = conf.get<int>("max_event_time", 1000);
+  max_event_time_ = conf.get<int>("max_event_time", 2000);
 
   live_time_ = conf.get<int>("trigger_control.live_time");
   dead_time_ = conf.get<int>("trigger_control.dead_time");

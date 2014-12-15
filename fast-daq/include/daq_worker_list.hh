@@ -47,8 +47,6 @@ class DaqWorkerList {
     }
 
     void FreeList();
-    void ClearList();
-
 
   private:
 

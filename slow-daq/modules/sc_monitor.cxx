@@ -23,16 +23,20 @@ namespace {
   ptree conf;
 
   // Set up the sockets.
-  zmq::context_t sc_ctx(2);
+  zmq::context_t sc_ctx(1);
   zmq::socket_t data_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   int secs_to_write; // Effectively the timeout before writing the root file.
 =======
   long long ticks_to_write; // Effectively the timeout before writing the root file.
 >>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
+=======
+  long long ticks_to_write; // The timeout before writing the root file.
+>>>>>>> mws-dev
 }
 
 // Helper Functions
@@ -144,7 +148,11 @@ void MessageLoop()
 <<<<<<< HEAD
 =======
     time_to_write = (clock() - start_time) > ticks_to_write;
+<<<<<<< HEAD
     usleep(100);
+=======
+    usleep(10000);
+>>>>>>> mws-dev
   }
 >>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
 

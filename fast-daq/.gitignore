@@ -1,20 +1,12 @@
-<<<<<<< HEAD
 fe_master
 start_daq
 stop_daq
-log
+usbreset
 build
 build/*
 data
 data/*
-bak
 */#*
 */.#*
 */*~
 *~
-=======
-*~
-*#
-*#*
-bak
->>>>>>> mws-dev

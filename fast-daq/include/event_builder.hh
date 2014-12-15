@@ -53,7 +53,11 @@ class EventBuilder {
   private:
 
     // Simple variable declarations
+<<<<<<< HEAD
 
+=======
+    int batch_size_;
+>>>>>>> mws-dev
     string conf_file_;
     int live_time_;
     int dead_time_;

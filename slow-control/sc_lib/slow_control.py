@@ -1,14 +1,20 @@
 # A wrapper Class for the BK Precision 9124 Power Supply
 import serial
 import u3
+<<<<<<< HEAD
 import urllib2 as url
 from urllib import quote
+=======
+>>>>>>> mws-dev
 
 class BKPrecision:
 
     def __init__(self, dev_path, baud=4800, timeout=1):
         self.s = serial.Serial(dev_path, baud, timeout=timeout)
+<<<<<<< HEAD
         print self.get_version()
+=======
+>>>>>>> mws-dev
    	self.id = int(self.get_version().split(',')[-2][-4:])
  
     def get_version(self):
@@ -128,6 +134,7 @@ class TempProbe:
 	for i in range(1, 7):
 	    self.set_channel(i)
 	    temp.append(self.meas_temp())
+<<<<<<< HEAD
 	return temp  
 
 
@@ -270,3 +277,6 @@ class UvaBias:
 		"""A wrapper function for the url calls."""
 		return url.urlopen(url_path + quote(args)).read()
 
+=======
+	return temp        
+>>>>>>> mws-dev

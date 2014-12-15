@@ -48,12 +48,28 @@ void DaqWriterMidas::PushData(const vector<event_data> &data_buffer)
 
 void DaqWriterMidas::EndOfBatch(bool bad_data)
 {
+  // while (!data_queue_.empty()) {
+  //   SendDataMessage();
+  // }
+
+  // zmq::message_t msg(10);
+  // memcpy(msg.data(), string("__EOB__").c_str(), 10);
+
+  // int count = 0;
+  // while (count < 10) {
+
+  //   midas_sck_.send(msg, ZMQ_DONTWAIT);
+  //   usleep(100);
+
+  //   count++;
+  // }
 }
 
 void DaqWriterMidas::SendMessageLoop()
 {
   ptree conf;
   read_json(conf_file_, conf);
+
   bool rc = false;
   zmq::message_t req_msg(20);
 
@@ -62,17 +78,17 @@ void DaqWriterMidas::SendMessageLoop()
     while (go_time_) {
 
       do {
-  rc = midas_rep_sck_.recv(&req_msg, ZMQ_NOBLOCK);
+	rc = midas_rep_sck_.recv(&req_msg, ZMQ_NOBLOCK);
       } while ((rc == false) && (zmq_errno() == EAGAIN));
       
       do {
-  rc = midas_rep_sck_.send(req_msg, ZMQ_NOBLOCK);
+	rc = midas_rep_sck_.send(req_msg, ZMQ_NOBLOCK);
       } while ((rc == false) && (zmq_errno() == EAGAIN));
-
+      
       if (rc == true) {
-  get_next_event_ = true;
-  usleep(100);
-  SendDataMessage();
+	get_next_event_ = true;
+	usleep(100);
+	SendDataMessage();
       }
   
       usleep(daq::short_sleep);
@@ -136,7 +152,7 @@ void DaqWriterMidas::SendDataMessage()
       rc = midas_data_sck_.send(data_msg, ZMQ_SNDMORE);
     } while ((rc == false) && (zmq_errno() == EINTR));
   }
-
+  
   count = 0;
   for (auto &sis : data.sis_slow) {
 

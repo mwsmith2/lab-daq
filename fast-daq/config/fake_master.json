@@ -1,6 +1,7 @@
 {
     "trigger_port":"tcp://127.0.0.1:42040",
     "handshake_port":"tcp://127.0.0.1:42041",
+    "batch_size":1,
     
     "devices":{
 	
@@ -41,8 +42,12 @@
 	    "in_use":true,
 	    "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
-	}
+	},
 	
+	"midas":{
+	    "in_use":true,
+	    "port":"tcp://127.0.0.1:42044"
+	}
     },
     
     "trigger_control":{

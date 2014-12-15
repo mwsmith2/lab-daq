@@ -13,6 +13,9 @@
 #define CAEN_6742_CH 18
 #define CAEN_6742_LN 1024
 
+#define DRS4_CH 4 
+#define DRS4_LN 1024
+
 //--- std includes ----------------------------------------------------------//
 #include <vector>
 using std::vector;
@@ -51,16 +54,27 @@ struct caen_6742 {
   UShort_t trace[CAEN_6742_CH][CAEN_6742_LN];
 };
 
+struct drs4 {
+  ULong64_t system_clock;
+  ULong64_t device_clock[DRS4_CH];
+  UShort_t trace[DRS4_CH][DRS4_LN];
+};
+
 // Built from basic structs 
 struct event_data {
   vector<sis_3350> sis_fast;
   vector<sis_3302> sis_slow;
   vector<caen_1785> caen_adc;
   vector<caen_6742> caen_drs;
+  vector<drs4> drs;
 };
 
 // typedef for all workers
-typedef boost::variant<DaqWorkerBase<sis_3350> *, DaqWorkerBase<sis_3302> *, DaqWorkerBase<caen_1785> *, DaqWorkerBase<caen_6742> *> worker_ptr_types;
+typedef boost::variant<DaqWorkerBase<sis_3350> *, 
+                       DaqWorkerBase<sis_3302> *, 
+                       DaqWorkerBase<caen_1785> *, 
+                       DaqWorkerBase<caen_6742> *,
+                       DaqWorkerBase<drs4> *> worker_ptr_types;
 
 namespace vme {
 
