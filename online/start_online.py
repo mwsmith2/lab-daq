@@ -45,7 +45,7 @@ socketio = SocketIO(app)
 #Define attributes of a run
 run_info = {}
 run_info['db_name'] = 'lab_db'
-run_info['attr'] = ['Description', 'Bias Voltage']
+run_info['attr'] = ['Description', 'Bias Voltage', 'Temperature']
 run_info['log_info'] = ['Events', 'Rate', 'Start Date', 'Start Time', 'End Date', 'End Time']
 run_info['runlog'] = 'runlog.csv'
 
