@@ -2,7 +2,7 @@
 #define SLAC_DAQ_INCLUDE_DAQ_STRUCTS_HH_
 
 #define SIS_3350_CH 4
-#define SIS_3350_LN 1024
+#define SIS_3350_LN 2048
 
 #define SIS_3302_CH 8 
 #define SIS_3302_LN 1024

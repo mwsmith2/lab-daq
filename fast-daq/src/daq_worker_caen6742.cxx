@@ -17,6 +17,7 @@ DaqWorkerCaen6742::~DaqWorkerCaen6742()
     work_thread_.join();
   }
 
+  //CAEN_DGTZ_Reset(device_);
   CAEN_DGTZ_FreeReadoutBuffer(&buffer_);
   CAEN_DGTZ_CloseDigitizer(device_);
 }
@@ -33,7 +34,16 @@ void DaqWorkerCaen6742::LoadConfig()
   int device_id = conf.get<int>("device_id");
 
   // Open the device.
-  ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, device_id, 0, 0, &device_);
+  int i = 0;
+  while (ret < 0 && i < 20) {
+    ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, device_id, 0, 0, &device_);
+    usleep(5000);
+    ++i;
+  }
+
+  usleep(1e5);
+
+  cout << "open caen digitizer ret: " << ret << endl;
   cout << "device: " << device_ << endl;
 
   // Reset the device.
@@ -50,14 +60,34 @@ void DaqWorkerCaen6742::LoadConfig()
   ret = CAEN_DGTZ_SetRecordLength(device_, CAEN_6742_LN);
 
   // Set "pretrigger".
-  ret = CAEN_DGTZ_SetPostTriggerSize(device_, 35);
+  int pretrigger_delay = conf.get<int>("pretrigger_delay", 35);
+  ret = CAEN_DGTZ_SetPostTriggerSize(device_, pretrigger_delay);
 
   // Set the sampling rate.
-  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, CAEN_DGTZ_DRS4_1GHz);
+  CAEN_DGTZ_DRS4Frequency_t rate;
+  double sampling_rate = conf.get<double>("sampling_rate", 1.0);
+
+  if (sampling_rate > 3.75) {
+
+    printf("Setting sampling rate to 5.0GHz.\n");
+    rate = CAEN_DGTZ_DRS4_5GHz;
+
+  } else if (sampling_rate <= 3.75 && sampling_rate >= 2.25) {
+
+    printf("Setting sampling rate to 2.5GHz.\n");
+    rate = CAEN_DGTZ_DRS4_2_5GHz;
+
+  } else {
+
+    printf("Setting sampling rate to 1.0GHz.\n");
+    rate = CAEN_DGTZ_DRS4_1GHz;
+  }  
+
+  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(device_, rate);
 
   if (conf.get<bool>("use_drs4_corrections")) {
     // Load and enable DRS4 corrections.
-    ret = CAEN_DGTZ_LoadDRS4CorrectionData(device_, CAEN_DGTZ_DRS4_1GHz);
+    ret = CAEN_DGTZ_LoadDRS4CorrectionData(device_, rate);
     ret = CAEN_DGTZ_EnableDRS4Correction(device_);
   }
 
@@ -205,11 +235,12 @@ void DaqWorkerCaen6742::GetEvent(caen_6742 &bundle)
   int gr, idx, ch_idx, len;
   for (gr = 0; gr < CAEN_6742_GR; ++gr) {
     for (ch = 0; ch < CAEN_6742_CH / CAEN_6742_GR; ++ch) {
+
       // Set the channels to fill as group0..group1..tr0..tr1.
-      if (ch == CAEN_6742_CH / CAEN_6742_GR - 1) {
-	ch_idx = CAEN_6742_CH - gr - 1;
+      if (ch < CAEN_6742_CH / CAEN_6742_GR - 1) {
+	ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR - 1);
       } else {
-	ch_idx = ch + gr * (CAEN_6742_CH / CAEN_6742_GR);
+	ch_idx = CAEN_6742_CH - 2 + gr;
       }
 
       int len = event_->DataGroup[gr].ChSize[ch];
