@@ -14,6 +14,7 @@
 #include "daq_worker_sis3302.hh"
 #include "daq_worker_caen1785.hh"
 #include "daq_worker_caen6742.hh"
+#include "daq_worker_drs4.hh"
 
 namespace daq {
 

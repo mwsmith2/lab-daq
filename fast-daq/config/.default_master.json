@@ -1,14 +1,8 @@
 {
-<<<<<<< HEAD
     "trigger_port":"tcp://127.0.0.1:42040",
     "handshake_port":"tcp://127.0.0.1:42041",
     "batch_size":1,
     "max_event_time":1200,
-=======
-    "trigger_port":"tcp://172.27.104.28:42040",
-    "handshake_port":"tcp://172.27.104.28:42041",
-    "batch_size":1,
->>>>>>> mws-dev
 
     "devices":
     {
@@ -16,8 +10,6 @@
 	},
 
         "sis_3350": {
-            "sis_fast_0":"config/sis_3350_0.json",
-            "sis_fast_1":"config/sis_3350_1.json"
         },
 
         "sis_3302": {
@@ -27,7 +19,10 @@
 	},
 
         "caen_6742": {
-	    "caen_drs_0":"config/caen_6742_0.json"
+	},
+	
+	"drs4": {
+	    "drs_0":"config/drs4_0.json"
 	}
     },
 
@@ -47,7 +42,7 @@
         },
 	
 	"midas": {
-	    "in_use":true,
+	    "in_use":false,
 	    "port":"tcp://127.0.0.1:42044",
 	    "high_water_mark":10
 	}

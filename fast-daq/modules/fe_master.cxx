@@ -220,6 +220,16 @@ int SetupConfig()
     }
   }
 
+  // Set up the DRS4 devices.
+  BOOST_FOREACH(const ptree::value_type &v, 
+                conf.get_child("devices.drs4")) {
+
+    string name(v.first);
+    string dev_conf_file(v.second.data());
+
+    daq_workers.PushBack(new DaqWorkerDrs4(name, dev_conf_file));
+  }
+
   // Set up the writers.
   BOOST_FOREACH(const ptree::value_type &v,
                 conf.get_child("writers")) {

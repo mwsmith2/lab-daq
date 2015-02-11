@@ -1,0 +1,13 @@
+{
+    "name":"drs_0",
+    "device_id":0,
+    "board_number":0,
+    "sampling_rate":1.0,
+    "voltage_range": 0.0,
+    "trigger_ext":true,
+    "trigger_chan":1,
+    "trigger_thresh":0.05,
+    "trigger_pos":false,
+    "trigger_delay":100,
+    "use_drs4_corrections":true
+}

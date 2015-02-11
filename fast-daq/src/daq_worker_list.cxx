@@ -215,7 +215,7 @@ bool DaqWorkerList::AnyWorkersHaveEvent()
 
     } else if ((*it).which() == 4) {
 
-      bad_data |= boost::get<DaqWorkerBase<caen_6742> *>(*it)->HasEvent();
+      bad_data |= boost::get<DaqWorkerBase<drs4> *>(*it)->HasEvent();
 
     }
 
@@ -247,6 +247,10 @@ bool DaqWorkerList::AnyWorkersHaveMultiEvent()
     } else if ((*it).which() == 3) {
 
       num_events = boost::get<DaqWorkerBase<caen_6742> *>(*it)->num_events();
+
+    } else if ((*it).which() == 4) {
+
+      num_events = boost::get<DaqWorkerBase<drs4> *>(*it)->num_events();
 
     }
 
@@ -280,7 +284,7 @@ void DaqWorkerList::GetEventData(event_data &bundle)
       auto ptr = boost::get<DaqWorkerBase<caen_6742> *>(*it);
       bundle.caen_drs.push_back(ptr->PopEvent());
 
-    } else if ((*it).which() == 3) {
+    } else if ((*it).which() == 4) {
 
       auto ptr = boost::get<DaqWorkerBase<drs4> *>(*it);
       bundle.drs.push_back(ptr->PopEvent());

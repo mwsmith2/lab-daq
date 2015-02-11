@@ -237,11 +237,40 @@ void DaqWriterOnline::PackMessage()
 
     }
 
+
     sprintf(str, "trace");
     caen_map.push_back(json_spirit::Pair(str, arr));
 
     sprintf(str, "caen_drs_%i", count++);
     json_map.push_back(json_spirit::Pair(str, caen_map));
+  }
+
+  count = 0;
+  for (auto &board : data.drs) {
+
+    json_spirit::Object drs_map;
+
+    sprintf(str, "system_clock");
+    drs_map.push_back(json_spirit::Pair(str, (uint64_t)board.system_clock));
+
+    sprintf(str, "device_clock");
+    drs_map.push_back(json_spirit::Pair(str, 
+      json_spirit::Array(
+        (uint64_t *)&board.device_clock[0], 
+        (uint64_t *)&board.device_clock[DRS4_CH])));
+
+    json_spirit::Array arr;
+    for (int ch = 0; ch < DRS4_CH; ++ch) {
+      arr.push_back(json_spirit::Array(
+        &board.trace[ch][0], &board.trace[ch][DRS4_LN]));
+
+    }
+
+    sprintf(str, "trace");
+    drs_map.push_back(json_spirit::Pair(str, arr));
+
+    sprintf(str, "drs_%i", count++);
+    json_map.push_back(json_spirit::Pair(str, drs_map));
   }
 
   string buffer = json_spirit::write(json_map);

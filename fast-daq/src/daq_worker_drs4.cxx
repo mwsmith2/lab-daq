@@ -63,7 +63,7 @@ void DaqWorkerDrs4::LoadConfig()
   }
 
   int trg_delay = conf.get<int>("trigger_delay");
-  board_->SetTriggerDelayNs(trg_delay); // 100 ns = 30 ns before trigger
+  board_->SetTriggerDelayNs(trg_delay); // 100 = 30 ns before trigger
 
 } // LoadConfig
 
