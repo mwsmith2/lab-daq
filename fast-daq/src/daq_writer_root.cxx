@@ -168,6 +168,10 @@ void DaqWriterRoot::StopWriter()
   pf_->Write();
   pf_->Close();
   delete pf_;
+  string cmd("chown newg2:newg2 ");
+  cmd += outfile_.c_str();
+  cout << cmd << endl;
+  system((const char*)cmd.c_str());
 }
 
 void DaqWriterRoot::PushData(const vector<event_data> &data_buffer)

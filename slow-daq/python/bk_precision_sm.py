@@ -13,7 +13,6 @@ branch_vars = "volt"
 push_interval = conf['push_interval']
 
 if (len(sys.argv) > 1):
-<<<<<<< HEAD
     dev_path = sys.argv[1]
 
 else:
@@ -24,12 +23,6 @@ bk = sc.BKPrecision(dev_path)
 name = "%s_%04i" % (name,  bk.id)
 bk.s.close()
 del bk
-=======
-    port = sys.argv[1]
-
-else:
-    port = '/dev/ttyUSB0'
->>>>>>> mws-dev
 
 context = zmq.Context()
 data_sck = context.socket(zmq.PUB)
