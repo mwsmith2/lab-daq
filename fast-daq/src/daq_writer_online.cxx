@@ -51,7 +51,7 @@ void DaqWriterOnline::EndOfBatch(bool bad_data)
   memcpy(msg.data(), string("__EOB__").c_str(), 10);
 
   int count = 0;
-  while (count < 10) {
+  while (count < 50) {
 
     online_sck_.send(msg, ZMQ_DONTWAIT);
     usleep(100);

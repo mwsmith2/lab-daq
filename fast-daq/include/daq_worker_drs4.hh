@@ -29,6 +29,22 @@ public:
   
   // ctor
   DaqWorkerDrs4(string name, string conf);
+
+  // dtor
+  ~DaqWorkerDrs4() {
+    // Clear the data.
+    go_time_ = false;
+    FlushEvents();
+    
+    // Stop the thread.
+    thread_live_ = false;
+    if (work_thread_.joinable()) {
+      work_thread_.join();
+    }
+
+    // free the drs4 object.
+    delete drs_;
+  }
   
   void LoadConfig();
   void WorkLoop();

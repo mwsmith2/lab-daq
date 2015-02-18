@@ -4,8 +4,13 @@ namespace daq {
 
 DaqWorkerDrs4::DaqWorkerDrs4(string name, string conf) : DaqWorkerBase<drs4>(name, conf)
 {
+  // Load the drs board.
+  drs_ = new DRS();
+
+  // Now configure it.
   LoadConfig();
 
+  // And start taking triggers.
   board_->StartClearCycle();
   board_->FinishClearCycle();
   board_->Reinit();
@@ -18,8 +23,7 @@ void DaqWorkerDrs4::LoadConfig()
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  // Load the drs board.
-  drs_ = new DRS();
+  // Get the board
   board_ = drs_->GetBoard(conf.get<int>("board_number", 0));
 
   // Reset the usb device in case it was shutdown improperly.

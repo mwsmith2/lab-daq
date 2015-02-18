@@ -36,7 +36,7 @@
         },
      
         "online": {
-	    "in_use":true,
+	    "in_use":false,
             "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
         },
