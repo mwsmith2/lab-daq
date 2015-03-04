@@ -88,7 +88,11 @@ void DaqWriterOnline::SendMessageLoop()
 	bool rc = false;
 	while (rc == false && count < 10) {
 	  
-	  rc = send_sck_.send(message_, ZMQ_DONTWAIT);
+	  try {
+	    rc = send_sck_.send(message_, ZMQ_DONTWAIT);
+	  } catch (zmq::error_t e) {
+	    continue;
+	  }
 
 	  count++;
 	}

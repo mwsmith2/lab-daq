@@ -109,7 +109,10 @@ void DaqWorkerSis3302::LoadConfig()
   // Set event configure register with changes
 
   if (conf.get<bool>("enable_event_length_stop", true))
-    msg = 0x1 << 5; // enable event length stop trigger
+    msg |= 0x1 << 5; // enable event length stop trigger
+
+  if (conf.get<bool>("enable_page_wrap_around", true))
+    msg |= 0x1 << 4; // enable page wrap around mode
 
   Write(0x01000000, msg);
   

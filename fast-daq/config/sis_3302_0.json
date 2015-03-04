@@ -1,9 +1,11 @@
 {
-	"device":"/dev/sis1100_00remote",
-	"base_address":"0x60000000",
-	"pretrigger_samples":"0x200",
-	"invert_ext_lemo":false,
-	"user_led_on":false,
-	"enable_ext_lemo":true,
-	"pre_trigger_delay":"0x180"
+    "device":"/dev/sis1100_00remote",
+    "base_address":"0x60000000",
+    "pretrigger_samples":"0x200",
+    "invert_ext_lemo":false,
+    "user_led_on":false,
+    "enable_ext_lemo":true,
+    "pre_trigger_delay":"0x180",
+    "enable_page_wrap_around":true,
+    "enable_event_length_stop":true
 }

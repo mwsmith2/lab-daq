@@ -96,7 +96,11 @@ int main(int argc, char *argv[])
   while (true) {
 
     // Check for a message.
-    rc = trigger_sck.recv(&message);
+    int count = 0;
+    do {
+      rc = trigger_sck.recv(&message, ZMQ_DONTWAIT);
+      ++count;
+    } while (!rc && count < 20);
 
     if (rc == true) {
 
@@ -321,11 +325,15 @@ void HandshakeLoop()
   bool rc = false;
   
   while (true) {
+
     rc = handshake_sck.recv(&message_2);
   
     if (rc == true) {
-
-      handshake_sck.send(message_2);
+      
+      rc = false;
+      do {
+	rc = handshake_sck.send(message_2);
+      } while (rc == false);
 
     }
   }

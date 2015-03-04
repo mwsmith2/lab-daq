@@ -10,6 +10,7 @@
 	},
 
         "sis_3350": {
+	    "struck_0" : "config/sis_3350_0.json"
         },
 
         "sis_3302": {
@@ -22,7 +23,6 @@
 	},
 	
 	"drs4": {
-	    "drs_0":"config/drs4_0.json"
 	}
     },
 
@@ -36,7 +36,7 @@
         },
      
         "online": {
-	    "in_use":false,
+	    "in_use":true,
             "port":"tcp://127.0.0.1:42043",
 	    "high_water_mark":10
         },

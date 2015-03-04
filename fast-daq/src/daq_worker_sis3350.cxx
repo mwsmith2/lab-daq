@@ -70,7 +70,19 @@ void DaqWorkerSis3350::LoadConfig()
 
   // Set to the acquisition register.
   msg = 0;
-  msg |= 0x1; //sync ring buffer mode
+  if (conf.get<bool>("ringbuffer_mode")) {
+
+    msg |= 0x1; //sync ring buffer mode
+
+  } else if (conf.get<bool>("direct_memory_mode")) {
+
+    msg |= 0x5; // direct memory trigger start mode
+
+  } else {
+
+    msg |= 0x1; // default to sync ring buffer mode
+  }
+    
   //msg |= 0x1 << 5; //enable multi mode
   //msg |= 0x1 << 6; //enable internal (channel) triggers
 
@@ -90,6 +102,11 @@ void DaqWorkerSis3350::LoadConfig()
   msg = 0;
   Read(0x10, msg);
   printf("sis 3350 acq reg reads 0x%08x\n", msg);
+
+  // direct memory sample length register
+  msg = SIS_3350_LN;
+  Write(0x18, msg);
+
 
   // Set the synthesizer register.
   msg = 0x14; //500 MHz

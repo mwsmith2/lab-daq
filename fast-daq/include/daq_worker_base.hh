@@ -52,6 +52,7 @@ class DaqWorkerBase {
   
   virtual void StopThread() {
     thread_live_ = false;
+    usleep(10);
     if (work_thread_.joinable()) work_thread_.join();
   };
   
