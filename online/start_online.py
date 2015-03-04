@@ -21,6 +21,8 @@ from time import sleep, time
 from setproctitle import setproctitle
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 # Set process name
