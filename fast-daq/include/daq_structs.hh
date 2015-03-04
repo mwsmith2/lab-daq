@@ -105,8 +105,9 @@ int WriteLog(const char *msg);
 int WriteLog(const std::string& msg);
 
 // Set sleep times for data polling threads.
-static int short_sleep = 10;
-static int long_sleep = 500;
+const int kShortSleep = 20;
+const int kLongSleep = 200;
+const int kMinEventTime = 100; // in microseconds
 
 } // ::daq
 

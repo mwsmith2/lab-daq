@@ -92,7 +92,7 @@ def start_run():
 
     handshake_sck = context.socket(zmq.REQ)
     handshake_sck.setsockopt(zmq.LINGER, 0);
-    start_sck = context.socket(zmq.PUB)
+    start_sck = context.socket(zmq.PUSH)
     start_sck.setsockopt(zmq.LINGER, 0)
 
     conf = json.load(open(os.path.join(cwd, '../fast-daq/config/.default_master.json')))
@@ -137,7 +137,7 @@ def end_run():
     context = zmq.Context()
     handshake_sck = context.socket(zmq.REQ)
     handshake_sck.setsockopt(zmq.LINGER, 0);
-    stop_sck = context.socket(zmq.PUB)
+    stop_sck = context.socket(zmq.PUSH)
     stop_sck.setsockopt(zmq.LINGER, 0)
 
     conf = json.load(open(os.path.join(cwd, '../fast-daq/config/.default_master.json')))

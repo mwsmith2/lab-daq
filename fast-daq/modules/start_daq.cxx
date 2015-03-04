@@ -24,13 +24,13 @@ int main(int argc, char *argv[])
   boost::property_tree::read_json(conf_file, conf);
 
   zmq::context_t ctx(1);
-  zmq::socket_t start_sck(ctx, ZMQ_PUB);
+  zmq::socket_t start_sck(ctx, ZMQ_PUSH);
   zmq::socket_t handshake_sck(ctx, ZMQ_REQ);
 
   start_sck.connect(conf.get<std::string>("trigger_port").c_str());
   handshake_sck.connect(conf.get<std::string>("handshake_port").c_str());
 
-  std::string connect("CONNECTED");
+  std::string connect("CONNECTED:");
   zmq::message_t handshake_msg(connect.size());
   memcpy(handshake_msg.data(), connect.c_str(), connect.size());
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     } while (rc == false);
 
     // Create the start message
-    std::string trigger("START:");
+    std::string trigger("START:test:");
     zmq::message_t start_msg(trigger.size());
     memcpy(start_msg.data(), trigger.c_str(), trigger.size());
 

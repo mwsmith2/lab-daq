@@ -44,7 +44,7 @@ namespace {
 
   // zmq declarations
   zmq::context_t master_ctx(1);
-  zmq::socket_t trigger_sck(master_ctx, ZMQ_SUB);
+  zmq::socket_t trigger_sck(master_ctx, ZMQ_PULL);
   zmq::socket_t handshake_sck(master_ctx, ZMQ_REP);
 
   // project declarations
@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
 
   // Connect the sockets since they shouldn't ever change.
   trigger_sck.bind(conf.get<string>("trigger_port").c_str());
-  trigger_sck.setsockopt(ZMQ_SUBSCRIBE, "", 0);
   handshake_sck.bind(conf.get<string>("handshake_port").c_str());
 
   // Launch the thread that confirms a running frontend.
@@ -99,6 +98,8 @@ int main(int argc, char *argv[])
     do {
       rc = trigger_sck.recv(&msg, ZMQ_DONTWAIT);
       ++count;
+      usleep(kShortSleep);
+
     } while (!rc && (count < 100));
 
     if (rc == true) {
@@ -132,11 +133,10 @@ int main(int argc, char *argv[])
 
         StopRun();
 	FreeConfig();
-
       }
     }
 
-    usleep(daq::long_sleep);
+    usleep(daq::kLongSleep);
   }
 
   return 0;
@@ -326,14 +326,25 @@ void HandshakeLoop()
   
   while (true) {
 
-    rc = handshake_sck.recv(&msg, ZMQ_DONTWAIT);
+    try {
+      rc = handshake_sck.recv(&msg, ZMQ_DONTWAIT);
+
+    } catch (zmq::error_t e) {
+
+      continue;
+    }
   
     if (rc == true) {
-      
+
+      usleep(kLongSleep);
+
       do {
 	rc = handshake_sck.send(msg, ZMQ_DONTWAIT);
       } while (rc == false);
 
     }
   }
+
+  usleep(kLongSleep);
+  std::this_thread::yield();
 }

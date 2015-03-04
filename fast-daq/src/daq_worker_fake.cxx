@@ -60,7 +60,7 @@ void DaqWorkerFake::GenerateEvent()
       std::this_thread::yield();
     }
 
-    usleep(daq::long_sleep);
+    usleep(daq::kLongSleep);
     std::this_thread::yield();
   }
 }
@@ -100,12 +100,12 @@ void DaqWorkerFake::WorkLoop()
 
       std::this_thread::yield();
 
-      usleep(daq::short_sleep);
+      usleep(daq::kShortSleep);
     }
 
     std::this_thread::yield();
 
-    usleep(daq::long_sleep);
+    usleep(daq::kLongSleep);
   }
 }
 

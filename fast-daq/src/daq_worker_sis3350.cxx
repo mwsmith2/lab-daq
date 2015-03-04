@@ -261,13 +261,13 @@ void DaqWorkerSis3350::WorkLoop()
       } else {
 	
 	std::this_thread::yield();
-	usleep(daq::short_sleep);
+	usleep(daq::kShortSleep);
 
       }
     }
 
     std::this_thread::yield();
-    usleep(daq::long_sleep);
+    usleep(daq::kLongSleep);
   }
 }
 

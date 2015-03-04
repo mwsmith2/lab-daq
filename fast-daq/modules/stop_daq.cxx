@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
   boost::property_tree::read_json(conf_file, conf);
 
   zmq::context_t ctx(1);
-  zmq::socket_t stop_sck(ctx, ZMQ_PUB);
+  zmq::socket_t stop_sck(ctx, ZMQ_PUSH);
   zmq::socket_t handshake_sck(ctx, ZMQ_REQ);
 
   stop_sck.connect(conf.get<std::string>("trigger_port").c_str());
