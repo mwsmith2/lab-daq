@@ -33,19 +33,6 @@ void DaqWorkerCaen6742::LoadConfig()
 
   int device_id = conf.get<int>("device_id");
 
-  // Open the device.
-  int i = 0;
-  while (ret < 0 && i < 20) {
-    ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_USB, device_id, 0, 0, &device_);
-    usleep(5000);
-    ++i;
-  }
-
-  usleep(1e5);
-
-  cout << "open caen digitizer ret: " << ret << endl;
-  cout << "device: " << device_ << endl;
-
   // Reset the device.
   ret = CAEN_DGTZ_Reset(device_);
 

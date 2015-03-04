@@ -1,5 +1,8 @@
 #include "daq_worker_list.hh"
 
+// Include the extern defs here since it is always used.
+#include "daq_structs_extdef.hh"
+
 namespace daq {
 
 DaqWorkerList::DaqWorkerList()
@@ -347,6 +350,11 @@ void DaqWorkerList::FreeList()
       delete boost::get<DaqWorkerBase<drs4> *>(*it);
 
     }
+  }
+
+  if (vme_dev != -1) {
+    close(vme_dev);
+    vme_dev = -1;
   }
 
   daq_workers_.resize(0);

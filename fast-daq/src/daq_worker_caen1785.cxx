@@ -18,16 +18,6 @@ void DaqWorkerCaen1785::LoadConfig()
 
   read_low_adc_ = conf.get<bool>("read_low_adc", false);
 
-  // Get the device filestream
-  if (vme::device == -1) {
-
-    string dev_path = conf.get<string>("device");
-    if ((vme::device = open(dev_path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
-      cerr << "Open vme device." << endl;
-    }
-  }
-  cout << "device: " << vme::device << endl;
-
   // Get the base address for the device.  Convert from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
   

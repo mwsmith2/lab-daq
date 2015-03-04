@@ -16,16 +16,6 @@ void DaqWorkerSis3302::LoadConfig()
   boost::property_tree::ptree conf;
   boost::property_tree::read_json(conf_file_, conf);
 
-  // Get the device filestream
-  if (vme::device == -1) {
-
-    string dev_path = conf.get<string>("device");
-    if ((vme::device = open(dev_path.c_str(), O_RDWR | O_NONBLOCK, 0)) < 0) {
-      cerr << "Open vme device." << endl;
-    }
-  }
-  cout << "device: " << vme::device << endl;
-
   // Get the base address for the device.  Convert from hex.
   base_address_ = std::stoi(conf.get<string>("base_address"), nullptr, 0);
 

@@ -30,8 +30,6 @@ using namespace boost::property_tree;
 
 using namespace daq;
 
-int daq::vme::device = -1;
-
 // Anonymous namespace for "global" parameters
 namespace {
   

@@ -1,10 +1,22 @@
 #ifndef SLAC_DAQ_INCLUDE_DAQ_STRUCTS_HH_
 #define SLAC_DAQ_INCLUDE_DAQ_STRUCTS_HH_
 
+/*===========================================================================*\
+
+author: Matthias W. Smith
+email:  mwsmith2@uw.edu
+file:   daq_common.hh
+
+about:  Contains the data structures for several hardware devices in a single
+        location.  The header should be included in any program that aims
+        to interface with (read or write) data with this daq.
+
+\*===========================================================================*/
+
+
 #define SIS_3350_CH 4
-//#define SIS_3350_LN 2048
-#define SIS_3350_LN 0x40000
 //#define SIS_3350_LN 1024
+#define SIS_3350_LN 0x40000 // ~250,000
 
 #define SIS_3302_CH 8 
 #define SIS_3302_LN 1024
@@ -19,6 +31,7 @@
 #define DRS4_LN 1024
 
 //--- std includes ----------------------------------------------------------//
+#include <mutex>
 #include <vector>
 using std::vector;
 
@@ -78,12 +91,20 @@ typedef boost::variant<DaqWorkerBase<sis_3350> *,
                        DaqWorkerBase<caen_6742> *,
                        DaqWorkerBase<drs4> *> worker_ptr_types;
 
-namespace vme {
+// A useful define guard for I/O with the vme bus.
+extern int vme_dev;
+extern std::string vme_path;
+extern std::mutex vme_mutex;
 
-extern int device;
+// Create a single log file for the whole DAQ.
+extern bool logging_on; 
+extern std::string logfile;
+extern std::ofstream logstream;
 
-} // ::vme
+int WriteLog(const char *msg);
+int WriteLog(const std::string& msg);
 
+// Set sleep times for data polling threads.
 static int short_sleep = 10;
 static int long_sleep = 500;
 
