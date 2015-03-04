@@ -46,8 +46,6 @@ namespace {
   zmq::context_t master_ctx(1);
   zmq::socket_t trigger_sck(master_ctx, ZMQ_SUB);
   zmq::socket_t handshake_sck(master_ctx, ZMQ_REP);
-  zmq::message_t message(10);
-  zmq::message_t message_2(10);
 
   // project declarations
   DaqWorkerList daq_workers;
@@ -90,20 +88,23 @@ int main(int argc, char *argv[])
 
   // Launch the thread that confirms a running frontend.
   std::thread handshake_thread(HandshakeLoop);
+  
+  zmq::message_t msg;
+  int count = 0;
 
   while (true) {
 
     // Check for a message.
-    int count = 0;
+    count = 0;
     do {
-      rc = trigger_sck.recv(&message, ZMQ_DONTWAIT);
+      rc = trigger_sck.recv(&msg, ZMQ_DONTWAIT);
       ++count;
-    } while (!rc && count < 20);
+    } while (!rc && (count < 100));
 
     if (rc == true) {
 
       // Process the message.
-      std::istringstream ss(static_cast<char *>(message.data()));
+      std::istringstream ss(static_cast<char *>(msg.data()));
       std::getline(ss, msg_string, ':');
 
       if (msg_string == string("START") && !is_running) {
@@ -319,18 +320,18 @@ int StopRun() {
 
 void HandshakeLoop()
 {
+  zmq::message_t msg;
   string msg_string;
   bool rc = false;
   
   while (true) {
 
-    rc = handshake_sck.recv(&message_2);
+    rc = handshake_sck.recv(&msg, ZMQ_DONTWAIT);
   
     if (rc == true) {
       
-      rc = false;
       do {
-	rc = handshake_sck.send(message_2);
+	rc = handshake_sck.send(msg, ZMQ_DONTWAIT);
       } while (rc == false);
 
     }

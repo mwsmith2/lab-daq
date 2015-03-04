@@ -34,23 +34,37 @@ int main(int argc, char *argv[])
   zmq::message_t handshake_msg(connect.size());
   memcpy(handshake_msg.data(), connect.c_str(), connect.size());
 
-  // Establish a connection.
-  handshake_sck.send(handshake_msg);
-  bool rc = handshake_sck.recv(&handshake_msg);
+  bool rc = false;
+  int num_tries = 0;
+
+  // Attempt to establish a connection.
+  do {
+    rc = handshake_sck.send(handshake_msg, ZMQ_DONTWAIT);
+    ++num_tries;
+  } while (!rc && (num_tries < 500));
 
   if (rc == true) {
+
+    // Complete the handshake.
+    do {
+      rc = handshake_sck.recv(&handshake_msg, ZMQ_DONTWAIT);
+    } while (rc == false);
+
     // Create the start message
-    std::string trigger("START:test:");
+    std::string trigger("START:");
     zmq::message_t start_msg(trigger.size());
     memcpy(start_msg.data(), trigger.c_str(), trigger.size());
-    
-    start_sck.send(start_msg);
+
+    do {
+      rc = start_sck.send(start_msg);
+    } while (rc == false);
+
     cout << "Connection established.  Sending start trigger." << endl;
     return 0;
 
   } else {
     
     cout << "Connection not established.  No trigger sent." << endl;
-    return 0;
+    return 1;
   }
 }
