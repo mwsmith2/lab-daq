@@ -23,6 +23,8 @@ void DaqWriterOnline::LoadConfig()
   int linger = 0;
   online_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
   online_sck_.connect(conf.get<string>("writers.online.port").c_str());
+
+  max_trace_length_ = conf.get<int>("writers.online.max_trace_length", -1);
 }
 
 void DaqWriterOnline::PushData(const vector<event_data> &data_buffer)
@@ -66,15 +68,6 @@ void DaqWriterOnline::SendMessageLoop()
   ptree conf;
   read_json(conf_file_, conf);
 
-  zmq::context_t send_ctx_(1);
-  zmq::socket_t send_sck_(send_ctx_, ZMQ_PUSH);
-
-  int hwm = conf.get<int>("writers.online.high_water_mark", 100);
-  send_sck_.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
-  int linger = 0;
-  send_sck_.setsockopt(ZMQ_LINGER, &linger, sizeof(linger)); 
-  send_sck_.connect(conf.get<string>("writers.online.port").c_str());
-
   while (thread_live_) {
 
     while (go_time_ && queue_has_data_) {
@@ -87,14 +80,8 @@ void DaqWriterOnline::SendMessageLoop()
 	
 	int count = 0;
 	bool rc = false;
-	while (rc == false && count < 10) {
-	  
-	  try {
-	    rc = send_sck_.send(message_, ZMQ_DONTWAIT);
-	  } catch (zmq::error_t e) {
-	    continue;
-	  }
-
+	while (rc == false && count < 200) {
+	  rc = online_sck_.send(message_, ZMQ_DONTWAIT);
 	  count++;
 	}
 
@@ -108,12 +95,12 @@ void DaqWriterOnline::SendMessageLoop()
         usleep(daq::kShortSleep);
         std::this_thread::yield();
       }
-
-    usleep(daq::kShortSleep);
-    std::this_thread::yield();
-
+      
+      usleep(daq::kShortSleep);
+      std::this_thread::yield();
+      
     }
-
+    
     usleep(daq::kLongSleep);
     std::this_thread::yield();
   }
@@ -142,140 +129,280 @@ void DaqWriterOnline::PackMessage()
 
   json_map.push_back(json_spirit::Pair("event_number", number_of_events_));
 
-  for (auto &sis : data.sis_fast) {
+  if (max_trace_length_ < 0) {
+    for (auto &sis : data.sis_fast) {
+      
+      json_spirit::Object sis_map;
+      
+      sprintf(str, "system_clock");
+      sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
+      
+      sprintf(str, "device_clock");
+      sis_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&sis.device_clock[0], 
+			    (uint64_t *)&sis.device_clock[SIS_3350_CH])));
+      
+      json_spirit::Array arr;
+      for (int ch = 0; ch < SIS_3350_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&sis.trace[ch][0], &sis.trace[ch][SIS_3350_LN]));
+	
+      }
+      
+      sprintf(str, "trace");
+      sis_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "sis_fast_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, sis_map));
+    }
+    
+    count = 0;
+    for (auto &sis : data.sis_slow) {
+      
+      json_spirit::Object sis_map;
+      
+      sprintf(str, "system_clock");
+      sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
+      
+      sprintf(str, "device_clock");
+      sis_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&sis.device_clock[0], 
+			    (uint64_t *)&sis.device_clock[SIS_3302_CH])));
 
-    json_spirit::Object sis_map;
+      json_spirit::Array arr;
+      for (int ch = 0; ch < SIS_3302_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&sis.trace[ch][0], &sis.trace[ch][SIS_3302_LN]));
 
-    sprintf(str, "system_clock");
-    sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
+      }
 
-    sprintf(str, "device_clock");
-    sis_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        (uint64_t *)&sis.device_clock[0], 
-        (uint64_t *)&sis.device_clock[SIS_3350_CH])));
+      sprintf(str, "trace");
+      sis_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "sis_slow_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, sis_map));
+    }
+    
+    count = 0;
+    for (auto &caen : data.caen_adc) {
+      
+      json_spirit::Object caen_map;
+      
+      sprintf(str, "system_clock");
+      caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
+      
+      sprintf(str, "device_clock");
+      caen_map.push_back(json_spirit::Pair(str, 
+                         json_spirit::Array(
+			   (uint64_t *)&caen.device_clock[0], 
+			   (uint64_t *)&caen.device_clock[CAEN_1785_CH])));
 
-    json_spirit::Array arr;
-    for (int ch = 0; ch < SIS_3350_CH; ++ch) {
-      arr.push_back(json_spirit::Array(
-        &sis.trace[ch][0], &sis.trace[ch][SIS_3350_LN]));
+      sprintf(str, "value");
+      caen_map.push_back(json_spirit::Pair(str, 
+			   json_spirit::Array(
+			     &caen.value[0], 
+			     &caen.value[CAEN_1785_CH])));
 
+      sprintf(str, "caen_adc_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, caen_map));
+    }
+    
+    count = 0;
+    for (auto &caen : data.caen_drs) {
+      
+      json_spirit::Object caen_map;
+      
+      sprintf(str, "system_clock");
+      caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
+      
+      sprintf(str, "device_clock");
+      caen_map.push_back(json_spirit::Pair(str, 
+			   json_spirit::Array(
+			     (uint64_t *)&caen.device_clock[0], 
+			     (uint64_t *)&caen.device_clock[CAEN_6742_CH])));
+
+      json_spirit::Array arr;
+      for (int ch = 0; ch < CAEN_6742_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&caen.trace[ch][0], &caen.trace[ch][CAEN_6742_LN]));
+
+      }
+      
+      
+      sprintf(str, "trace");
+      caen_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "caen_drs_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, caen_map));
+    }
+    
+    count = 0;
+    for (auto &board : data.drs) {
+      
+      json_spirit::Object drs_map;
+      
+      sprintf(str, "system_clock");
+      drs_map.push_back(json_spirit::Pair(str, (uint64_t)board.system_clock));
+
+      sprintf(str, "device_clock");
+      drs_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&board.device_clock[0], 
+			    (uint64_t *)&board.device_clock[DRS4_CH])));
+
+      json_spirit::Array arr;
+      for (int ch = 0; ch < DRS4_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&board.trace[ch][0], &board.trace[ch][DRS4_LN]));
+
+      }
+      
+      sprintf(str, "trace");
+      drs_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "drs_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, drs_map));
     }
 
-    sprintf(str, "trace");
-    sis_map.push_back(json_spirit::Pair(str, arr));
-
-    sprintf(str, "sis_fast_%i", count++);
-    json_map.push_back(json_spirit::Pair(str, sis_map));
-  }
-
-  count = 0;
-  for (auto &sis : data.sis_slow) {
-
-    json_spirit::Object sis_map;
-
-    sprintf(str, "system_clock");
-    sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
-
-    sprintf(str, "device_clock");
-    sis_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        (uint64_t *)&sis.device_clock[0], 
-        (uint64_t *)&sis.device_clock[SIS_3302_CH])));
-
-    json_spirit::Array arr;
-    for (int ch = 0; ch < SIS_3302_CH; ++ch) {
-      arr.push_back(json_spirit::Array(
-        &sis.trace[ch][0], &sis.trace[ch][SIS_3302_LN]));
-
+  } else {    
+    
+    for (auto &sis : data.sis_fast) {
+      
+      json_spirit::Object sis_map;
+      
+      sprintf(str, "system_clock");
+      sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
+      
+      sprintf(str, "device_clock");
+      sis_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&sis.device_clock[0], 
+			    (uint64_t *)&sis.device_clock[SIS_3350_CH])));
+      
+      json_spirit::Array arr;
+      for (int ch = 0; ch < SIS_3350_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&sis.trace[ch][0], &sis.trace[ch][max_trace_length_]));
+	
+      }
+      
+      sprintf(str, "trace");
+      sis_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "sis_fast_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, sis_map));
     }
+    
+    count = 0;
+    for (auto &sis : data.sis_slow) {
+      
+      json_spirit::Object sis_map;
+      
+      sprintf(str, "system_clock");
+      sis_map.push_back(json_spirit::Pair(str, (uint64_t)sis.system_clock));
+      
+      sprintf(str, "device_clock");
+      sis_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&sis.device_clock[0], 
+			    (uint64_t *)&sis.device_clock[SIS_3302_CH])));
 
-    sprintf(str, "trace");
-    sis_map.push_back(json_spirit::Pair(str, arr));
+      json_spirit::Array arr;
+      for (int ch = 0; ch < SIS_3302_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&sis.trace[ch][0], &sis.trace[ch][max_trace_length_]));
 
-    sprintf(str, "sis_slow_%i", count++);
-    json_map.push_back(json_spirit::Pair(str, sis_map));
-  }
+      }
 
-  count = 0;
-  for (auto &caen : data.caen_adc) {
-
-    json_spirit::Object caen_map;
-
-    sprintf(str, "system_clock");
-    caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
-
-    sprintf(str, "device_clock");
-    caen_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        (uint64_t *)&caen.device_clock[0], 
-        (uint64_t *)&caen.device_clock[CAEN_1785_CH])));
-
-    sprintf(str, "value");
-    caen_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        &caen.value[0], 
-        &caen.value[CAEN_1785_CH])));
-
-    sprintf(str, "caen_adc_%i", count++);
-    json_map.push_back(json_spirit::Pair(str, caen_map));
-  }
-
-  count = 0;
-  for (auto &caen : data.caen_drs) {
-
-    json_spirit::Object caen_map;
-
-    sprintf(str, "system_clock");
-    caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
-
-    sprintf(str, "device_clock");
-    caen_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        (uint64_t *)&caen.device_clock[0], 
-        (uint64_t *)&caen.device_clock[CAEN_6742_CH])));
-
-    json_spirit::Array arr;
-    for (int ch = 0; ch < CAEN_6742_CH; ++ch) {
-      arr.push_back(json_spirit::Array(
-        &caen.trace[ch][0], &caen.trace[ch][CAEN_6742_LN]));
-
+      sprintf(str, "trace");
+      sis_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "sis_slow_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, sis_map));
     }
+    
+    count = 0;
+    for (auto &caen : data.caen_adc) {
+      
+      json_spirit::Object caen_map;
+      
+      sprintf(str, "system_clock");
+      caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
+      
+      sprintf(str, "device_clock");
+      caen_map.push_back(json_spirit::Pair(str, 
+                         json_spirit::Array(
+			   (uint64_t *)&caen.device_clock[0], 
+			   (uint64_t *)&caen.device_clock[CAEN_1785_CH])));
 
+      sprintf(str, "value");
+      caen_map.push_back(json_spirit::Pair(str, 
+			   json_spirit::Array(
+			     &caen.value[0], 
+			     &caen.value[CAEN_1785_CH])));
 
-    sprintf(str, "trace");
-    caen_map.push_back(json_spirit::Pair(str, arr));
-
-    sprintf(str, "caen_drs_%i", count++);
-    json_map.push_back(json_spirit::Pair(str, caen_map));
-  }
-
-  count = 0;
-  for (auto &board : data.drs) {
-
-    json_spirit::Object drs_map;
-
-    sprintf(str, "system_clock");
-    drs_map.push_back(json_spirit::Pair(str, (uint64_t)board.system_clock));
-
-    sprintf(str, "device_clock");
-    drs_map.push_back(json_spirit::Pair(str, 
-      json_spirit::Array(
-        (uint64_t *)&board.device_clock[0], 
-        (uint64_t *)&board.device_clock[DRS4_CH])));
-
-    json_spirit::Array arr;
-    for (int ch = 0; ch < DRS4_CH; ++ch) {
-      arr.push_back(json_spirit::Array(
-        &board.trace[ch][0], &board.trace[ch][DRS4_LN]));
-
+      sprintf(str, "caen_adc_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, caen_map));
     }
+    
+    count = 0;
+    for (auto &caen : data.caen_drs) {
+      
+      json_spirit::Object caen_map;
+      
+      sprintf(str, "system_clock");
+      caen_map.push_back(json_spirit::Pair(str, (uint64_t)caen.system_clock));
+      
+      sprintf(str, "device_clock");
+      caen_map.push_back(json_spirit::Pair(str, 
+			   json_spirit::Array(
+			     (uint64_t *)&caen.device_clock[0], 
+			     (uint64_t *)&caen.device_clock[CAEN_6742_CH])));
 
-    sprintf(str, "trace");
-    drs_map.push_back(json_spirit::Pair(str, arr));
+      json_spirit::Array arr;
+      for (int ch = 0; ch < CAEN_6742_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&caen.trace[ch][0], &caen.trace[ch][max_trace_length_]));
 
-    sprintf(str, "drs_%i", count++);
-    json_map.push_back(json_spirit::Pair(str, drs_map));
+      }
+      
+      
+      sprintf(str, "trace");
+      caen_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "caen_drs_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, caen_map));
+    }
+    
+    count = 0;
+    for (auto &board : data.drs) {
+      
+      json_spirit::Object drs_map;
+      
+      sprintf(str, "system_clock");
+      drs_map.push_back(json_spirit::Pair(str, (uint64_t)board.system_clock));
+
+      sprintf(str, "device_clock");
+      drs_map.push_back(json_spirit::Pair(str, 
+                          json_spirit::Array(
+			    (uint64_t *)&board.device_clock[0], 
+			    (uint64_t *)&board.device_clock[DRS4_CH])));
+
+      json_spirit::Array arr;
+      for (int ch = 0; ch < DRS4_CH; ++ch) {
+	arr.push_back(json_spirit::Array(
+			&board.trace[ch][0], &board.trace[ch][max_trace_length_]));
+
+      }
+      
+      sprintf(str, "trace");
+      drs_map.push_back(json_spirit::Pair(str, arr));
+      
+      sprintf(str, "drs_%i", count++);
+      json_map.push_back(json_spirit::Pair(str, drs_map));
+    }
   }
 
   string buffer = json_spirit::write(json_map);
@@ -287,5 +414,6 @@ void DaqWriterOnline::PackMessage()
   cout << "Online writer message ready." << endl;
   message_ready_ = true;
 }
+
 
 } // ::daq

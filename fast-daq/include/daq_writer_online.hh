@@ -58,6 +58,7 @@ class DaqWriterOnline : public DaqWriterBase {
   private:
 
     const int kMaxQueueSize = 5;
+    int max_trace_length_;
     int number_of_events_;
     std::atomic<bool> message_ready_;
     std::atomic<bool> go_time_;
