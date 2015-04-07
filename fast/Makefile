@@ -1,9 +1,9 @@
 # Grab the targets from the src directory.
-COREOBJ = $(patsubst core/src/%.cxx, core/build/%.o, $(wildcard core/src/*.cxx))
-DEPSOBJ = $(patsubst deps/src/drs/%.c, deps/build/%.o, $(wildcard deps/src/drs/*.c))
-DEPSOBJ += $(patsubst deps/src/drs/%.cpp, deps/build/%.o, $(wildcard deps/src/drs/*.cpp))
-DEPSOBJ += $(patsubst deps/src/vme/%.c, deps/build/%.o, $(wildcard deps/src/vme/*.c))
 TARGETS = $(patsubst src/%.cxx, bin/%, $(wildcard src/*.cxx))
+COREOBJ = $(patsubst core/src/%.cxx, core/build/%.o, $(wildcard core/src/*.cxx))
+DEPSOBJ = $(patsubst core/src/drs/%.c, core/build/%.o, $(wildcard core/src/drs/*.c))
+DEPSOBJ += $(patsubst core/src/drs/%.cpp, core/build/%.o, $(wildcard core/src/drs/*.cpp))
+DEPSOBJ += $(patsubst core/include/vme/%.c, core/build/%.o, $(wildcard core/include/vme/*.c))
 
 # Figure out the architecture
 UNAME_S = $(shell uname -s)
@@ -36,29 +36,28 @@ FLAGS += $(shell root-config --cflags)
 LIBS = $(shell root-config --libs)
 
 # wxWidgets libs and flags
-WXLIBS        = $(shell wx-config --libs)
-WXFLAGS       = $(shell wx-config --cxxflags)
+WXLIBS  = $(shell wx-config --libs)
+WXFLAGS = $(shell wx-config --cxxflags)
 
-LIBS += -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
+FLAGS += -Icore/include -Icore/include/drs 
+LIBS += -Lcore/lib -luwlab -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
 
-all: $(TARGETS) $(COREOBJ) $(DEPSOBJ) 
+all: $(COREOBJ) $(DEPSOBJ) $(TARGETS)
 
-bin/fe_%: src/fe_%.cxx $(OBJECTS) $(OBJ_VME) $(OBJ_DRS)
+bin/fe_%: src/fe_%.cxx $(COREOBJ) $(DEPSOBJ)
 	$(CXX) $< -o $@ $(FLAGS) $(WXFLAGS) \
 	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
 
 bin/%_daq: modules/%_daq.cxx 
 	$(CXX) $< -o $@ $(FLAGS) $(LIBS)
 
-bin/%: src/%.cxx $(OBJECTS) $(OBJ_VME) $(OBJ_DRS)
+bin/%: src/%.cxx $(COREOBJ) $(DEPSOBJ)
 	$(CXX) $< -o $@ $(FLAGS) $(WXFLAGS) \
 	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
 
 core/build/%.o: core/src/%.cxx
 	cd core; make; cd ..
 
-deps/build/%.o: 
-	cd deps; make; cd ..
-
 clean:
-	rm -f $(TARGETS)
+	cd core && make clean && cd ..; \
+	rm -f $(TARGETS) $(COREOBJ) $(DEPSOBJ)
