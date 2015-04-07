@@ -21,12 +21,13 @@ using namespace boost::property_tree;
 #include <zmq.hpp>
 
 //--- project includes -----------------------------------------------------//
-#include "daq_worker_list.hh"
-#include "daq_writer_online.hh"
-#include "daq_writer_root.hh"
-#include "daq_writer_midas.hh"
+#include "worker_list.hh"
+#include "writer_online.hh"
+#include "writer_root.hh"
+#include "writer_midas.hh"
 #include "event_builder.hh"
-#include "daq_common.hh"
+#include "worker_fake.hh"
+#include "common.hh"
 
 using namespace daq;
 
@@ -48,8 +49,8 @@ namespace {
   zmq::socket_t handshake_sck(master_ctx, ZMQ_REP);
 
   // project declarations
-  DaqWorkerList daq_workers;
-  vector<DaqWriterBase *> daq_writers;
+  WorkerList workers;
+  vector<WriterBase *> writers;
   EventBuilder *event_builder = nullptr;
 }
 
@@ -166,7 +167,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerFake(name, dev_conf_file));
+    workers.PushBack(new WorkerFake(name, dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -176,7 +177,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerSis3350(name, dev_conf_file));
+    workers.PushBack(new WorkerSis3350(name, dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -186,7 +187,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerSis3302(name, dev_conf_file));
+    workers.PushBack(new WorkerSis3302(name, dev_conf_file));
   }
 
   // Set up the caen1785 devices.
@@ -196,30 +197,30 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerCaen1785(name, dev_conf_file));
+    workers.PushBack(new WorkerCaen1785(name, dev_conf_file));
   }
 
   // Set up the caen6742 devices.
-  std::vector<DaqWorkerCaen6742 *> caen_vec;
+  std::vector<WorkerCaen6742 *> caen_vec;
   BOOST_FOREACH(const ptree::value_type &v, 
                 conf.get_child("devices.caen_6742")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    caen_vec.push_back(new DaqWorkerCaen6742(name, dev_conf_file));
+    caen_vec.push_back(new WorkerCaen6742(name, dev_conf_file));
   }
 
   // Now push back the old caen6742 devices based on sn == 406
   for (auto &caen : caen_vec) {
     if (caen->dev_sn() == 406) {
-      daq_workers.PushBack(caen);
+      workers.PushBack(caen);
     }
   }
   // Now push back the new device
   for (auto &caen : caen_vec) {
     if (caen->dev_sn() != 406) {
-      daq_workers.PushBack(caen);
+      workers.PushBack(caen);
     }
   }
 
@@ -230,7 +231,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    daq_workers.PushBack(new DaqWorkerDrs4(name, dev_conf_file));
+    workers.PushBack(new WorkerDrs4(name, dev_conf_file));
   }
 
   // Set up the writers.
@@ -239,22 +240,22 @@ int SetupConfig()
  
     if (string(v.first) == string("root") && v.second.get<bool>("in_use")) {
    
-      daq_writers.push_back(new DaqWriterRoot(tmp_conf_file));
+      writers.push_back(new WriterRoot(tmp_conf_file));
    
     } else if (string(v.first) == string("online") 
 	       && v.second.get<bool>("in_use")) {
    
-      daq_writers.push_back(new DaqWriterOnline(tmp_conf_file));
+      writers.push_back(new WriterOnline(tmp_conf_file));
    
     } else if (string(v.first) == string("midas")
 	       && v.second.get<bool>("in_use")) {
       
-      daq_writers.push_back(new DaqWriterMidas(tmp_conf_file));
+      writers.push_back(new WriterMidas(tmp_conf_file));
     }
   }
 
   // Set up the event builder.
-  event_builder = new EventBuilder(daq_workers, daq_writers, tmp_conf_file);
+  event_builder = new EventBuilder(workers, writers, tmp_conf_file);
 
   return 0;
 }
@@ -263,14 +264,14 @@ int FreeConfig()
 {
   cout << "Freeing the workers." << endl;
   // Delete the allocated workers.
-  daq_workers.FreeList();
+  workers.FreeList();
 
   cout << "Freeing the writers." << endl;
   // Delete the allocated writers.
-  for (auto &writer : daq_writers) {
+  for (auto &writer : writers) {
     delete writer;
   }
-  daq_writers.resize(0);
+  writers.resize(0);
 
   cout << "Free the event builder." << endl;
   delete event_builder;
@@ -287,12 +288,12 @@ int StartRun() {
   event_builder->StartBuilder();
 
   // Start the writers
-  for (auto it = daq_writers.begin(); it != daq_writers.end(); ++it) {
+  for (auto it = writers.begin(); it != writers.end(); ++it) {
     (*it)->StartWriter();
   }
 
   // Start the data gatherers
-  daq_workers.StartRun();
+  workers.StartRun();
 
   return 0;
 }
@@ -308,12 +309,12 @@ int StopRun() {
   while (!event_builder->FinishedRun());
 
   // Stop the writers
-  for (auto it = daq_writers.begin(); it != daq_writers.end(); ++it) {
+  for (auto it = writers.begin(); it != writers.end(); ++it) {
     (*it)->StopWriter();
   }
 
   // Stop the data gatherers
-  daq_workers.StopRun();
+  workers.StopRun();
 
   return 0;
 }

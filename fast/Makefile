@@ -40,7 +40,7 @@ WXLIBS  = $(shell wx-config --libs)
 WXFLAGS = $(shell wx-config --cxxflags)
 
 FLAGS += -Icore/include -Icore/include/drs 
-LIBS += -Lcore/lib -luwlab -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
+LIBS += -Lcore/lib -luwlab -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
 
 all: $(COREOBJ) $(DEPSOBJ) $(TARGETS)
 
