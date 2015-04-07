@@ -1,0 +1,3 @@
+[submodule "fast/core"]
+	path = fast/core
+	url = https://github.com/mwsmith2/fast-daq-core

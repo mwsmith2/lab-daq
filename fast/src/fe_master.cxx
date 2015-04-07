@@ -26,7 +26,7 @@ using namespace boost::property_tree;
 #include "daq_writer_root.hh"
 #include "daq_writer_midas.hh"
 #include "event_builder.hh"
-#include "daq_structs.hh"
+#include "daq_common.hh"
 
 using namespace daq;
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     do {
       rc = trigger_sck.recv(&msg, ZMQ_DONTWAIT);
       ++count;
-      usleep(kShortSleep);
+      usleep(short_sleep);
 
     } while (!rc && (count < 100));
 
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    usleep(daq::kLongSleep);
+    usleep(daq::long_sleep);
   }
 
   return 0;
@@ -336,7 +336,7 @@ void HandshakeLoop()
   
     if (rc == true) {
 
-      usleep(kLongSleep);
+      usleep(long_sleep);
 
       do {
 	rc = handshake_sck.send(msg, ZMQ_DONTWAIT);
@@ -345,6 +345,6 @@ void HandshakeLoop()
     }
   }
 
-  usleep(kLongSleep);
+  usleep(long_sleep);
   std::this_thread::yield();
 }
