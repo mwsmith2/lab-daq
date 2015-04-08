@@ -28,15 +28,7 @@ namespace {
   zmq::socket_t tree_sck(sc_ctx, ZMQ_SUB);
   zmq::socket_t msg_sck(sc_ctx, ZMQ_PUB);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  int secs_to_write; // Effectively the timeout before writing the root file.
-=======
-  long long ticks_to_write; // Effectively the timeout before writing the root file.
->>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
-=======
   long long ticks_to_write; // The timeout before writing the root file.
->>>>>>> mws-dev
 }
 
 // Helper Functions
@@ -114,7 +106,7 @@ void MessageLoop()
 
       if (str == "DATA") {
 
-	data_count++;
+      	data_count++;
 
         std::getline(ss, str);
         int rc = sc_root_writer.PushData(str);
@@ -145,16 +137,6 @@ void MessageLoop()
 
       }
     }
-<<<<<<< HEAD
-=======
-    time_to_write = (clock() - start_time) > ticks_to_write;
-<<<<<<< HEAD
-    usleep(100);
-=======
-    usleep(10000);
->>>>>>> mws-dev
-  }
->>>>>>> 4c9f0efc2f8cc26a72eeb350d71a6e71a1345613
 
     auto t_now = std::chrono::system_clock::now();
     std::chrono::duration<double> t_diff = t_now - t0;
