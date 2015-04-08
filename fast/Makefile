@@ -45,14 +45,14 @@ LIBS += -Lcore/lib -luwlab -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1
 all: $(COREOBJ) $(DEPSOBJ) $(TARGETS)
 
 bin/fe_%: src/fe_%.cxx $(COREOBJ) $(DEPSOBJ)
-	$(CXX) $< -o $@ $(FLAGS) $(WXFLAGS) \
+	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) \
 	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
 
 bin/%_daq: modules/%_daq.cxx 
-	$(CXX) $< -o $@ $(FLAGS) $(LIBS)
+	$(CXX) -o $@ $+ $(FLAGS) $(LIBS)
 
 bin/%: src/%.cxx $(COREOBJ) $(DEPSOBJ)
-	$(CXX) $< -o $@ $(FLAGS) $(WXFLAGS) \
+	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) \
 	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
 
 core/build/%.o: core/src/%.cxx
