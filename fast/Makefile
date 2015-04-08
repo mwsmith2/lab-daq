@@ -40,20 +40,18 @@ WXLIBS  = $(shell wx-config --libs)
 WXFLAGS = $(shell wx-config --cxxflags)
 
 FLAGS += -Icore/include -Icore/include/drs 
-LIBS += -Lcore/lib -luwlab -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
+LIBS += -Lcore/lib -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
 
 all: $(COREOBJ) $(DEPSOBJ) $(TARGETS)
 
 bin/fe_%: src/fe_%.cxx $(COREOBJ) $(DEPSOBJ)
-	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) \
-	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
+	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) $(LIBS) $(WXLIBS)
 
 bin/%_daq: modules/%_daq.cxx 
 	$(CXX) -o $@ $+ $(FLAGS) $(LIBS)
 
 bin/%: src/%.cxx $(COREOBJ) $(DEPSOBJ)
-	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) \
-	$(COREOBJ) $(DEPSOBJ) $(LIBS) $(WXLIBS)
+	$(CXX) -o $@ $+ $(FLAGS) $(WXFLAGS) $(LIBS) $(WXLIBS)
 
 core/build/%.o: core/src/%.cxx
 	cd core; make; cd ..
