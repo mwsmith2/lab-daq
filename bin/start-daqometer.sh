@@ -7,15 +7,14 @@ TMPDIR=`pwd`
 . /usr/local/opt/root/bin/thisroot.sh
 
 SCRIPTDIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
-cd $SCRIPTDIR/../fast
+cd $SCRIPTDIR/../online
 
 if [[ $EUID -ne 0 ]]; then
-
-    ./bin/fe_master $1 &> data/log &
+    python start_online.py $1 >& data/log &
 
 else
 
-    ./bin/fe_master $1 &> /var/log/fast-daq.log &
+    python start_online.py $1 >& /var/log/daqometer.log &
 fi
 
 cd $TMPDIR

@@ -14,9 +14,11 @@ using std::endl;
 
 int main(int argc, char *argv[])
 {
-  // Check for a different config file
-  std::string conf_file("config/.default_master.json");
+  // Set default config file location.
+  std::string conf_file("/usr/local/opt/lab-daq/fast/");
+  conf_file += std::string("config/.default_master.json");
 
+  // Check for a different config file
   if (argc > 1) conf_file = std::string(argv[1]);
 
   // Get the system configuration

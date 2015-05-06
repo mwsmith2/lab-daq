@@ -5,18 +5,20 @@
 	"invert_ext_lemo":false,
 	"user_led_on":false,
 	"enable_ext_lemo":true,
+        "ringbuffer_mode":false,
+        "direct_memory_mode":true,
 
 	"channel_offset":[
-		-1.7,
-		-1.7,
-		-1.7,
-		-1.7
+		1.0,
+		-2.0,
+		-0.0,
+		-0.0
 	],
-	
+
 	"channel_gain":[
-		85,
-		85,
-		85,
-		85
+		60,
+		100,
+		30,
+		30
 	]
 }

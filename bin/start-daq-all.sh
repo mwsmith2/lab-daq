@@ -5,10 +5,12 @@ killall daqometer
 
 sleep 1
 
-cd fast-daq
-./fe_master &> data/log &
+olddir=`pwd`
+cd $DAQDIR/fast
+./bin/fe_master &> data/log &
 
-cd ../online
+cd $DAQDIR/online
 python start_online.py &> log &
 
-cd ..
+cd $olddir
+unset oldir

@@ -14,7 +14,7 @@ import gevent
 import zmq, json, os
 
 cwd = os.path.dirname(os.path.realpath(__file__))
-conf = json.load(open(os.path.join(cwd, '../fast-daq/config/.default_master.json')))
+conf = json.load(open(os.path.join(cwd, '../fast/config/.default_master.json')))
 
 data = {}
 hists = {}

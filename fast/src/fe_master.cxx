@@ -43,11 +43,6 @@ namespace {
   string conf_file;
   string tmp_conf_file(tmpnam(nullptr));
 
-  // zmq declarations
-  zmq::context_t master_ctx(1);
-  zmq::socket_t trigger_sck(master_ctx, ZMQ_PULL);
-  zmq::socket_t handshake_sck(master_ctx, ZMQ_REP);
-
   // project declarations
   WorkerList workers;
   vector<WriterBase *> writers;
@@ -72,7 +67,9 @@ int main(int argc, char *argv[])
 
   } else {
 
-    conf_file = string("config/.default_master.json"); // default
+    // Set default config file location.
+    conf_file = string("/usr/local/opt/lab-daq/");
+    conf_file += string("fast/config/.default_master.json");
 
   }
 
@@ -83,8 +80,8 @@ int main(int argc, char *argv[])
   read_json(tmp_conf_file, conf);
 
   // Connect the sockets since they shouldn't ever change.
+  zmq::socket_t trigger_sck(msg_context, ZMQ_PULL);
   trigger_sck.bind(conf.get<string>("trigger_port").c_str());
-  handshake_sck.bind(conf.get<string>("handshake_port").c_str());
 
   // Launch the thread that confirms a running frontend.
   std::thread handshake_thread(HandshakeLoop);
@@ -172,11 +169,11 @@ int SetupConfig()
 
   // Set up the sis3350 devices.
   BOOST_FOREACH(const ptree::value_type &v, 
-		            conf.get_child("devices.sis_3350")) {
+		conf.get_child("devices.sis_3350")) {
 
     string name(v.first);
     string dev_conf_file(v.second.data());
-
+    
     workers.PushBack(new WorkerSis3350(name, dev_conf_file));
   }  
 
@@ -262,9 +259,9 @@ int SetupConfig()
 
 int FreeConfig() 
 {
-  cout << "Freeing the workers." << endl;
-  // Delete the allocated workers.
-  workers.FreeList();
+  // cout << "Freeing the workers." << endl;
+  // // Delete the allocated workers.
+  // workers.FreeList();
 
   cout << "Freeing the writers." << endl;
   // Delete the allocated writers.
@@ -321,6 +318,13 @@ int StopRun() {
 
 void HandshakeLoop()
 {
+  ptree conf;
+  read_json(tmp_conf_file, conf);
+
+  // zmq declarations
+  zmq::socket_t handshake_sck(msg_context, ZMQ_REP);
+  handshake_sck.bind(conf.get<string>("handshake_port").c_str());
+
   zmq::message_t msg;
   string msg_string;
   bool rc = false;
