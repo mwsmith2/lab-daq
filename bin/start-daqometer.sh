@@ -10,7 +10,7 @@ SCRIPTDIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
 cd $SCRIPTDIR/../online
 
 if [[ $EUID -ne 0 ]]; then
-    python start_online.py $1 >& data/log &
+    python start_online.py $1 >& daqometer.log &
 
 else
 
