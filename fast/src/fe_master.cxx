@@ -68,9 +68,7 @@ int main(int argc, char *argv[])
   } else {
 
     // Set default config file location.
-    conf_file = string("/usr/local/opt/lab-daq/");
-    conf_file += string("fast/config/.default_master.json");
-
+    conf_file = conf_dir + string(".default_master.json");
   }
 
   // Load the configuration
@@ -164,7 +162,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    workers.PushBack(new WorkerFake(name, dev_conf_file));
+    workers.PushBack(new WorkerFake(name, conf_dir + dev_conf_file));
   } 
 
   // Set up the sis3350 devices.
@@ -174,7 +172,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
     
-    workers.PushBack(new WorkerSis3350(name, dev_conf_file));
+    workers.PushBack(new WorkerSis3350(name, conf_dir + dev_conf_file));
   }  
 
   // Set up the sis3302 devices.
@@ -184,7 +182,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    workers.PushBack(new WorkerSis3302(name, dev_conf_file));
+    workers.PushBack(new WorkerSis3302(name, conf_dir + dev_conf_file));
   }
 
   // Set up the caen1785 devices.
@@ -194,7 +192,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    workers.PushBack(new WorkerCaen1785(name, dev_conf_file));
+    workers.PushBack(new WorkerCaen1785(name, conf_dir + dev_conf_file));
   }
 
   // Set up the caen6742 devices.
@@ -205,7 +203,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    caen_vec.push_back(new WorkerCaen6742(name, dev_conf_file));
+    caen_vec.push_back(new WorkerCaen6742(name, conf_dir + dev_conf_file));
   }
 
   // Now push back the old caen6742 devices based on sn == 406
@@ -228,7 +226,7 @@ int SetupConfig()
     string name(v.first);
     string dev_conf_file(v.second.data());
 
-    workers.PushBack(new WorkerDrs4(name, dev_conf_file));
+    workers.PushBack(new WorkerDrs4(name, conf_dir + dev_conf_file));
   }
 
   // Set up the writers.
@@ -259,6 +257,9 @@ int SetupConfig()
 
 int FreeConfig() 
 {
+  cout << "Free the event builder." << endl;
+  delete event_builder;
+
   // cout << "Freeing the workers." << endl;
   // // Delete the allocated workers.
   // workers.FreeList();
@@ -269,9 +270,6 @@ int FreeConfig()
     delete writer;
   }
   writers.resize(0);
-
-  cout << "Free the event builder." << endl;
-  delete event_builder;
 
   return 0;
 }

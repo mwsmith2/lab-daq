@@ -23,9 +23,9 @@ ifeq ($(UNAME_S), Linux)
 endif
 
 ifdef DEBUG
-	FLAGS += -g
+	FLAGS += -g -pthread
 else
-	FLAGS += -g
+	FLAGS += -g -pthread
 endif
 
 # DRS flags
@@ -40,7 +40,7 @@ WXLIBS  = $(shell wx-config --libs)
 WXFLAGS = $(shell wx-config --cxxflags)
 
 FLAGS += -Icore/include -Icore/include/drs 
-LIBS += -Lcore/lib -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil
+LIBS += -Lcore/lib -lfid -lm -lzmq -ljson_spirit -lCAENDigitizer -lusb-1.0 -lutil -lpthread
 
 all: $(COREOBJ) $(DEPSOBJ) $(TARGETS)
 
