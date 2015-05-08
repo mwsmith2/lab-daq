@@ -260,9 +260,9 @@ int FreeConfig()
   cout << "Free the event builder." << endl;
   delete event_builder;
 
-  // cout << "Freeing the workers." << endl;
-  // // Delete the allocated workers.
-  // workers.FreeList();
+  cout << "Freeing the workers." << endl;
+  // Delete the allocated workers.
+  workers.Resize(0);
 
   cout << "Freeing the writers." << endl;
   // Delete the allocated writers.
