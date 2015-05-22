@@ -15,7 +15,7 @@ if [[ $EUID -ne 0 ]]; then
 
 else
 
-    ./bin/fe_master $1 &> /var/log/fast-daq.log &
+    ./bin/fe_master $1 &> /var/log/lab-daq/fast-frontend.log &
 fi
 
 cd $TMPDIR
