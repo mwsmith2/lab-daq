@@ -3,7 +3,9 @@
     "base_address": "0xD0000000",
     "sampling_rate":1.0,
     "pretrigger_delay":50,
-    "use_drs4_corrections":true,
+    "drs_cell_corrections":true,
+    "drs_peak_corrections":false,
+    "drs_time_corrections":true,
     "channel_offset":[
 	0.15,
 	0.15,
