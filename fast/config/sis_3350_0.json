@@ -1,0 +1,24 @@
+{
+	"device":"/dev/sis1100_00remote",
+	"base_address":"0x30000000",
+	"pretrigger_samples":"0x100",
+	"user_led_on":false,
+	"enable_ext_lemo":true,
+	"invert_ext_lemo":false,
+        "ringbuffer_mode":true,
+        "direct_memory_mode":false,
+
+	"channel_offset":[
+		1.0,
+		-2.0,
+		-0.0,
+		-0.0
+	],
+
+	"channel_gain":[
+		60,
+		100,
+		30,
+		30
+	]
+}
