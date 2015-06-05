@@ -4,7 +4,7 @@
     "sampling_rate":1.0,
     "pretrigger_delay":50,
     "drs_cell_corrections":true,
-    "drs_peak_corrections":false,
+    "drs_peak_corrections":true,
     "drs_time_corrections":true,
     "channel_offset":[
 	0.15,
