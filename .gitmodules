@@ -1,6 +1,3 @@
 [submodule "fast/core"]
 	path = fast/core
-	url = https://github.com/mwsmith2/fast-daq-core
-[submodule "fast/corels"]
-	path = fast/corels
-	url = https://github.com/mwsmith2/fast-daq-core
+	url = https://github.com/uwmuonlab/fast-daq-core
