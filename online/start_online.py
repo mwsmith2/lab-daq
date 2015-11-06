@@ -16,6 +16,8 @@ import os, glob, datetime
 import threading
 import collections
 
+import serial
+
 import data_io
 import zmq, json
 from time import sleep, time
@@ -238,6 +240,10 @@ def traces():
 
     return render_template('traces.html', options=devices, 
                            selected=current_selection, in_progress=running)
+
+@app.route('/controls')
+def controls():
+    return render_template('controls.html', in_progress=running)
 
 @app.route('/beam')
 def beam_display():
@@ -501,6 +507,27 @@ def on_refresh():
     """when a client refreshes his page, this ds him a fresh batch of data"""
     if running:
         emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate})
+
+@socketio.on('filter position?', namespace='/online')
+def query_filter_position():
+     ser = serial.Serial('/dev/filterwheel', 115200, timeout=1)
+     ser.write('pos?\r')
+     message = ['']
+     while message[-1] != '>':
+         message.append(ser.read(1).strip())
+     emit('filter position is: ', {'position' : message[-3]})
+     
+@socketio.on('new filter wheel setting', namespace='/online')
+def new_filter_wheel_setting(msg):
+    newSetting = int(msg['newSetting'])
+    if newSetting < 7 and newSetting > 0:
+        ser = serial.Serial('/dev/filterwheel', 115200, timeout=1)
+        ser.write('pos=%s\r' % repr(newSetting))
+        while ser.read(1).strip() != '>':
+            pass
+        emit('filter moved')
+    else:
+        emit('invalid setting')
 
 @socketio.on('connect', namespace='/online')
 def test_connect():
