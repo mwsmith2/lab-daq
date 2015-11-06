@@ -14,6 +14,7 @@ import couchdb
 from couchdb.design import ViewDefinition
 import os, glob, datetime
 import threading
+import collections
 
 import data_io
 import zmq, json
@@ -456,28 +457,28 @@ def generate_runlog():
         runlog_headers += ', ' + info
         
     #fill runlog lines with database info
-    runlog_lines = []
+    runlog_lines = collections.deque()
     db = connect_db(run_info['db_name'])
     n_runs = int(db['toc']['n_runs'])
     counter = 0
     for doc in db.view('_design/all/_view/all'):
         data = doc['value']
     
-        runlog_lines.append('')
+        runlog_lines.appendleft('')
         if 'run_number' in data:
-            runlog_lines[-1] += str(data['run_number'])
+            runlog_lines[0] += str(data['run_number'])
         else:
-            runlog_lines[-1] += 'N/A'
+            runlog_lines[0] += 'N/A'
         for attr in run_info['attr']:
                 if attr in data:
-                    runlog_lines[-1] += ', ' + str(data[attr])
+                    runlog_lines[0] += ', ' + str(data[attr])
                 else: 
-                    runlog_lines[-1] += (', N/A')
+                    runlog_lines[0] += (', N/A')
         for info in run_info['log_info']:
             if info in data:
-                runlog_lines[-1] += ', ' + str(data[info])
+                runlog_lines[0] += ', ' + str(data[info])
             else:
-                runlog_lines[-1] += (', N/A')
+                runlog_lines[0] += (', N/A')
 
         counter+=1
         progress = 100*float(counter)/n_runs
