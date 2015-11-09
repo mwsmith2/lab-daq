@@ -19,8 +19,11 @@
 	$('#nEvents').text(0);
 	$('#rate').text(0);
 	socket.on('event info', function(msg) {
-	    $('#nEvents').text(String(msg.count));
-            $('#rate').text(String(msg.rate.toFixed(1)));
+	    if(msg.runNumber){
+		$('#nEvents').text(String(msg.count));
+		$('#rate').text(String(msg.rate.toFixed(1)));
+		$('#runNumber').text("Run "+ String(msg.runNumber));
+	    }
 	});
 	
         socket.on('my response', function(msg) {
@@ -48,6 +51,7 @@ href="{{ url_for('static', filename='favicon.ico') }}">
     <a href="{{ url_for('runlog') }}">runlog</a>
     </div>
     {% if in_progress %}
+    <big id = "runNumber"></big><br>
     <b id="nEvents"></b> events recorded<br>
      data rate: <b id="rate"></b> hz 
     {% else %}

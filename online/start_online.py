@@ -83,8 +83,13 @@ def start_run():
     This entails saving the user configuration in couchdb and 
     launching the data getter and emitter"""
     global running
-
     data = copy_form_data(run_info, request)
+    if running:
+        error = 'There is already a run in progress!'
+        return render_template('new_run.html', info=run_info, 
+                               data=data, error=error, new=True,
+                               in_progress=running)
+
     complete = check_form_data(run_info, data)
     if not complete:
         error = "All fields in the form must be filled."
@@ -322,11 +327,16 @@ def get_upload(filename):
     filename = os.path.basename(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/nEvents')
+def n_events_query():
+    return repr(data_io.eventCount)
+
 def send_events():
     """sends data to the clients while a run is going"""
     while not data_io.runOver.isSet():
         sleep(0.1)
-        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate},
+        socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate, 
+                                     "runNumber" : run_info['last_run']},
                       namespace='/online')
         
 
@@ -519,8 +529,12 @@ def query_filter_position():
      
 @socketio.on('new filter wheel setting', namespace='/online')
 def new_filter_wheel_setting(msg):
-    newSetting = int(msg['newSetting'])
-    if newSetting < 7 and newSetting > 0:
+    badValue = False
+    try:
+        newSetting = int(msg['newSetting'])
+    except ValueError:
+        badValue = True
+    if not badValue and newSetting < 7 and newSetting > 0:
         ser = serial.Serial('/dev/filterwheel', 115200, timeout=1)
         ser.write('pos=%s\r' % repr(newSetting))
         while ser.read(1).strip() != '>':
