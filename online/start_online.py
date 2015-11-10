@@ -466,17 +466,60 @@ def stop_continual_beam():
     print ' stop continual beam'
     session['updating_beam'] = False
 
-@socketio.on('generate runlog', namespace='/online')
-def generate_runlog():
-    '''generates the runlog from db'''
-    #generate column headers
-    start = time()
+def get_runlog_headers():
     runlog_headers = ''
     for attr in run_info['attr']:
         runlog_headers += ', ' + attr
     for info in run_info['log_info']:
         runlog_headers += ', ' + info
-        
+    return runlog_headers
+
+@socketio.on('runlog data', namespace='/online')
+def send_runlog(msg):
+    """generate runlog data and send it"""
+    n_rows = 0
+    try:
+        n_rows = int(msg['n_rows'])
+    except ValueError:
+        emit('bad row value')
+        return
+    if n_rows < 1:
+        emit('bad row value')
+        return        
+
+    rows = []
+    rows.append(get_runlog_headers().split(','))
+    last = last_run_number()
+    if(n_rows > last):
+        n_rows = last
+    view = db.view('_design/all/_view/all', descending=True)[last:last-n_rows+1]
+    for doc in view:
+        data = doc['value']
+        thisRow = []
+        if 'run_number' in data:
+            thisRow.append(str(data['run_number']))
+        else:
+            thisRow.append('N/A')
+        for attr in run_info['attr']:
+            if attr in data:
+                thisRow.append(str(data[attr]))
+            else: 
+                thisRow.append('N/A')
+        for info in run_info['log_info']:
+            if info in data:
+                thisRow.append(str(data[info]))
+            else:
+                thisRow.append('N/A')
+        rows.append(thisRow)
+    emit('rows: ', rows)
+
+@socketio.on('generate runlog', namespace='/online')
+def generate_runlog():
+    '''generates the runlog from db'''
+    #generate column headers
+    start = time()
+    runlog_headers = get_runlog_headers()
+
     #fill runlog lines with database info
     runlog_lines = collections.deque()
     db = connect_db(run_info['db_name'])

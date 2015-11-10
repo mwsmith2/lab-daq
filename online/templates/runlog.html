@@ -1,21 +1,71 @@
 {% extends "layout.html" %}
 {% block body %}
-    <button id="generate">Generate Runlog</button> <b id="progress"></b>
-    <a id="runlog" style="display: none"
-		 href="{{url_for('get_upload', filename=path) }}">
-       <br><br>runlog.csv </a>
-    
-    <script type="text/javascript" charset="utf-8">
+  <style> 
+    table {
+    border-collapse: collapse;
+    border: 2px black solid;
+    font: 12px sans-serif;
+    }
+    td {
+    border: 1px black solid;
+    padding: 5px;
+    }
+  </style>
+  <br>
+  <b> last <input id="n_rows" size="1" value="20"> runs </b>
+  <br><b><font color="red" id="error" style="display: none">Invalid entry!</font></b>
+  <br>
+  <table id="runlog_table" style="display: none">
+    <tbody>	
+    <tr><td></td></tr>
+    </tbody>
+  </table>
+  <b id="output_test"></b>
+  <br>
+  <button id="generate">Prepare Full Runlog as CSV</button> 
+  <a id="runlog" style="display: none"
+     href="{{url_for('get_upload', filename=path) }}">
+    runlog.csv 
+  </a>
+  <br><b id="progress"></b>
+  <script type="text/javascript" charset="utf-8">
        $(document).ready(function(){
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 	   
+	   socket.emit('runlog data', {'n_rows' : $('#n_rows').val()});
+
            socket.on('progress', function(msg) {
 	       $('#progress').text(msg);
 	   });
       
 	   socket.on('runlog ready', function() {
 	       $('#runlog').show();
+	   });
+
+	   socket.on('bad row value', function() {
+	       $('#error').show();
+	   });
+	   
+	   socket.on('rows: ', function(rows) {
+	       $('#runlog_table').hide();
+	       $('#runlog_table').find('tbody:last').empty();
+	       for(i in rows){
+		   $('#runlog_table').find('tbody:last').append('<tr>');
+		   for(j in rows[i]){
+		       if(j == 0 && i != 0){
+			   var url = '/revise/' + rows[i][j];
+			   var entry = '<td><a href=' + url + '>' +
+			       + rows[i][j] + '</a></td>';
+			   $('#runlog_table').find('tbody:last').append(entry);
+		       }
+		       else{
+			   $('#runlog_table').find('tbody:last').append('<td>'+rows[i][j]+'</td>');
+		       }
+		   }
+		   $('#runlog_table').find('tbody:last').append('</tr>');
+	       }
+	       $('#runlog_table').show();
 	   });
        });
 
@@ -24,7 +74,20 @@
 	  var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 	  socket.emit('generate runlog');
       });
-    </script>
+
+      $('#n_rows').keydown(function (e){
+	  if(e.keyCode == 13){
+	      $('#error').hide();
+	      namespace = '/online';
+	      var socket = io.connect('http://' + document.domain + 
+				      ':' + location.port + namespace);
+	      socket.emit("runlog data",  {'n_rows' : $('#n_rows').val()});
+	  }	   
+      });
+
+
+
+  </script>
+  {% endblock body %}
     
     
-{% endblock body %}
