@@ -69,13 +69,12 @@ def new_run():
     the previous run and prompt user for summary information"""
     
     last_data = {}
-    if run_info['last_run'] != 0:
-        db = connect_db(run_info['db_name'])
-        last_data = db[db['toc'][str(run_info['last_run'])]]
+    if last_run_number() != 0:
+        last_data = get_last_data()
         last_data['Description'] = ''
 
     return render_template('new_run.html', info=run_info, data=last_data, 
-                           new=True, in_progress=running)
+                           last=last_run_number(), new=True, in_progress=running)
 
 @app.route('/start', methods=['POST'])
 def start_run():
@@ -113,20 +112,19 @@ def start_run():
     handshake_sck.send(msg)
     if (handshake_sck.recv() == msg):
         # Connection established.
-        start_sck.send("START:%05i:" % (run_info['last_run'] + 1))
+        start_sck.send("START:%05i:" % (last_run_number() + 1))
 
     handshake_sck.close()
     start_sck.close()
     context.destroy()           
     
     #save the run info
-    db = get_db(run_info['db_name'])
-    run_info['last_run'] += 1
-    data['run_number'] = run_info['last_run']
+    db = connect_db(run_info['db_name'])
+    data['run_number'] = last_run_number() + 1
     now = datetime.datetime.now()
-    data['Start Date'] = "%02i/%02i" % (now.month, now.day)
+    data['Start Date'] = "%02i/%02i/%04i" % (now.month, now.day, now.year)
     data['Start Time'] = "%02i:%02i" % (now.hour, now.minute)
-    save_db_data(db, data)
+    db.save(data)
 
     #start the run and launch the data emitter
     running = True
@@ -169,14 +167,14 @@ def end_run():
         running = False
         data_io.end_run()
 
-    db = connect_db(run_info['db_name'])
-    data = db[db['toc'][str(run_info['last_run'])]]
+    data = get_last_data()
     data['Events'] = data_io.eventCount
     data['Rate'] = "%.1f" % data_io.rate
     now = datetime.datetime.now()
-    data['End Date'] = "%02i/%02i" % (now.month, now.day)
+    data['End Date'] = "%02i/%02i/%04i" % (now.month, now.day, now.year)
     data['End Time'] = "%02i:%02i" % (now.hour, now.minute)
     print "%i events" % data_io.eventCount
+    db = connect_db(run_info['db_name'])
     db.save(data)
 
     sleep(0.1)
@@ -272,22 +270,21 @@ def no_data():
 @app.route('/revision_select')
 def revision_select():
     """display page where user can select a run to revise"""
-    if run_info['last_run']<10:
+    last = last_run_number()
+    if last < 10:
         end = 0
     else:
-        end = run_info['last_run']-10
+        end = last - 10
     
     return render_template("revision_select.html", 
                            in_progress=running,
-                           last_ten=range(run_info['last_run'],end,-1))
+                           last_ten=range(last,end,-1))
 
 @app.route('/revise/<string:run_num>')
 def revise(run_num):
     """display page for revising the given run"""
     try:
-        db = connect_db(run_info['db_name'])
-        old_data = db[db['toc'][run_num]]
-
+        old_data = get_run_data(int(run_num))
         session['revision_number']=run_num
         return render_template('revise.html', num=run_num, 
                                info=run_info, data=old_data,
@@ -307,12 +304,19 @@ def save_revision():
                                in_progress=running)
         
     #save the revision    
-    db = connect_db(run_info['db_name'])
-    data = db[db['toc'][str(session['revision_number'])]]
+    data = {}
+    try:
+        data = get_run_data(int(session['revision_number']))
+    except:
+        error = 'error saving revision!'
+        return render_template('revise.html',num=session['revision_number'], 
+                               info=run_info, data=new_data,error=error, 
+                               in_progress=running)
     for attr in run_info['attr']:
         data[attr] = new_data[attr]
 
-    save_db_data(db, data)
+    db = connect_db(run_info['db_name'])
+    db.save(data)
     return render_template('revision_success.html', in_progress=running)
 
 @app.route('/runlog')
@@ -333,10 +337,11 @@ def n_events_query():
 
 def send_events():
     """sends data to the clients while a run is going"""
+    last = last_run_number()
     while not data_io.runOver.isSet():
         sleep(0.1)
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate, 
-                                     "runNumber" : run_info['last_run']},
+                                     "runNumber" : last },
                       namespace='/online')
         
 
@@ -475,7 +480,7 @@ def generate_runlog():
     #fill runlog lines with database info
     runlog_lines = collections.deque()
     db = connect_db(run_info['db_name'])
-    n_runs = int(db['toc']['n_runs'])
+    n_runs = get_last_data()['run_number']
     counter = 0
     for doc in db.view('_design/all/_view/all'):
         data = doc['value']
@@ -561,7 +566,7 @@ def generate_hist():
         this_dev = session['device'] + ' channel ' + str(session['channel'])
         plt.hist(data_io.hists[this_dev], 100)
         plt.title('Run %i Event %i, %s channel %i' % 
-                  (run_info['last_run'], data_io.eventCount,
+                  (last_run_number(), data_io.eventCount,
                    session['device'], session['channel']))
     except IndexError:
         return 'failed', 'failed'
@@ -579,7 +584,7 @@ def generate_trace(xmin, xmax):
     plt.clf()
     plt.plot(data_io.data[session['device']]['trace'][session['channel']])
     plt.title('Run %i Event %i, %s channel %i' % 
-              (run_info['last_run'], data_io.eventCount,
+              (last_run_number(), data_io.eventCount,
               session['device'], session['channel']))
     plt.xlim([xmin,xmax])
 
@@ -650,6 +655,24 @@ def copy_form_data(info, req):
 
     return data
 
+def get_last_data():
+    """get data for the last run"""
+    db = connect_db(run_info['db_name'])
+    try:
+        return iter(db.view('_design/all/_view/all', descending=True)).next()['value']
+    except (KeyError, StopIteration):
+        return {}
+
+def get_run_data(run_num):
+    """get data for a given run"""
+    db = connect_db(run_info['db_name'])
+    data = {}
+    try:
+        data = iter(db.view('_design/all/_view/all')[run_num]).next()['value']
+    except StopIteration:
+        pass
+    return data
+
 def check_form_data(info, data):
     """Check each spot in the form data."""
     for key in info['attr']:
@@ -657,27 +680,6 @@ def check_form_data(info, data):
             return False
 
     return True
-
-def save_db_data(db, data):
-    """Save the entry to the db and enter it into the table of contents."""
-    # Form a map to the most recent entry.
-    toc = db.get('toc')
-        
-    # Create if null.
-    if (toc == None):
-        toc = {}
-        toc['n_runs'] = 0
-        toc['_id'] = 'toc'
-
-    # Increment n_entries if necessary.
-    if str(run_info['last_run']) not in toc:
-        toc['n_runs'] += 1
-
-    # Save the data.
-    idx, ver = db.save(data)
-    
-    toc[run_info['last_run']] = idx
-    db.save(toc)
 
 def connect_db(db_name):
     """Connect to the database if open, and start database if not running."""
@@ -695,13 +697,19 @@ def connect_db(db_name):
     except:
         client.create(db_name)
         db = client[db_name]
-        toc = {}
-        toc['n_runs'] = 0
 
-        toc['_id'] = 'toc'
-        db.save(toc)
+    return db
 
+def last_run_number():
+    """determines the last run number by looking in the database"""
+    try:
+        return get_last_data()['run_number']
+    except KeyError:
+        return 0
+
+if __name__ == '__main__':
     #create permanent view to all if one doesn't exist
+    db = connect_db(run_info['db_name'])    
     if '_design/all' not in db:
         view_def = ViewDefinition('all', 'all',''' 
 				  function(doc) { 
@@ -710,24 +718,4 @@ def connect_db(db_name):
 				  }''')
         view_def.sync(db)
 
-    return db
-
-
-def get_db(db_name):
-    """Place a handle to the database in the global variables."""
-    if not hasattr(g, 'client'):
-        g.client = {}
-
-    if not hasattr(g.client, db_name):
-        g.client[db_name] = connect_db(db_name)
-
-    return g.client[db_name]
-
-def last_run_number():
-    """determines the last run number by looking in the database"""
-    db = connect_db(run_info['db_name'])
-    return db['toc']['n_runs']
-
-if __name__ == '__main__':
-    run_info['last_run'] = last_run_number()
     socketio.run(app, host='0.0.0.0')
