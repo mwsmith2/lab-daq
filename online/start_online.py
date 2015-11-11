@@ -746,6 +746,7 @@ def connect_db(db_name):
 
 def last_run_number():
     """determines the last run number by looking in the database"""
+    db = connect_db(run_info['db_name'])
     try:
         return db.view('_design/all/_view/all').total_rows
     except:
