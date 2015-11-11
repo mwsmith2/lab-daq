@@ -701,8 +701,9 @@ def copy_form_data(info, req):
 def get_last_data():
     """get data for the last run"""
     db = connect_db(run_info['db_name'])
+    last = last_run_number()
     try:
-        return iter(db.view('_design/all/_view/all', descending=True)).next()['value']
+        return iter(db.view('_design/all/_view/all', descending=True)[last:last]).next()['value']
     except (KeyError, StopIteration):
         return {}
 
@@ -746,8 +747,8 @@ def connect_db(db_name):
 def last_run_number():
     """determines the last run number by looking in the database"""
     try:
-        return get_last_data()['run_number']
-    except KeyError:
+        return db.view('_design/all/_view/all').total_rows
+    except:
         return 0
 
 if __name__ == '__main__':
