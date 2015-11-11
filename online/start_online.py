@@ -566,30 +566,155 @@ def on_refresh():
     if running:
         emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate})
 
+def read_serial(s, terminator='\n'):
+    """tries to read one byte at a time but breaks if timeout"""
+    response = ''
+    while True:
+        old_len = len(response)
+        response += s.read(1)
+        try:
+            if response[-1] == terminator:
+                break
+        except IndexError:
+            #timed out
+            break
+        if len(response) == old_len:
+            #timed out
+            break
+        response = response.strip()
+    return response.strip()
+
 @socketio.on('filter position?', namespace='/online')
 def query_filter_position():
-     ser = serial.Serial('/dev/filterwheel', 115200, timeout=1)
-     ser.write('pos?\r')
-     message = ['']
-     while message[-1] != '>':
-         message.append(ser.read(1).strip())
-     emit('filter position is: ', {'position' : message[-3]})
-     
+    filter = serial.Serial('/dev/filterwheel', 115200, timeout=1)
+    filter.write('pos?\r')
+    counter = 0
+    while True:
+        try:
+            response = read_serial(filter, '>')
+            if(response[-1] == '>'):
+                emit('filter position is: ', {'position' : response[-2]})
+                return
+        except IndexError:
+            counter += 1
+            sleep(0.01)
+            if counter == 500:
+                return
+
 @socketio.on('new filter wheel setting', namespace='/online')
 def new_filter_wheel_setting(msg):
     badValue = False
     try:
-        newSetting = int(msg['newSetting'])
+        new_setting = int(msg['new_setting'])
     except ValueError:
         badValue = True
-    if not badValue and newSetting < 7 and newSetting > 0:
-        ser = serial.Serial('/dev/filterwheel', 115200, timeout=1)
-        ser.write('pos=%s\r' % repr(newSetting))
-        while ser.read(1).strip() != '>':
-            pass
+    if not badValue and new_setting < 7 and new_setting > 0:
+        filter = serial.Serial('/dev/filterwheel', 115200, timeout=1)
+        filter.write('pos=%s\r' % repr(new_setting))
+        read_serial(filter)
         emit('filter moved')
     else:
         emit('invalid setting')
+
+@socketio.on('bk status', namespace='/online')
+def query_bk_status():
+    bk = serial.Serial('/dev/ttyUSB1', 4800, timeout=1)
+
+    #make sure we are current limited at desired level
+    current_limit = 0.005
+    #seems to like being made contact with initially
+    bk.write('*IDN?\n')
+    read_serial(bk)
+
+    try: 
+        bk.write('SOUR:CURR?\n')
+        response = ''
+        counter = 0
+        response = read_serial(bk) 
+        if float(response) != current_limit:
+            bk.write('SOUR:CURR % .4f\n' % current_limit)
+            bk.write('SOUR:CURR?\n')
+            response = read_serial(bk)
+            if float(response) != current_limit:
+                #failed to set current limit, return here
+                emit('bk failure')
+                return
+    except ValueError:
+        #couldn't convert to float for some reason, something weird happening
+        emit('bk failure')
+        return
+
+    status = {}
+
+    #get output status
+    bk.write('OUTP:STAT?\n')
+    status['output'] = read_serial(bk)
+    
+    #get set point
+    bk.write('SOUR:VOLT?\n')
+    status['set_pt'] = read_serial(bk)
+    
+    #get measured voltage
+    bk.write('MEAS:VOLT?\n')
+    status['measured'] = read_serial(bk)
+    
+    bk.write('SOUR:CURR?\n')
+    status['i_limit'] = read_serial(bk)
+
+    emit('bk status is', status)
+
+@socketio.on("toggle bk power", namespace='/online')
+def toggle_bk_power():
+    bk = serial.Serial('/dev/ttyUSB1', 4800, timeout=0.5)
+
+    #really seems to need two commands to start out for some reason
+    bk.write('*idn?\nOUTP:STAT?\n')
+    read_serial(bk)
+    
+    bk_on = False
+    try:
+        bk_on = int(read_serial(bk)) == 1
+    except ValueError:
+        #something didn't work
+        return 
+    
+    if bk_on:
+        bk.write('OUTP:STAT 0\n')
+    else:
+        bk.write('OUTP:STAT 1\n')
+    
+    sleep(1)
+    emit('bk changed')        
+
+@socketio.on("new voltage pt", namespace='/online')
+def new_bk_voltage(msg):
+    new_voltage = 0
+    try:
+        new_voltage = float(msg['new_setting'])
+    except ValueError:        
+        emit('invalid bk setting')
+        return
+        
+    #temporary limits for now
+    v_low = 0
+    v_high = 67.5
+    if new_voltage < v_low or new_voltage > v_high:
+        emit('invalid bk setting')
+        return
+
+    bk = serial.Serial('/dev/ttyUSB1', 4800, timeout=0.5)
+    
+    bk.write("*IDN?\n")
+    read_serial(bk)
+    bk.write('SOUR:VOLT % .4f\n' % new_voltage)
+    bk.write('SOUR:VOLT?\n')
+    try:
+        if float(read_serial(bk)) == new_voltage:
+            emit('bk changed')
+        else: 
+            emit('bk failure')
+    except:
+        emit('bk failure')        
 
 @socketio.on('connect', namespace='/online')
 def test_connect():
@@ -703,7 +828,7 @@ def get_last_data():
     db = connect_db(run_info['db_name'])
     last = last_run_number()
     try:
-        return iter(db.view('_design/all/_view/all', descending=True)[last:last]).next()['value']
+        return iter(db.view('_design/all/_view/all', descending=True)[last]).next()['value']
     except (KeyError, StopIteration):
         return {}
 
