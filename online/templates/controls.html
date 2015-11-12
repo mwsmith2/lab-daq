@@ -1,9 +1,9 @@
 {% extends "layout.html" %}
 {% block body %}
-<h2> Filter Wheel </h2>
+<h2> Filter Wheel </h2> <br>
 Current wheel setting: <b id="filterSetting"></b><br>
 <br>
-New setting: <input type=text id="newSetting"></input>
+New setting: <input type=text id="newSetting" size="1"></input>
 <br>
 <b><font color="red" id="settingError" style="display: none">Invalid setting!</font></b>
 <br>
@@ -12,19 +12,23 @@ New setting: <input type=text id="newSetting"></input>
 BK output <b id="bk_output"></b> <button id="bk_power_button" style="display: none"></button>
 <br><br>
 voltage set point: <b id="bk_set_pt"></b> new: <input type=text id="new_set_pt" size="1"></input> V
-<br><br>
-current limit: <b id="bk_i_limit"></b>
 <b><font color="red" id="bk_error" style="display: none">Invalid setting!</font></b>
 <br><br>
-measured output voltage: <b id="bk_measured"></b> <button id='remeasure' style="display: none"> measure again </button>
+current limit: <b id="bk_i_limit"></b>
+<br><br>
+measured output voltage: <b id="bk_measured"></b>
 
 <script type="text/javascript" charset="utf-8">
        $(document).ready(function(){
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
+	   setInterval(function() {
+	       socket.emit('filter position?');
+	       socket.emit('bk status');
+	   }, 5000);
+
            socket.emit('filter position?');
-	   
 	   socket.emit('bk status');
 
 	   socket.on('filter position is: ', function(msg){
@@ -36,6 +40,8 @@ measured output voltage: <b id="bk_measured"></b> <button id='remeasure' style="
 	       $('#newSetting').val("");
 	       $('#settingError').hide();
 	   });
+
+	   
 
 	   socket.on('invalid setting', function(msg){
 	       $('#settingError').show();
@@ -52,7 +58,6 @@ measured output voltage: <b id="bk_measured"></b> <button id='remeasure' style="
 	   socket.on('bk status is', function(msg){
 	       $('#bk_error').hide();
 	       $('#bk_failure').hide();
-	       $('#new_set_pt').val('');
 	       if(msg.output == '1'){
 		   $('#bk_output').text('ON');
 		   $('#bk_power_button').text('switch OFF');
@@ -72,8 +77,6 @@ measured output voltage: <b id="bk_measured"></b> <button id='remeasure' style="
 	       
 	       $('#bk_measured').text(msg.measured + ' V');
 	       $('#bk_measured').show()
-
-	       $('#remeasure').show()
 	   });
 
 	   socket.on('bk changed', function(){
@@ -110,6 +113,7 @@ measured output voltage: <b id="bk_measured"></b> <button id='remeasure' style="
 	       var socket = io.connect('http://' + document.domain + 
 				       ':' + location.port + namespace);
 	       socket.emit("new voltage pt", {"new_setting" : $('#new_set_pt').val() } );
+	       $('#new_set_pt').val('');
 	   }	   
        });
 </script>

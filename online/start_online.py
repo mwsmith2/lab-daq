@@ -86,14 +86,14 @@ def start_run():
     if running:
         error = 'There is already a run in progress!'
         return render_template('new_run.html', info=run_info, 
-                               data=data, error=error, new=True,
+                               last=last_run_number(), data=data, error=error, new=True,
                                in_progress=running)
 
     complete = check_form_data(run_info, data)
     if not complete:
         error = "All fields in the form must be filled."
         return render_template('new_run.html', info=run_info, 
-                               data=data, error=error, new=True,
+                               last=last_run_number(), data=data, error=error, new=True,
                                in_progress=running)
 
     # Send a start run signal to fe_master.
@@ -467,7 +467,7 @@ def stop_continual_beam():
     session['updating_beam'] = False
 
 def get_runlog_headers():
-    runlog_headers = ''
+    runlog_headers = 'Run#'
     for attr in run_info['attr']:
         runlog_headers += ', ' + attr
     for info in run_info['log_info']:
