@@ -7,9 +7,6 @@
       </option>
     {% endfor %}
   </select>
-  <!-- <img id="img"  -->
-  <!--      src="" width="80%" style="display: none"></img> -->
-  <!--   <br> -->
   <div id="trace_plot" style="width: 50em; height: 30em; margin: 0"></div>
   <button id="update">Update Trace</button> 
   x_min <input type=text id="min" size="1" value="0"></input>
@@ -31,13 +28,6 @@
 	   socket.emit('update trace', {"x_min":$('#min').val(),
 					"x_max":$('#max').val(),
 					"selected":$('#device').val()});
-
-	   socket.on('trace ready', function(msg) {
-               $('#img').show();
-	       $('#img').attr('src',msg.path);
-	       $('#min').val(msg.x_min);
-	       $('#max').val(msg.x_max);
-	   });
 
 	   socket.on('trace data', function(msg) {
 	       var plotdata = google.visualization.arrayToDataTable(msg.data);
@@ -107,7 +97,7 @@
 		   $('#rep_rate').val("");
 	       }
 	   }
-
+	   
 	   $('#continual').click(function() {
 	       continual();
 	   });
