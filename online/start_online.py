@@ -2,12 +2,12 @@
 #Fienberg@uw.edu
 #online display for SLAC test beam run
 
-from gevent import monkey
-monkey.patch_all()
+import eventlet
+eventlet.monkey_patch()
 
 from flask import Flask, render_template, send_from_directory, redirect, url_for
 from flask import g, request, session
-from flask.ext.socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 import couchdb
@@ -39,7 +39,7 @@ app.config.update(dict(
     IMAGE_UPLOADS=['.jpg', '.jpe', '.jpeg', '.png', '.gif', '.svg', '.bmp'],
     DEBUG=True))
 app.config['SECRET_KEY'] = '\xf5\x1a#qx%`Q\x88\xd1h4\xc3\xba1~\x16\x11\x81\t\x8a?\xadF'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 
 #Define attributes of a run
