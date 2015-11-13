@@ -48,10 +48,6 @@
 	       amplhist.draw(histdata, options)
 	   });
 
-	   socket.on('updated', function(){
-	       socket.emit('continue updating');
-	   });
-
 	   socket.on('current rate', function(msg){
 	       $('#rep_rate').val(msg);
 	   });
@@ -92,6 +88,7 @@
 
 	   $('#rep_rate').keydown(function (e){
 	       if(e.keyCode == 13){
+		   clearInterval(interval);
 		   continual();
 	       }
 	   });

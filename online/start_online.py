@@ -168,7 +168,7 @@ def end_run():
     now = datetime.datetime.now()
     data['End Date'] = "%02i/%02i/%04i" % (now.month, now.day, now.year)
     data['End Time'] = "%02i:%02i" % (now.hour, now.minute)
-    print "%i events" % data_io.eventCount
+
     db = connect_db(run_info['db_name'])
     db.save(data)
 
@@ -236,7 +236,11 @@ def traces():
 
     current_selection = session['device'] + ' channel ' + str(session['channel'])
 
+    if 'refresh_rate' not in session:
+        session['refresh_rate'] = 1.
+
     return render_template('traces.html', options=devices, 
+                           r_rate=session['refresh_rate'],
                            selected=current_selection, in_progress=running)
 
 @app.route('/controls')
@@ -353,7 +357,7 @@ def update_hist(msg):
                                                     data_io.eventCount,
                                                     device, 
                                                     channel)              
-        print title
+
         data = [['amplitudes']]
         data.extend([[i] for i in data_io.hists[this_dev]])
         emit('histogram ready', {"title" : title, "data" : data});
@@ -479,7 +483,6 @@ def generate_runlog():
         runlog.write(runlog_headers)
         for line in runlog_lines:
             runlog.write('\n' + line)
-    print '%i seconds' % (time() - start)
     
     emit('runlog ready')
 
