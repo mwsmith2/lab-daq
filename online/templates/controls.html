@@ -19,103 +19,89 @@ current limit: <b id="bk_i_limit"></b>
 measured output voltage: <b id="bk_measured"></b>
 
 <script type="text/javascript" charset="utf-8">
-       $(document).ready(function(){
-	   namespace = '/online';
-	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+  
+  $(document).ready(function(){
+      namespace = '/online';
+      var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
-	   setInterval(function() {
-	       socket.emit('filter position?');
-	       socket.emit('bk status');
-	   }, 5000);
+      setInterval(function() {
+	  socket.emit('filter position?');
+	  socket.emit('bk status');
+      }, 5000);
 
-           socket.emit('filter position?');
-	   socket.emit('bk status');
+      socket.emit('filter position?');
+      socket.emit('bk status');
 
-	   socket.on('filter position is: ', function(msg){
-	       $('#filterSetting').text(String(msg.position));
-	   });
-	   
-	   socket.on('filter moved', function(msg){
-	       socket.emit('filter position?')
-	       $('#newSetting').val("");
-	       $('#settingError').hide();
-	   });
+      socket.on('filter position is: ', function(msg){
+	  $('#filterSetting').text(String(msg.position));
+      });
+      
+      socket.on('filter moved', function(msg){
+	  socket.emit('filter position?')
+	  $('#newSetting').val("");
+	  $('#settingError').hide();
+      });
 
-	   
+      
 
-	   socket.on('invalid setting', function(msg){
-	       $('#settingError').show();
-	   });
+      socket.on('invalid setting', function(msg){
+	  $('#settingError').show();
+      });
 
-	   socket.on('invalid bk setting', function(msg){
-	       $('#bk_error').show();
-	   });
+      socket.on('invalid bk setting', function(msg){
+	  $('#bk_error').show();
+      });
 
-	   socket.on('bk failure', function(){
-	       $('#bk_failure').show();
-	   });
+      socket.on('bk failure', function(){
+	  $('#bk_failure').show();
+      });
 
-	   socket.on('bk status is', function(msg){
-	       $('#bk_error').hide();
-	       $('#bk_failure').hide();
-	       if(msg.output == '1'){
-		   $('#bk_output').text('ON');
-		   $('#bk_power_button').text('switch OFF');
-	       }
-	       else{
-		   $('#bk_output').text('OFF');
-		   $('#bk_power_button').text('switch ON');
-	       }
-	       $('#bk_output').show();
-	       $('#bk_power_button').show();
-	       
-	       $('#bk_set_pt').text(msg.set_pt + ' V');
-	       $('#bk_set_pt').show()
+      socket.on('bk status is', function(msg){
+	  $('#bk_error').hide();
+	  $('#bk_failure').hide();
+	  if(msg.output == '1'){
+	      $('#bk_output').text('ON');
+	      $('#bk_power_button').text('switch OFF');
+	  }
+	  else{
+	      $('#bk_output').text('OFF');
+	      $('#bk_power_button').text('switch ON');
+	  }
+	  $('#bk_output').show();
+	  $('#bk_power_button').show();
+	  
+	  $('#bk_set_pt').text(msg.set_pt + ' V');
+	  $('#bk_set_pt').show()
 
-	       $('#bk_i_limit').text(msg.i_limit + ' A');
-	       $('#bk_i_limit').show()
-	       
-	       $('#bk_measured').text(msg.measured + ' V');
-	       $('#bk_measured').show()
-	   });
+	  $('#bk_i_limit').text(msg.i_limit + ' A');
+	  $('#bk_i_limit').show()
+	  
+	  $('#bk_measured').text(msg.measured + ' V');
+	  $('#bk_measured').show()
+      });
 
-	   socket.on('bk changed', function(){
-	       socket.emit('bk status');
-	   });
-       });
+      socket.on('bk changed', function(){
+	  socket.emit('bk status');
+      });
 
-       $('#newSetting').keydown(function (e){
-	   if(e.keyCode == 13){
-	       namespace = '/online';
-	       var socket = io.connect('http://' + document.domain + 
-				      ':' + location.port + namespace);
-	       socket.emit("new filter wheel setting", {"new_setting" : $('#newSetting').val() } );
-	   }	   
-       });
+      $('#newSetting').keydown(function (e){
+	  if(e.keyCode == 13){
+	      socket.emit("new filter wheel setting", {"new_setting" : $('#newSetting').val() } );
+	  }	   
+      });
 
-       $('#bk_power_button').click(function() {
-	   namespace = '/online';
-	   var socket = io.connect('http://' + document.domain + 
-				   ':' + location.port + namespace);	   
-	   socket.emit("toggle bk power");
-       });
+      $('#bk_power_button').click(function() {
+	  socket.emit("toggle bk power");
+      });
+      
+      $('#new_set_pt').keydown(function (e){
+	  if(e.keyCode == 13){
+	      socket.emit("new voltage pt", {"new_setting" : $('#new_set_pt').val() } );
+	      $('#new_set_pt').val('');
+	  }	   
+      });
+  });
 
-       $('#remeasure').click(function() {
-	   namespace = '/online';
-	   var socket = io.connect('http://' + document.domain + 
-				   ':' + location.port + namespace);	   
-	   socket.emit("bk status")
-       });
-
-       $('#new_set_pt').keydown(function (e){
-	   if(e.keyCode == 13){
-	       namespace = '/online';
-	       var socket = io.connect('http://' + document.domain + 
-				       ':' + location.port + namespace);
-	       socket.emit("new voltage pt", {"new_setting" : $('#new_set_pt').val() } );
-	       $('#new_set_pt').val('');
-	   }	   
-       });
 </script>
 
 {% endblock body %}

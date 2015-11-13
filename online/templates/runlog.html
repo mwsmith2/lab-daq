@@ -28,64 +28,80 @@
     runlog.csv 
   </a>
   <br><b id="progress"></b>
+
   <script type="text/javascript" charset="utf-8">
-       $(document).ready(function(){
-	   namespace = '/online';
-	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-	   
-	   socket.emit('runlog data', {'n_rows' : $('#n_rows').val()});
 
-           socket.on('progress', function(msg) {
-	       $('#progress').text(msg);
-	   });
-      
-	   socket.on('runlog ready', function() {
-	       $('#runlog').show();
-	   });
+    $(document).ready(function(){
+	namespace = '/online';
+	var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+	
+	socket.emit('runlog data', {'n_rows' : $('#n_rows').val()});
 
-	   socket.on('bad row value', function() {
-	       $('#error').show();
-	   });
-	   
-	   socket.on('rows: ', function(rows) {
-	       $('#runlog_table').hide();
-	       $('#runlog_table').find('tbody:last').empty();
-	       for(i in rows){
-		   $('#runlog_table').find('tbody:last').append('<tr>');
-		   for(j in rows[i]){
-		       if(j == 0 && i != 0){
-			   var url = '/revise/' + rows[i][j];
-			   var entry = '<td><a href=' + url + '>' +
-			       + rows[i][j] + '</a></td>';
-			   $('#runlog_table').find('tbody:last').append(entry);
-		       }
-		       else{
-			   $('#runlog_table').find('tbody:last').append('<td>'+rows[i][j]+'</td>');
-		       }
-		   }
-		   $('#runlog_table').find('tbody:last').append('</tr>');
-	       }
-	       $('#runlog_table').show();
-	   });
-       });
+        socket.on('progress', function(msg) {
+	    $('#progress').text(msg);
+	});
+	
+	socket.on('runlog ready', function() {
+	    $('#runlog').show();
+	});
 
-      $('#generate').click(function() {
-      	  namespace = '/online';
-	  var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-	  socket.emit('generate runlog');
-      });
+	socket.on('bad row value', function() {
+	    $('#error').show();
+	});
+	
+	socket.on('rows: ', function(rows) {
+	    $('#runlog_table').hide();
+	    $('#runlog_table').find('tbody:last').empty();
+	    for(i in rows){
+		$('#runlog_table').find('tbody:last').append('<tr>');
+		for(j in rows[i]){
+		    if(j == 0 && i != 0){
+			var url = '/revise/' + rows[i][j];
+			var entry = '<td><a href=' + url + '>' +
+			    + rows[i][j] + '</a></td>';
+			$('#runlog_table').find('tbody:last').append(entry);
+		    }
+		    else{
+			$('#runlog_table').find('tbody:last').append('<td>'+rows[i][j]+'</td>');
+		    }
+		}
+		$('#runlog_table').find('tbody:last').append('</tr>');
+	    }
+	    $('#runlog_table').show();
+	});
 
-      $('#n_rows').keydown(function (e){
-	  if(e.keyCode == 13){
-	      $('#error').hide();
-	      namespace = '/online';
-	      var socket = io.connect('http://' + document.domain + 
-				      ':' + location.port + namespace);
-	      socket.emit("runlog data",  {'n_rows' : $('#n_rows').val()});
-	  }	   
-      });
+	$('#generate').click(function() {
+	    socket.emit('generate runlog');
+	});
 
+	$('#n_rows').keydown(function (e){
+	    if(e.keyCode == 13){
+		$('#error').hide();
+		socket.emit("runlog data",  {'n_rows' : $('#n_rows').val()});
+	    }	   
+	});
 
+	$('#newSetting').keydown(function (e){
+	    if(e.keyCode == 13){
+		socket.emit("new filter wheel setting", {"new_setting" : $('#newSetting').val() } );
+	    }	   
+	});
+
+	$('#bk_power_button').click(function() {
+	    socket.emit("toggle bk power");
+	});
+
+	$('#remeasure').click(function() {
+	    socket.emit("bk status")
+	});
+
+	$('#new_set_pt').keydown(function (e){
+	    if(e.keyCode == 13){
+		$('#new_set_pt').val('');
+	    }	   
+	});
+	
+    });
 
   </script>
   {% endblock body %}

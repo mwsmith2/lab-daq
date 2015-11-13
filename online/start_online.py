@@ -23,11 +23,6 @@ import zmq, json
 from time import sleep, time
 from setproctitle import setproctitle
 
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-from matplotlib import pyplot as plt
-
 # Set process name
 setproctitle("daqometer")
 
@@ -248,18 +243,18 @@ def traces():
 def controls():
     return render_template('controls.html', in_progress=running)
 
-@app.route('/beam')
-def beam_display():
-    """displays wire chamber hists"""
-    if len(data_io.hists)==0:
-        return render_template('no_data.html', in_progress=running)
+# @app.route('/beam')
+# def beam_display():
+#     """displays wire chamber hists"""
+#     if len(data_io.hists)==0:
+#         return render_template('no_data.html', in_progress=running)
     
-    if 'b_refresh_rate' not in session:
-        session['b_refresh_rate'] = 1.
+#     if 'b_refresh_rate' not in session:
+#         session['b_refresh_rate'] = 1.
 
-    return render_template('beam_monitor.html',
-                           r_rate=session['b_refresh_rate'],
-                           in_progress=running)
+#     return render_template('beam_monitor.html',
+#                            r_rate=session['b_refresh_rate'],
+#                            in_progress=running)
 
 @app.route('/nodata')
 def no_data():
@@ -347,24 +342,27 @@ def send_events():
 
 @socketio.on('update histogram', namespace='/online')
 def update_hist(msg):
-    """update the histogram upon request from client and then
-    respond when it's ready"""
-
+    """send data to client needed to make histogram"""
     try:
         selection = msg['selected'].split(' ')
-        session['device'] = selection[0]
-        session['channel'] = int(selection[-1])
-    except: 
-        pass
-    
-    name, path = generate_hist()
+        device = selection[0]
+        channel = int(selection[-1])
+        this_dev = device + ' channel ' + str(channel)
 
-    emit('histogram ready', {"path" : path});
-
+        title = 'Run %i Event %i, %s channel %i' % (last_run_number(), 
+                                                    data_io.eventCount,
+                                                    device, 
+                                                    channel)              
+        print title
+        data = [['amplitudes']]
+        data.extend([[i] for i in data_io.hists[this_dev]])
+        emit('histogram ready', {"title" : title, "data" : data});
+    except:
+        pass    
+        
 @socketio.on('update trace', namespace='/online')
 def update_trace(msg):
-    """update the histogram upon request from client and then
-    respond when it's ready"""
+    """send data to client needed to make trace"""
     try: 
         xmin = int(msg['x_min'])
         xmax = int(msg['x_max'])
@@ -380,91 +378,17 @@ def update_trace(msg):
         xmax = 1024
 
     selection = msg['selected'].split(' ')
-    session['device'] = selection[0]
-    session['channel'] = int(selection[-1])
 
-
-
-    name, path = generate_trace(xmin, xmax)
-
-    emit('trace ready', {"path" : path, "x_min" : xmin, "x_max" : xmax});
-
-@socketio.on('update beam', namespace='/online')
-def update_beam():
-
-    name, path = generate_beam()
+    device = selection[0]
+    channel = int(selection[-1])
     
-    if name != None:
-        emit('beam ready', {'path': path});
-    
-@socketio.on('start continual update', namespace='/online')
-def start_continual():
-    """begins the chain of continual histogram updates"""
-    session['updating_hist'] = True
-    continue_updating()
+    title = 'Run %i Event %i, %s channel %i' % (last_run_number(), data_io.eventCount,
+                                                device, channel)
+                  
+    data = [['sample', 'adc counts']]
 
-@socketio.on('start continual beam update', namespace='/online')
-def start_continual_beam():
-    """begins the chain of continual beam updates"""
-    session['updating_beam'] = True
-    continue_updating_beam()  
- 
-@socketio.on('continue updating', namespace='/online')
-def continue_updating():
-    """updates the histogram and then informs the client"""
-    sleep(1.0/session['refresh_rate'])
-
-    if session['updating_hist']:
-        update_hist('')
-        emit('updated')
-
-@socketio.on('continue updating beam', namespace='/online')
-def continue_updating_beam():
-    """updates the beam and then informs the client"""
-    sleep(1.0/session['b_refresh_rate'])
-
-    print 'continue updating beam'
-
-    if session['updating_beam']:
-        update_beam()
-        emit('updated beam')
-
-@socketio.on('refresh rate', namespace='/online')
-def set_refresh(msg):
-    """sets the histogram refresh rate"""
-    try:
-        new_rate = float(msg)
-        if 0 < new_rate <= 5.0:
-            session['refresh_rate'] = new_rate
-    except ValueError:
-        pass
-        
-    emit('current rate', str(session['refresh_rate']))
-
-@socketio.on('beam refresh rate', namespace='/online')
-def set_refresh_beam(msg):
-    """sets the beam refresh rate"""
-    try:
-        new_rate = float(msg)
-        if 0 < new_rate <= 1.0:
-            session['b_refresh_rate'] = new_rate
-    except ValueError:
-        pass
-
-    print 'set refresh rate'
-    
-    emit('current beam rate', str(session['refresh_rate']))
-
-@socketio.on('stop continual update', namespace='/online')
-def stop_continual():
-    """ends the chain of continual histogram updates"""
-    session['updating_hist'] = False
-
-@socketio.on('stop continual beam update', namespace='/online')
-def stop_continual_beam():
-    """ends the chain of continual beam updates"""
-    print ' stop continual beam'
-    session['updating_beam'] = False
+    data.extend([[i, data_io.data[device]['trace'][channel][i]] for i in xrange(xmin, xmax)])
+    emit('trace data', {'title' : title, 'data' : data})
 
 def get_runlog_headers():
     runlog_headers = 'Run#'
@@ -716,91 +640,10 @@ def new_bk_voltage(msg):
     except:
         emit('bk failure')        
 
-@socketio.on('connect', namespace='/online')
-def test_connect():
-    """communicates upon connection with a client"""
-    emit('my response', {'data': 'Connected'})
-
 def broadcast_refresh():
     """tells all clients to refresh their pages. This is called when a run begins
     or ends"""
     socketio.emit('refresh', {'data': ''}, namespace='/online')
-
-def generate_hist():
-    """updates the online histogram"""
-    plt.clf()
-  
-    try:
-        this_dev = session['device'] + ' channel ' + str(session['channel'])
-        plt.hist(data_io.hists[this_dev], 100)
-        plt.title('Run %i Event %i, %s channel %i' % 
-                  (last_run_number(), data_io.eventCount,
-                   session['device'], session['channel']))
-    except IndexError:
-        return 'failed', 'failed'
-
-    for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_hist*'):
-        os.remove(temp_file)
-    filename = unique_filename('temp_hist.png')
-    filepath = upload_path(filename)
-    plt.savefig(filepath)
-    
-    return filename, filepath
- 
-def generate_trace(xmin, xmax):
-    """generate the trace plot"""
-    plt.clf()
-    plt.plot(data_io.data[session['device']]['trace'][session['channel']])
-    plt.title('Run %i Event %i, %s channel %i' % 
-              (last_run_number(), data_io.eventCount,
-              session['device'], session['channel']))
-    plt.xlim([xmin,xmax])
-
-    for tempFile in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_trace*'):
-        os.remove(tempFile)
-    filename = unique_filename('temp_trace.png')
-    filepath = upload_path(filename)
-    plt.savefig(filepath)
-    
-    return filename, filepath
- 
-def generate_beam():
-    plt.clf()
-    
-    #grab data
-    x = data_io.wireX
-    y = data_io.wireY
-    
-    if len(x) == 0 or len(y) == 0:
-        return None, None
-
-    #make plot
-    ax1 = plt.subplot2grid((3,3),(0,0), colspan=2)
-    plt.hist(x, bins=50, range=[-5,5])
-    plt.xlim(-5,5)
-    ax1.axes.get_xaxis().set_visible(False)
-    ax1.axes.get_yaxis().set_visible(False)
-    ax2 = plt.subplot2grid((3,3),(1,0), colspan=2, rowspan=2)
-    plt.hist2d(x, y, bins=50, range=np.array([(-5,5),(-5,5)]))
-    plt.xlim(-5,5)
-    plt.ylim(-5,5)
-    plt.xlabel('x position')
-    plt.ylabel('y position')
-    ax3 = plt.subplot2grid((3,3),(1,2), rowspan=2)
-    plt.hist(y, bins=50, orientation='horizontal', range=[-5,5])
-    plt.ylim(-5,5)
-    ax3.axes.get_xaxis().set_visible(False)
-    ax3.axes.get_yaxis().set_visible(False)
-    
-    for temp_file in glob.glob(app.config['UPLOAD_FOLDER'] + '/temp_beam*'):
-        os.remove(temp_file)
-    filename = unique_filename('temp_beam.png')
-    filepath = upload_path(filename)
-    plt.savefig(filepath)
-
-    return filename, filepath
-    
-
    
 def unique_filename(upload_file):
      """Take a base filename, add characters to make it more unique, and ensure that it is a secure filename."""
@@ -886,6 +729,11 @@ if __name__ == '__main__':
 				      if( doc.run_number )
 					  emit(parseInt(doc.run_number), doc);
 				  }''')
+        couch = couchdb.Server()
+        db = couch[run_info['db_name']]
         view_def.sync(db)
+        if '_design/all' not in db:
+            print 'error: cannot create view. Do you have credentials?'
+            sys.exit(0)
 
     socketio.run(app, host='0.0.0.0')
