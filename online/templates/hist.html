@@ -8,7 +8,7 @@
     {% endfor %} 
     </select>
     <div id="hist_plot" style="width: 50em; height: 30em; margin: 0"></div>
-  <button id="update">Update Histogram</button>
+    <button id="update">Update Histogram</button>
   {% if in_progress %}
     <button id="continual">Start Continual Refresh</button>
     <button id="stop" style="display: none">Stop Continual Refresh</button>
@@ -23,14 +23,11 @@
 	   namespace = '/online';
 	   var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
 
-           socket.emit('stop continual update');
-    
-           socket.emit('update histogram', {"selected":$('#device').val()});
+	   socket.emit('update histogram', {"selected":$('#device').val()});
 
 	   socket.on('histogram ready', function(msg) {
 	       $('#rate_failure').hide();
 	       var histdata = google.visualization.arrayToDataTable(msg.data);
-	       $('#hist_plot').text("hello");
 	       var options = {
 		   title: msg.title,
 		   legend: {
@@ -48,31 +45,36 @@
 	       amplhist.draw(histdata, options)
 	   });
 
-	   socket.on('current rate', function(msg){
-	       $('#rep_rate').val(msg);
-	   });
-
 	   $('#update').click(function() {
 	       socket.emit('update histogram',{"selected":$('#device').val()});
 	   });
 	   
-	   var interval;      
+	   var interval = 0;      
 
 	   function continual(){
+	       var rate = -1;
+
 	       if ($.isNumeric($('#rep_rate').val())){
 		   rate = $('#rep_rate').val();
 	       }
 	       
 	       if ( (rate > 0) && (rate <= 5) ){	   
 		   $('#rate_failure').hide();
+		   if(interval != 0){
+		       clearInterval(interval);
+		   }
 		   interval = setInterval(function() {
 		       socket.emit('update histogram', {"selected":$('#device').val()});
 		   }, 1000/rate);
 		   $('#continual').hide();
 		   $('#stop').show();
 	       }
+	       else if (rate == 0){
+		   stop();
+	       }
 	       else{
 		   $('#rate_failure').show();
+		   $('#rep_rate').val("");
 	       }
 	   }
 
@@ -80,18 +82,22 @@
 	       continual();
 	   });
 
-	   $('#stop').click(function() {
-	       clearInterval(interval);
-	       $('#continual').show();
-	       $('#stop').hide();
-	   });
-
 	   $('#rep_rate').keydown(function (e){
 	       if(e.keyCode == 13){
-		   clearInterval(interval);
 		   continual();
 	       }
 	   });
+	   
+	   function stop(){
+	      clearInterval(interval);
+	       $('#continual').show();
+	       $('#stop').hide();
+	   } 
+
+	   $('#stop').click(function() {
+	       stop();
+	   });
+
        });
      
     </script>

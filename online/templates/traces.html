@@ -79,42 +79,54 @@
 	       }
 	   });
 	  
-	   var interval;      
+	   var interval = 0;    
 
 	   function continual(){
+	       var rate = -1;
+
 	       if ($.isNumeric($('#rep_rate').val())){
 		   rate = $('#rep_rate').val();
 	       }
 	       
 	       if ( (rate > 0) && (rate <= 5) ){	   
 		   $('#rate_failure').hide();
+		   if(interval != 0){
+		       clearInterval(interval);
+		   }
 		   interval = setInterval(function() {
 		       update_trace()
 		   }, 1000/rate);
 		   $('#continual').hide();
 		   $('#stop').show();
 	       }
+	       else if (rate == 0){
+		   stop();
+	       }
 	       else{
 		   $('#rate_failure').show();
+		   $('#rep_rate').val("");
 	       }
 	   }
 
 	   $('#continual').click(function() {
 	       continual();
 	   });
-
-	   $('#stop').click(function() {
-	       clearInterval(interval);
-	       $('#continual').show();
-	       $('#stop').hide();
-	   });
-
+	   
 	   $('#rep_rate').keydown(function (e){
 	       if(e.keyCode == 13){
-		   clearInterval(interval);
 		   continual();
 	       }
 	   });
+
+	   function stop(){
+	       clearInterval(interval);
+	       $('#continual').show();
+	       $('#stop').hide();
+	   } 
+	   
+	   $('#stop').click(function() {
+	       stop();
+	   });	   
  
        });
       
