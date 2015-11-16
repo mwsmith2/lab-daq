@@ -64,9 +64,9 @@
 	    }
 
 	    var row = 0;	    
-	    var interval = window.setInterval(function(){
-		var startRow = row;
-		for(; row < startRow + 100; ++row){
+	    var interval = setInterval(function(){
+		var endRow = row + 100;
+		for(; row < endRow; ++row){
 		    if(row === nRows){
 			break;
 		    }
@@ -86,7 +86,7 @@
 		}
 		
 		if(row >= nRows){
-		    window.clearInterval(interval);
+		    clearInterval(interval);
 		    $('#n_rows_selection').show();
 		    $('#generating').text("");
 		}
