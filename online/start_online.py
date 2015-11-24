@@ -566,7 +566,6 @@ def query_bk_status():
     try: 
         bk.write('SOUR:CURR?\n')
         response = ''
-        counter = 0
         response = read_serial(bk) 
         if float(response) != current_limit:
             bk.write('SOUR:CURR % .4f\n' % current_limit)
