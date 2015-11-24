@@ -105,10 +105,19 @@ def start_run():
 
     msg = "CONNECT"
     handshake_sck.send(msg)
-    if (handshake_sck.recv() == msg):
-        # Connection established.
-        start_sck.send("START:%05i:" % (last_run_number() + 1))
-
+    reply = ""
+    sleep(0.2) #give fast-daq chance to reply
+    try:
+        reply = handshake_sck.recv(zmq.NOBLOCK)
+    except zmq.error.Again:
+        error = "fast-daq not responding (is it running?)"
+        return render_template('new_run.html', info=run_info, 
+                               last=last_run_number(), data=data, error=error, new=True,
+                               in_progress=running)
+    else:
+        if reply == msg:
+            # Connection established.
+            start_sck.send("START:%05i:" % (last_run_number() + 1))
     handshake_sck.close()
     start_sck.close()
     context.destroy()           
