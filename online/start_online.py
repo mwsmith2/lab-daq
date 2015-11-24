@@ -118,9 +118,10 @@ def start_run():
         if reply == msg:
             # Connection established.
             start_sck.send("START:%05i:" % (last_run_number() + 1))
-    handshake_sck.close()
-    start_sck.close()
-    context.destroy()           
+    finally:
+        handshake_sck.close()
+        start_sck.close()
+        context.destroy()           
     
     #save the run info
     db = connect_db(run_info['db_name'])
