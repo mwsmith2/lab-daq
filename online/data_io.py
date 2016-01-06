@@ -21,7 +21,7 @@ hists = {}
 trace = np.zeros(1024)
 wireX = []
 wireY = []
-runOver = threading.Event()
+run_over = threading.Event()
 
 rate = 0 
 eventCount = 0
@@ -91,7 +91,7 @@ def pull_event(e, start):
     last_message = ''
     message = ''
 
-    while not runOver.isSet():
+    while not run_over.isSet():
 
         try:
             last_message = message
@@ -142,7 +142,7 @@ pull_event.event_data = Queue.Queue()
 
 
 def generate_data(e, data):
-    while not runOver.isSet():
+    while not run_over.isSet():
         if generate_data.counter != generate_data.maxsize:
             generate_data.counter += 1
             
@@ -168,22 +168,22 @@ generate_data.times = Queue.Queue(maxsize=generate_data.maxsize)
 
 
 def begin_run():
-    global runOver
+    global run_over
     print 'starting'
-    runOver.clear()
+    run_over.clear()
     clear_data()
     start = time()
     for unused_i in xrange(10):
         generate_data.times.put(start)
 
-    #t = threading.Thread(name='data-generator', target=generate_data, args=(runOver,data))
-    t = threading.Thread(name='data-puller', target=pull_event, args=(runOver, start))
+    #t = threading.Thread(name='data-generator', target=generate_data, args=(run_over,data))
+    t = threading.Thread(name='data-puller', target=pull_event, args=(run_over, start))
 
     print 'starting'
     t.start()
 
 def end_run():
-    global runOver
-    runOver.set()
+    global run_over
+    run_over.set()
     for i in xrange(10):
         generate_data.times.get()

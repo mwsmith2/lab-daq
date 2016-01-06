@@ -347,7 +347,7 @@ def n_events_query():
 def send_events():
     """sends data to the clients while a run is going"""
     last = last_run_number()
-    while not data_io.runOver.isSet():
+    while not data_io.run_over.isSet():
         sleep(0.1)
         socketio.emit('event info', {"count" : data_io.eventCount, "rate" : data_io.rate, 
                                      "runNumber" : last },
@@ -555,7 +555,7 @@ def new_filter_wheel_setting(msg):
 
 @socketio.on('bk status', namespace='/online')
 def query_bk_status():
-    bk = serial.Serial('/dev/ttyUSB1', 4800, timeout=1)
+    bk = serial.Serial('/dev/keyspan', 4800, timeout=1)
 
     #make sure we are current limited at desired level
     current_limit = 0.005
@@ -633,7 +633,7 @@ def new_bk_voltage(msg):
         
     #temporary limits for now
     v_low = 0
-    v_high = 67.5
+    v_high = 70.0
     if new_voltage < v_low or new_voltage > v_high:
         emit('invalid bk setting')
         return

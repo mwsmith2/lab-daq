@@ -9,13 +9,13 @@
   </select>
   <div id="trace_plot" style="width: 50em; height: 30em; margin: 0"></div>
   <button id="update">Update Trace</button> 
-  x_min <input type=text id="min" size="1" value="0"></input>
-  x_max <input type=text id="max" size="1" value="1024"></input> 
+  x_min <input type=text id="min" size="4" value="0"></input>
+  x_max <input type=text id="max" size="4" value="1024"></input> 
   {% if in_progress %}
     <br><br>
     <button id="continual">Start Continual Refresh</button>
     <button id="stop" style="display: none">Stop Continual Refresh</button>
-    <input type=text id="rep_rate" size="1" value="{{r_rate}}">
+    <input type=text id="rep_rate" size="3" value="{{r_rate}}">
    Refresh Rate (Hz)</input>
     <font color="red" id="rate_failure" style="display: none">rate must between 0 and 5 Hz</font>
   {% endif %}
